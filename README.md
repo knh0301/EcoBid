@@ -103,8 +103,8 @@ To learn more about React Native, take a look at the following resources:
 <img width="807" height="527" alt="image" src="https://github.com/user-attachments/assets/252d1507-43ca-4351-9447-cd94ce03ab85" />
 <img width="793" height="313" alt="image" src="https://github.com/user-attachments/assets/221a81dc-f601-4550-8a8c-8f05b2b2f985" />
 <img width="797" height="380" alt="image" src="https://github.com/user-attachments/assets/6c8f65f2-5c7f-4fc3-b7b7-081320a3b336" />
-ㅇㅇㅇ
 <img width="803" height="387" alt="image" src="https://github.com/user-attachments/assets/243d76f4-07c7-454c-b716-8fb7b2049299" />
+cd EcoBid X -> cd EcoBid/frontend (EcoBid가 아닌 EcoBid안에 frontend 폴더 안에서 실행해야합니다!
 <img width="792" height="267" alt="image" src="https://github.com/user-attachments/assets/598c3304-c09d-42c9-95e9-62af4f29d8ee" />
 <img width="787" height="338" alt="image" src="https://github.com/user-attachments/assets/3170bcd1-d03e-4ebf-8d15-adb20932c667" />
 <img width="801" height="524" alt="image" src="https://github.com/user-attachments/assets/9d67e140-03e5-42df-9983-06ca20a71300" />

@@ -1,7 +1,7 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import {homeStyles} from '../styles/HomeScreenStyle';
-import {GoToScreen} from '../types/navigation';
 import {AppLayout} from '../components/AppLayout';
 
 const rankingData = [
@@ -10,7 +10,6 @@ const rankingData = [
   {rank: 3, department: '기계공학과', credit: '112,894'},
 ];
 
-// 추천 미션과 나눔 물품 데이터는 실제 API 연동 시 서버에서 받아오는 형태로 변경될 예정입니다.
 const missionData = [
   {
     title: '텀블러 사용하기',
@@ -22,7 +21,7 @@ const missionData = [
     description: '대중교통 이용을 인증하고 크레딧을 얻으세요.',
     reward: '+500 크레딧',
   },
-   {
+  {
     title: '분리수거 인증하기',
     description: '올바른 분리수거를 인증하고 크레딧을 얻으세요.',
     reward: '+300 크레딧',
@@ -61,9 +60,11 @@ const itemData = [
   },
 ];
 
-export function HomeScreen({go}: {go: GoToScreen}) {
+export function HomeScreen() {
+  const navigation = useNavigation<any>();
+
   return (
-    <AppLayout active="home" go={go}>
+    <AppLayout>
       <ScrollView
         style={homeStyles.homeScroll}
         contentContainerStyle={homeStyles.homeContainer}
@@ -93,7 +94,9 @@ export function HomeScreen({go}: {go: GoToScreen}) {
 
           <Pressable
             style={homeStyles.homeCreditButton}
-            onPress={() => go('mission')}>
+            onPress={() =>
+              navigation.navigate('MainTabs', {screen: 'MissionTab'})
+            }>
             <Text style={homeStyles.homeCreditButtonText}>크레딧 모으기</Text>
           </Pressable>
         </View>
@@ -111,7 +114,9 @@ export function HomeScreen({go}: {go: GoToScreen}) {
                 ]}>
                 <View style={homeStyles.homeRankingLeft}>
                   <Text style={homeStyles.homeRankingRank}>{item.rank}</Text>
-                  <Text style={homeStyles.homeRankingDept}>{item.department}</Text>
+                  <Text style={homeStyles.homeRankingDept}>
+                    {item.department}
+                  </Text>
                 </View>
 
                 <Text style={homeStyles.homeRankingCredit}>
@@ -126,27 +131,29 @@ export function HomeScreen({go}: {go: GoToScreen}) {
         <Text style={homeStyles.homeSectionTitle}>추천 미션</Text>
 
         <ScrollView
-  horizontal
-  showsHorizontalScrollIndicator={false}
-  contentContainerStyle={homeStyles.homeMissionScrollContent}>
-  {missionData.map(item => (
-    <View key={item.title} style={homeStyles.homeMissionCard}>
-      <Text style={homeStyles.homeMissionTitle}>{item.title}</Text>
-      <Text style={homeStyles.homeMissionDescription}>
-        {item.description}
-      </Text>
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={homeStyles.homeMissionScrollContent}>
+          {missionData.map(item => (
+            <View key={item.title} style={homeStyles.homeMissionCard}>
+              <Text style={homeStyles.homeMissionTitle}>{item.title}</Text>
+              <Text style={homeStyles.homeMissionDescription}>
+                {item.description}
+              </Text>
 
-      <View style={homeStyles.homeMissionBottom}>
-        <Text style={homeStyles.homeMissionReward}>{item.reward}</Text>
-        <Pressable
-          style={homeStyles.homeMissionButton}
-          onPress={() => go('mission')}>
-          <Text style={homeStyles.homeMissionButtonText}>인증하기</Text>
-        </Pressable>
-      </View>
-    </View>
-  ))}
-</ScrollView>
+              <View style={homeStyles.homeMissionBottom}>
+                <Text style={homeStyles.homeMissionReward}>{item.reward}</Text>
+                <Pressable
+                  style={homeStyles.homeMissionButton}
+                  onPress={() =>
+                    navigation.navigate('MainTabs', {screen: 'MissionTab'})
+                  }>
+                  <Text style={homeStyles.homeMissionButtonText}>인증하기</Text>
+                </Pressable>
+              </View>
+            </View>
+          ))}
+        </ScrollView>
 
         <View style={homeStyles.homeSectionHeaderRow}>
           <Text style={homeStyles.homeSectionTitle}>나눔 물품 리스트</Text>
@@ -160,7 +167,7 @@ export function HomeScreen({go}: {go: GoToScreen}) {
             <Pressable
               key={item.id}
               style={homeStyles.homeItemCard}
-              onPress={() => go('productDetail')}>
+              onPress={() => navigation.navigate('ProductDetail')}>
               <View style={homeStyles.homeItemImagePlaceholder}>
                 <Text style={homeStyles.homeItemIcon}>{item.icon}</Text>
               </View>

@@ -1,7 +1,7 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import {styles} from '../styles/commonStyles';
-import {GoToScreen} from '../types/navigation';
 import {Input} from '../components/Input';
 import {
   PrimaryButton,
@@ -9,7 +9,9 @@ import {
   SocialButton,
 } from '../components/Buttons';
 
-export function LoginScreen({go}: {go: GoToScreen}) {
+export function LoginScreen() {
+  const navigation = useNavigation<any>();
+
   return (
     <ScrollView contentContainerStyle={styles.centerPage}>
       <View style={styles.card}>
@@ -28,8 +30,15 @@ export function LoginScreen({go}: {go: GoToScreen}) {
           <Text style={styles.linkText}>비밀번호 찾기</Text>
         </View>
 
-        <PrimaryButton title="로그인" onPress={() => go('home')} />
-        <OutlineButton title="게스트로 둘러보기" onPress={() => go('home')} />
+        <PrimaryButton
+          title="로그인"
+          onPress={() => navigation.replace('MainTabs')}
+        />
+
+        <OutlineButton
+          title="게스트로 둘러보기"
+          onPress={() => navigation.replace('MainTabs')}
+        />
 
         <Text style={styles.dividerText}>또는</Text>
 
@@ -39,7 +48,7 @@ export function LoginScreen({go}: {go: GoToScreen}) {
 
         <View style={styles.bottomTextRow}>
           <Text>계정이 없으신가요? </Text>
-          <Pressable onPress={() => go('signup')}>
+          <Pressable onPress={() => navigation.navigate('Signup')}>
             <Text style={styles.linkText}>회원가입</Text>
           </Pressable>
         </View>

@@ -1,16 +1,20 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import {styles} from '../styles/commonStyles';
-import {GoToScreen} from '../types/navigation';
 
-export function ProductDetailScreen({go}: {go: GoToScreen}) {
+export function ProductDetailScreen() {
+  const navigation = useNavigation<any>();
+
   return (
     <View style={styles.fullPage}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => go('home')}>
+        <Pressable onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>{'<'}</Text>
         </Pressable>
+
         <Text style={styles.appTitle}>상세 정보</Text>
+
         <Text>🔗</Text>
       </View>
 
@@ -40,7 +44,10 @@ export function ProductDetailScreen({go}: {go: GoToScreen}) {
         <Pressable style={styles.heartBtn}>
           <Text style={styles.heartText}>♡</Text>
         </Pressable>
-        <Pressable style={styles.chatActionBtn} onPress={() => go('chatDetail')}>
+
+        <Pressable
+          style={styles.chatActionBtn}
+          onPress={() => navigation.navigate('ChatDetail')}>
           <Text style={styles.primaryBtnText}>채팅하기</Text>
         </Pressable>
       </View>

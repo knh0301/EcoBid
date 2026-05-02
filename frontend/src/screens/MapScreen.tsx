@@ -1,14 +1,16 @@
 import React from 'react';
 import {Text, TextInput, View} from 'react-native';
 import {styles} from '../styles/commonStyles';
-import {GoToScreen} from '../types/navigation';
 import {AppLayout} from '../components/AppLayout';
 
-export function MapScreen({go}: {go: GoToScreen}) {
+export function MapScreen() {
   return (
-    <AppLayout active="map" go={go}>
+    <AppLayout>
       <View style={styles.mapPage}>
-        <TextInput style={styles.searchInput} placeholder="우리 동네 에코 스팟 검색" />
+        <TextInput
+          style={styles.searchInput}
+          placeholder="우리 동네 에코 스팟 검색"
+        />
 
         <View style={styles.filterRow}>
           <Text style={styles.filterActive}>전체</Text>

@@ -1,12 +1,14 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
+import {useNavigation} from '@react-navigation/native';
 import {styles} from '../styles/commonStyles';
-import {GoToScreen} from '../types/navigation';
 import {AppLayout} from '../components/AppLayout';
 
-export function ChatListScreen({go}: {go: GoToScreen}) {
+export function ChatListScreen() {
+  const navigation = useNavigation<any>();
+
   return (
-    <AppLayout active="chat" go={go}>
+    <AppLayout>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.bgTitle}>채팅</Text>
 
@@ -18,12 +20,14 @@ export function ChatListScreen({go}: {go: GoToScreen}) {
           <Pressable
             key={name}
             style={styles.chatItem}
-            onPress={() => go('chatDetail')}>
+            onPress={() => navigation.navigate('ChatDetail')}>
             <View style={styles.avatar} />
+
             <View style={{flex: 1}}>
               <Text style={styles.chatName}>{name}</Text>
               <Text style={styles.desc}>{message}</Text>
             </View>
+
             <Text>{'>'}</Text>
           </Pressable>
         ))}

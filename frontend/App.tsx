@@ -1,10 +1,10 @@
 import React from 'react';
 import {Text} from 'react-native';
-import {NavigationContainer, useNavigation} from '@react-navigation/native';
+import {NavigationContainer} from '@react-navigation/native';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 
-import {ScreenName} from './src/types/navigation';
+import {RootStackParamList, MainTabParamList} from './src/types/navigation';
 
 import {LoginScreen} from './src/screens/LoginScreen';
 import {SignupScreen} from './src/screens/SignupScreen';
@@ -19,149 +19,8 @@ import {SharedItemsScreen} from './src/screens/SharedItemsScreen';
 import {CreditHistoryScreen} from './src/screens/CreditHistoryScreen';
 import {ProductDetailScreen} from './src/screens/ProductDetailScreen';
 
-type RootStackParamList = {
-  Login: undefined;
-  Signup: undefined;
-  MainTabs: undefined;
-  ProductDetail: undefined;
-  ChatDetail: undefined;
-  LikedItems: undefined;
-  SharedItems: undefined;
-  CreditHistory: undefined;
-};
-
-type MainTabParamList = {
-  HomeTab: undefined;
-  MapTab: undefined;
-  MissionTab: undefined;
-  ChatTab: undefined;
-  MyPageTab: undefined;
-};
-
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<MainTabParamList>();
-
-function useGoToScreen() {
-  const navigation = useNavigation<any>();
-
-  const go = (screen: ScreenName) => {
-    switch (screen) {
-      case 'login':
-        navigation.navigate('Login');
-        break;
-
-      case 'signup':
-        navigation.navigate('Signup');
-        break;
-
-      case 'home':
-        navigation.navigate('MainTabs', {screen: 'HomeTab'});
-        break;
-
-      case 'map':
-        navigation.navigate('MainTabs', {screen: 'MapTab'});
-        break;
-
-      case 'mission':
-        navigation.navigate('MainTabs', {screen: 'MissionTab'});
-        break;
-
-      case 'chatList':
-        navigation.navigate('MainTabs', {screen: 'ChatTab'});
-        break;
-
-      case 'mypage':
-        navigation.navigate('MainTabs', {screen: 'MyPageTab'});
-        break;
-
-      case 'chatDetail':
-        navigation.navigate('ChatDetail');
-        break;
-
-      case 'productDetail':
-        navigation.navigate('ProductDetail');
-        break;
-
-      case 'likedItems':
-        navigation.navigate('LikedItems');
-        break;
-
-      case 'sharedItems':
-        navigation.navigate('SharedItems');
-        break;
-
-      case 'creditHistory':
-        navigation.navigate('CreditHistory');
-        break;
-
-      default:
-        navigation.navigate('MainTabs');
-        break;
-    }
-  };
-
-  return go;
-}
-
-function LoginWrapper() {
-  const go = useGoToScreen();
-  return <LoginScreen go={go} />;
-}
-
-function SignupWrapper() {
-  const go = useGoToScreen();
-  return <SignupScreen go={go} />;
-}
-
-function HomeWrapper() {
-  const go = useGoToScreen();
-  return <HomeScreen go={go} />;
-}
-
-function MapWrapper() {
-  const go = useGoToScreen();
-  return <MapScreen go={go} />;
-}
-
-function MissionWrapper() {
-  const go = useGoToScreen();
-  return <MissionScreen go={go} />;
-}
-
-function ChatListWrapper() {
-  const go = useGoToScreen();
-  return <ChatListScreen go={go} />;
-}
-
-function MyPageWrapper() {
-  const go = useGoToScreen();
-  return <MyPageScreen go={go} />;
-}
-
-function ProductDetailWrapper() {
-  const go = useGoToScreen();
-  return <ProductDetailScreen go={go} />;
-}
-
-function ChatDetailWrapper() {
-  const go = useGoToScreen();
-  return <ChatDetailScreen go={go} />;
-}
-
-function LikedItemsWrapper() {
-  const go = useGoToScreen();
-  return <LikedItemsScreen go={go} />;
-}
-
-function SharedItemsWrapper() {
-  const go = useGoToScreen();
-  return <SharedItemsScreen go={go} />;
-}
-
-function CreditHistoryWrapper() {
-  const go = useGoToScreen();
-  return <CreditHistoryScreen go={go} />;
-}
 
 function MainTabs() {
   return (
@@ -186,7 +45,7 @@ function MainTabs() {
       }}>
       <Tab.Screen
         name="HomeTab"
-        component={HomeWrapper}
+        component={HomeScreen}
         options={{
           title: '홈',
           tabBarIcon: ({color}) => (
@@ -197,7 +56,7 @@ function MainTabs() {
 
       <Tab.Screen
         name="MapTab"
-        component={MapWrapper}
+        component={MapScreen}
         options={{
           title: '지도',
           tabBarIcon: ({color}) => (
@@ -208,7 +67,7 @@ function MainTabs() {
 
       <Tab.Screen
         name="MissionTab"
-        component={MissionWrapper}
+        component={MissionScreen}
         options={{
           title: '미션',
           tabBarIcon: ({color}) => (
@@ -219,7 +78,7 @@ function MainTabs() {
 
       <Tab.Screen
         name="ChatTab"
-        component={ChatListWrapper}
+        component={ChatListScreen}
         options={{
           title: '채팅',
           tabBarIcon: ({color}) => (
@@ -230,7 +89,7 @@ function MainTabs() {
 
       <Tab.Screen
         name="MyPageTab"
-        component={MyPageWrapper}
+        component={MyPageScreen}
         options={{
           title: '마이페이지',
           tabBarIcon: ({color}) => (
@@ -250,14 +109,15 @@ export default function App(): React.JSX.Element {
         screenOptions={{
           headerShown: false,
         }}>
-        <Stack.Screen name="Login" component={LoginWrapper} />
-        <Stack.Screen name="Signup" component={SignupWrapper} />
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Signup" component={SignupScreen} />
         <Stack.Screen name="MainTabs" component={MainTabs} />
-        <Stack.Screen name="ProductDetail" component={ProductDetailWrapper} />
-        <Stack.Screen name="ChatDetail" component={ChatDetailWrapper} />
-        <Stack.Screen name="LikedItems" component={LikedItemsWrapper} />
-        <Stack.Screen name="SharedItems" component={SharedItemsWrapper} />
-        <Stack.Screen name="CreditHistory" component={CreditHistoryWrapper} />
+
+        <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+        <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+        <Stack.Screen name="LikedItems" component={LikedItemsScreen} />
+        <Stack.Screen name="SharedItems" component={SharedItemsScreen} />
+        <Stack.Screen name="CreditHistory" component={CreditHistoryScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

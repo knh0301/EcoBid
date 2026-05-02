@@ -1,15 +1,21 @@
-export type ScreenName =
-  | 'login'
-  | 'signup'
-  | 'home'
-  | 'mission'
-  | 'chatList'
-  | 'chatDetail'
-  | 'map'
-  | 'mypage'
-  | 'likedItems'
-  | 'sharedItems'
-  | 'creditHistory'
-  | 'productDetail';
+import {NavigatorScreenParams} from '@react-navigation/native';
 
-export type GoToScreen = (screen: ScreenName) => void;
+export type MainTabParamList = {
+  HomeTab: undefined;
+  MapTab: undefined;
+  MissionTab: undefined;
+  ChatTab: undefined;
+  MyPageTab: undefined;
+};
+
+export type RootStackParamList = {
+  Login: undefined;
+  Signup: undefined;
+  MainTabs: NavigatorScreenParams<MainTabParamList>;
+
+  ProductDetail: undefined;
+  ChatDetail: undefined;
+  LikedItems: undefined;
+  SharedItems: undefined;
+  CreditHistory: undefined;
+};

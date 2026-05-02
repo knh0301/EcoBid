@@ -1,57 +1,180 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
-import {styles} from '../styles/commonStyles';
+import {homeStyles} from '../styles/HomeScreenStyle';
 import {GoToScreen} from '../types/navigation';
 import {AppLayout} from '../components/AppLayout';
-import {MiniCard} from '../components/MiniCard';
-import {OutlineButton} from '../components/Buttons';
+
+const rankingData = [
+  {rank: 1, department: '컴퓨터공학과', credit: '112,894'},
+  {rank: 2, department: '디자인테크놀로지학과', credit: '112,894'},
+  {rank: 3, department: '기계공학과', credit: '112,894'},
+];
+
+// 추천 미션과 나눔 물품 데이터는 실제 API 연동 시 서버에서 받아오는 형태로 변경될 예정입니다.
+const missionData = [
+  {
+    title: '텀블러 사용하기',
+    description: '텀블러 사용 인증하고 크레딧을 얻으세요.',
+    reward: '+500 크레딧',
+  },
+  {
+    title: '대중교통 이용하기',
+    description: '대중교통 이용을 인증하고 크레딧을 얻으세요.',
+    reward: '+500 크레딧',
+  },
+   {
+    title: '분리수거 인증하기',
+    description: '올바른 분리수거를 인증하고 크레딧을 얻으세요.',
+    reward: '+300 크레딧',
+  },
+  {
+    title: '장바구니 사용하기',
+    description: '일회용 봉투 대신 장바구니를 사용해보세요.',
+    reward: '+300 크레딧',
+  },
+];
+
+const itemData = [
+  {
+    id: 1,
+    title: '빈티지 조명',
+    price: '2,500 크레딧',
+    icon: '💡',
+  },
+  {
+    id: 2,
+    title: '곰돌이 인형',
+    price: '500 크레딧',
+    icon: '🧸',
+  },
+  {
+    id: 3,
+    title: '각티슈 3묶음',
+    price: '500 크레딧',
+    icon: '🧻',
+  },
+  {
+    id: 4,
+    title: '수저 세트',
+    price: '700 크레딧',
+    icon: '🍴',
+  },
+];
 
 export function HomeScreen({go}: {go: GoToScreen}) {
   return (
     <AppLayout active="home" go={go}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.appTitle}>EcoBid</Text>
-
-        <Pressable style={styles.attendanceCard}>
-          <View>
-            <Text style={styles.sectionTitle}>오늘의 출석 도장</Text>
-            <Text style={styles.desc}>매일 출석하고 랜덤 크레딧을 받으세요!</Text>
+      <ScrollView
+        style={homeStyles.homeScroll}
+        contentContainerStyle={homeStyles.homeContainer}
+        showsVerticalScrollIndicator={false}>
+        <Pressable style={homeStyles.homeAttendanceCard}>
+          <View style={homeStyles.homeAttendanceTextBox}>
+            <Text style={homeStyles.homeCardTitle}>오늘의 출석 도장</Text>
+            <Text style={homeStyles.homeCardDescription}>
+              매일 출석하고 랜덤 크레딧을 받으세요!
+            </Text>
           </View>
-          <View style={styles.stampButton}>
-            <Text style={styles.stampText}>STAMP</Text>
+
+          <View style={homeStyles.homeStampCircle}>
+            <Text style={homeStyles.homeStampText}>STAMP</Text>
           </View>
         </Pressable>
 
-        <View style={styles.greenCard}>
-          <Text style={styles.sectionTitle}>나의 크레딧 잔액</Text>
-          <Text style={styles.creditText}>1,250 크레딧</Text>
-          <OutlineButton title="크레딧 모으러 가기" onPress={() => go('mission')} />
+        <View style={homeStyles.homeCreditCard}>
+          <View style={homeStyles.homeCreditTopRow}>
+            <Text style={homeStyles.homeCardTitle}>나의 크레딧 잔액</Text>
+
+            <View style={homeStyles.homeCreditRow}>
+              <Text style={homeStyles.homeCreditAmount}>1,250</Text>
+              <Text style={homeStyles.homeCreditUnit}> 크레딧</Text>
+            </View>
+          </View>
+
+          <Pressable
+            style={homeStyles.homeCreditButton}
+            onPress={() => go('mission')}>
+            <Text style={homeStyles.homeCreditButtonText}>크레딧 모으기</Text>
+          </Pressable>
         </View>
 
-        <Pressable style={styles.cardBlock}>
-          <Text style={styles.sectionTitle}>크레딧 총액 학과 순위</Text>
-          <Text>1. 컴퓨터공학과 - 112,894 크레딧</Text>
-          <Text>2. 디자인테크놀로지학과 - 108,420 크레딧</Text>
-          <Text>3. 경영학과 - 98,150 크레딧</Text>
+        <View style={homeStyles.homeRankingCard}>
+          <Text style={homeStyles.homeCardTitle}>크레딧 총액 학과 순위</Text>
+
+          <View style={homeStyles.homeRankingList}>
+            {rankingData.map(item => (
+              <View
+                key={item.rank}
+                style={[
+                  homeStyles.homeRankingItem,
+                  item.rank === 1 && homeStyles.homeRankingItemFirst,
+                ]}>
+                <View style={homeStyles.homeRankingLeft}>
+                  <Text style={homeStyles.homeRankingRank}>{item.rank}</Text>
+                  <Text style={homeStyles.homeRankingDept}>{item.department}</Text>
+                </View>
+
+                <Text style={homeStyles.homeRankingCredit}>
+                  {item.credit}
+                  <Text style={homeStyles.homeRankingCreditUnit}> 크레딧</Text>
+                </Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
+        <Text style={homeStyles.homeSectionTitle}>추천 미션</Text>
+
+        <ScrollView
+  horizontal
+  showsHorizontalScrollIndicator={false}
+  contentContainerStyle={homeStyles.homeMissionScrollContent}>
+  {missionData.map(item => (
+    <View key={item.title} style={homeStyles.homeMissionCard}>
+      <Text style={homeStyles.homeMissionTitle}>{item.title}</Text>
+      <Text style={homeStyles.homeMissionDescription}>
+        {item.description}
+      </Text>
+
+      <View style={homeStyles.homeMissionBottom}>
+        <Text style={homeStyles.homeMissionReward}>{item.reward}</Text>
+        <Pressable
+          style={homeStyles.homeMissionButton}
+          onPress={() => go('mission')}>
+          <Text style={homeStyles.homeMissionButtonText}>인증하기</Text>
         </Pressable>
+      </View>
+    </View>
+  ))}
+</ScrollView>
 
-        <Text style={styles.sectionHeader}>추천 미션</Text>
-        <View style={styles.horizontalRow}>
-          <MiniCard title="텀블러 사용 인증" />
-          <MiniCard title="분리수거 인증" />
-          <MiniCard title="대중교통 이용" />
+        <View style={homeStyles.homeSectionHeaderRow}>
+          <Text style={homeStyles.homeSectionTitle}>나눔 물품 리스트</Text>
+          <Pressable>
+            <Text style={homeStyles.homeMoreText}>전체보기 &gt;</Text>
+          </Pressable>
         </View>
 
-        <Text style={styles.sectionHeader}>나눔 물품 리스트</Text>
-        <View style={styles.grid}>
-          {['빈티지 조명', '흰색 블라우스', '책상 스탠드', '머그컵'].map(item => (
+        <View style={homeStyles.homeItemGrid}>
+          {itemData.map(item => (
             <Pressable
-              key={item}
-              style={styles.itemCard}
+              key={item.id}
+              style={homeStyles.homeItemCard}
               onPress={() => go('productDetail')}>
-              <View style={styles.itemImage} />
-              <Text style={styles.itemTitle}>{item}</Text>
-              <Text style={styles.itemPrice}>2500 크레딧</Text>
+              <View style={homeStyles.homeItemImagePlaceholder}>
+                <Text style={homeStyles.homeItemIcon}>{item.icon}</Text>
+              </View>
+
+              <View style={homeStyles.homeItemInfo}>
+                <View>
+                  <Text style={homeStyles.homeItemTitle}>{item.title}</Text>
+                  <Text style={homeStyles.homeItemPrice}>{item.price}</Text>
+                </View>
+
+                <Pressable style={homeStyles.homeHeartButton}>
+                  <Text style={homeStyles.homeHeartIcon}>♡</Text>
+                </Pressable>
+              </View>
             </Pressable>
           ))}
         </View>

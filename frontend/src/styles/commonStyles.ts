@@ -587,4 +587,20 @@ export const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  appHeader: {
+  height: 60,
+  backgroundColor: '#FFFFFF',
+  flexDirection: 'row',
+  alignItems: 'center',
+  paddingHorizontal: 18,
+  borderBottomWidth: 1,
+  borderBottomColor: '#E5E7EB',
+},
+
+headerTitle: {
+  fontSize: 22,
+  fontWeight: '900',
+  color: '#1F1F1F',
+},
+
 });

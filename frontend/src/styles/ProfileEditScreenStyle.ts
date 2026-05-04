@@ -247,4 +247,61 @@ export const profileEditStyles = StyleSheet.create({
     fontWeight: '900',
     color: '#FFFFFF',
   },
+
+  departmentSheet: {
+  width: '100%',
+  backgroundColor: '#FFFFFF',
+  borderRadius: 18,
+  paddingHorizontal: 18,
+  paddingTop: 20,
+  paddingBottom: 16,
+},
+
+departmentSheetTitle: {
+  fontSize: 17,
+  fontWeight: '900',
+  color: '#222222',
+  textAlign: 'center',
+  marginBottom: 14,
+},
+
+departmentOption: {
+  height: 44,
+  borderRadius: 10,
+  paddingHorizontal: 12,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  marginBottom: 6,
+},
+
+departmentOptionSelected: {
+  backgroundColor: '#F0F6EE',
+},
+
+departmentOptionText: {
+  fontSize: 14,
+  fontWeight: '600',
+  color: '#333333',
+},
+
+departmentOptionTextSelected: {
+  color: '#2F6F3E',
+  fontWeight: '900',
+},
+
+departmentCancelButton: {
+  height: 42,
+  borderRadius: 10,
+  backgroundColor: '#E4E4E4',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginTop: 8,
+},
+
+departmentCancelText: {
+  fontSize: 14,
+  fontWeight: '800',
+  color: '#555555',
+},
 });

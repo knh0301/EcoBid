@@ -12,6 +12,28 @@ import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {profileEditStyles as styles} from '../styles/ProfileEditScreenStyle';
 
+// 학과 정보 추가 예정
+const DEPARTMENTS = [
+  '컴퓨터공학과',
+  '인공지능공학과',
+  '전자공학과',
+  '정보통신공학과',
+  '기계공학과',
+  '산업경영공학과',
+  '경영학과',
+  '디자인테크놀로지학과',
+  '의류디자인학과',
+  '기타',
+];
+
+// 지금은 백엔드 연동 전이라 예시 회원 데이터로 사용.
+// 나중에는 이 부분을 API 응답값으로 대체하면 됨.
+const mockUser = {
+  nickname: '나봉',
+  department: '컴퓨터공학과',
+  email: 'nabong@inha.edu',
+};
+
 type ModalType =
   | 'logoutConfirm'
   | 'logoutDone'
@@ -21,17 +43,36 @@ type ModalType =
 
 export function ProfileEditScreen() {
   const navigation = useNavigation<any>();
+
+  const [nickname, setNickname] = useState(mockUser.nickname);
+  const [selectedDepartment, setSelectedDepartment] = useState(
+    mockUser.department,
+  );
+  const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
+
   const [modalType, setModalType] = useState<ModalType>(null);
 
   const closeModal = () => {
     setModalType(null);
   };
 
+  const handleProfileUpdate = () => {
+    // 나중에 여기서 회원 정보 수정 API 호출하면 됨.
+    // 예: updateProfile({nickname, department: selectedDepartment})
+    console.log('수정할 회원 정보:', {
+      nickname,
+      department: selectedDepartment,
+      email: mockUser.email,
+    });
+  };
+
   const handleLogoutConfirm = () => {
+    // 나중에 여기서 토큰 삭제, 로그아웃 API 처리 가능
     setModalType('logoutDone');
   };
 
   const handleWithdrawConfirm = () => {
+    // 나중에 여기서 회원 탈퇴 API 호출 가능
     setModalType('withdrawDone');
   };
 
@@ -72,7 +113,8 @@ export function ProfileEditScreen() {
             <Text style={styles.label}>닉네임</Text>
             <TextInput
               style={styles.input}
-              defaultValue="나봉"
+              value={nickname}
+              onChangeText={setNickname}
               placeholder="닉네임을 입력하세요"
               placeholderTextColor="#999999"
             />
@@ -81,8 +123,10 @@ export function ProfileEditScreen() {
           <View style={styles.inputGroup}>
             <Text style={styles.label}>학과</Text>
 
-            <Pressable style={styles.selectBox}>
-              <Text style={styles.selectText}>컴퓨터공학과</Text>
+            <Pressable
+              style={styles.selectBox}
+              onPress={() => setDepartmentModalVisible(true)}>
+              <Text style={styles.selectText}>{selectedDepartment}</Text>
               <Ionicons name="chevron-down" size={18} color="#777777" />
             </Pressable>
           </View>
@@ -91,12 +135,12 @@ export function ProfileEditScreen() {
             <Text style={styles.label}>이메일</Text>
             <TextInput
               style={[styles.input, styles.disabledInput]}
-              value="kimnai6207@inha.edu"
+              value={mockUser.email}
               editable={false}
             />
           </View>
 
-          <Pressable style={styles.submitButton}>
+          <Pressable style={styles.submitButton} onPress={handleProfileUpdate}>
             <Text style={styles.submitButtonText}>회원 정보 수정하기</Text>
           </Pressable>
         </View>
@@ -117,6 +161,17 @@ export function ProfileEditScreen() {
           </Pressable>
         </View>
       </ScrollView>
+
+      <DepartmentSelectModal
+        visible={departmentModalVisible}
+        departments={DEPARTMENTS}
+        selectedDepartment={selectedDepartment}
+        onSelect={department => {
+          setSelectedDepartment(department);
+          setDepartmentModalVisible(false);
+        }}
+        onClose={() => setDepartmentModalVisible(false)}
+      />
 
       <ConfirmModal
         visible={modalType === 'logoutConfirm'}
@@ -149,6 +204,60 @@ export function ProfileEditScreen() {
         onConfirm={handleDone}
       />
     </SafeAreaView>
+  );
+}
+
+function DepartmentSelectModal({
+  visible,
+  departments,
+  selectedDepartment,
+  onSelect,
+  onClose,
+}: {
+  visible: boolean;
+  departments: string[];
+  selectedDepartment: string;
+  onSelect: (department: string) => void;
+  onClose: () => void;
+}) {
+  return (
+    <Modal visible={visible} transparent animationType="fade">
+      <View style={styles.modalOverlay}>
+        <View style={styles.departmentSheet}>
+          <Text style={styles.departmentSheetTitle}>학과 선택</Text>
+
+          {departments.map(department => {
+            const isSelected = selectedDepartment === department;
+
+            return (
+              <Pressable
+                key={department}
+                style={[
+                  styles.departmentOption,
+                  isSelected && styles.departmentOptionSelected,
+                ]}
+                onPress={() => onSelect(department)}>
+                <Text
+                  style={[
+                    styles.departmentOptionText,
+                    isSelected && styles.departmentOptionTextSelected,
+                  ]}>
+                  {department}
+                </Text>
+
+                {isSelected && (
+                  <Ionicons name="checkmark" size={18} color="#79AD6F" />
+                )}
+              </Pressable>
+            );
+          })}
+
+          <Pressable style={styles.departmentCancelButton} onPress={onClose}>
+            <Text style={styles.departmentCancelText}>닫기</Text>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
   );
 }
 

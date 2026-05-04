@@ -18,6 +18,7 @@ import {ProductDetailScreen} from './src/screens/ProductDetailScreen';
 import {SharedItemsScreen} from './src/screens/SharedItemsScreen';
 import {LikedItemsScreen} from './src/screens/LikedItemsScreen';
 import {CreditHistoryScreen} from './src/screens/CreditHistoryScreen';
+import {MissionVerifyScreen} from './src/screens/MissionVerifyScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -75,6 +76,7 @@ export default function App(): React.JSX.Element {
         <Stack.Screen name="SharedItems" component={SharedItemsScreen} />
         <Stack.Screen name="LikedItems" component={LikedItemsScreen} />
         <Stack.Screen name="CreditHistory" component={CreditHistoryScreen} />
+        <Stack.Screen name="MissionVerify" component={MissionVerifyScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

@@ -118,7 +118,7 @@ const DAILY_MISSIONS = [
   },
 ];
 
-const MissionCard = ({item}: {item: any}) => (
+const MissionCard = ({item, navigation}: {item: any; navigation: any}) => (
   <View style={missionStyles.card}>
     <View style={missionStyles.cardHeader}>
       <Text style={missionStyles.cardTitle}>{item.title}</Text>
@@ -133,7 +133,16 @@ const MissionCard = ({item}: {item: any}) => (
         item.status === 'completed' && missionStyles.buttonCompleted,
       ]}
       activeOpacity={0.7}
-      disabled={item.status === 'completed'}>
+      disabled={item.status === 'completed'}
+      onPress={() => {
+        if (item.buttonText === '인증하기') {
+          navigation.navigate('MissionVerify', {missionTitle: item.title});
+        } else if (item.buttonText === '출석하기') {
+          navigation.navigate('Attendance');
+        } else if (item.buttonText === '나눔 물품 등록하기') {
+          navigation.navigate('ProductRegister');
+        }
+      }}>
       <Text
         style={[
           missionStyles.buttonText,
@@ -145,7 +154,7 @@ const MissionCard = ({item}: {item: any}) => (
   </View>
 );
 
-export function MissionScreen() {
+export function MissionScreen({navigation}: any) {
   return (
     <SafeAreaView style={missionStyles.container}>
       <View style={missionStyles.header}>
@@ -159,7 +168,7 @@ export function MissionScreen() {
         </Text>
 
         {MISSION_DATA.map(item => (
-          <MissionCard key={item.id} item={item} />
+          <MissionCard key={item.id} item={item} navigation={navigation} />
         ))}
 
         <Text style={missionStyles.sectionTitle}>데일리 미션</Text>
@@ -175,7 +184,7 @@ export function MissionScreen() {
         </View>
 
         {DAILY_MISSIONS.map(item => (
-          <MissionCard key={item.id} item={item} />
+          <MissionCard key={item.id} item={item} navigation={navigation} />
         ))}
       </ScrollView>
     </SafeAreaView>

@@ -1,32 +1,137 @@
 import React from 'react';
-import {Pressable, ScrollView, Text, View} from 'react-native';
-import {styles} from '../styles/commonStyles';
-import {AppLayout} from '../components/AppLayout';
+import {
+  ScrollView,
+  Text,
+  View,
+  TouchableOpacity,
+  StyleSheet,
+  SafeAreaView,
+} from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
+
+const CHAT_DATA = [
+  {
+    id: '1',
+    name: '김나현',
+    lastMessage: '빈티지 조명 나눔 받고싶어요!',
+    color: '#FFD15B',
+    icon: 'happy-outline',
+  },
+  {
+    id: '2',
+    name: '김애리',
+    lastMessage: '각티슈 언제 구매하신건가요?',
+    color: '#A5C9A1',
+    icon: 'leaf-outline',
+  },
+  {
+    id: '3',
+    name: '이지오',
+    lastMessage: '인하대 정문에서 봬요.',
+    color: '#ADCFFF',
+    icon: 'cloud-outline',
+  },
+];
 
 export function ChatListScreen({navigation}: any) {
   return (
-    <AppLayout>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.bgTitle}>채팅</Text>
+    <SafeAreaView style={styles.container}>
+      {/* 1단계 헤더: EcoBid 로고 */}
+      <View style={styles.topHeader}>
+        <Text style={styles.headerLogo}>EcoBid</Text>
+      </View>
 
-        {[
-          ['김나현', '빈티지 조명 나눔 받고싶어요!'],
-          ['김애리', '빈티지 조명 나눔 받고싶어요!'],
-          ['이지오', '인하대 정문에서 봬요'],
-        ].map(([name, message]) => (
-          <Pressable
-            key={name}
+      {/* 2단계 헤더: 채팅 타이틀 */}
+      <View style={styles.titleHeader}>
+        <Text style={styles.pageTitle}>채팅</Text>
+      </View>
+
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {CHAT_DATA.map((item) => (
+          <TouchableOpacity
+            key={item.id}
             style={styles.chatItem}
-            onPress={() => navigation.navigate('ChatDetail')}>
-            <View style={styles.avatar} />
-            <View style={{flex: 1}}>
-              <Text style={styles.chatName}>{name}</Text>
-              <Text style={styles.desc}>{message}</Text>
+            onPress={() => navigation.navigate('ChatDetail', {name: item.name})}
+            activeOpacity={0.7}
+          >
+            {/* 시안의 아바타를 재현한 아이콘 포함 원형 박스 */}
+            <View style={[styles.avatar, {backgroundColor: item.color}]}>
+              <Ionicons name={item.icon as any} size={36} color="rgba(0,0,0,0.5)" />
             </View>
-            <Text>{'>'}</Text>
-          </Pressable>
+
+            {/* 이름 및 마지막 메시지 */}
+            <View style={styles.chatInfo}>
+              <Text style={styles.userName}>{item.name}</Text>
+              <Text style={styles.lastMessage} numberOfLines={1}>
+                {item.lastMessage}
+              </Text>
+            </View>
+          </TouchableOpacity>
         ))}
       </ScrollView>
-    </AppLayout>
+    </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  topHeader: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+  },
+  headerLogo: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: '#000',
+  },
+  titleHeader: {
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+  },
+  pageTitle: {
+    fontSize: 34,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
+  chatItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingVertical: 18,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F5F5F5',
+  },
+  avatar: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 16,
+  },
+  chatInfo: {
+    flex: 1,
+    justifyContent: 'center',
+  },
+  userName: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: '#000',
+    marginBottom: 4,
+  },
+  lastMessage: {
+    fontSize: 15,
+    color: '#888',
+    fontWeight: '400',
+  },
+});

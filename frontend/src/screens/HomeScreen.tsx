@@ -6,8 +6,8 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
-import {ScreenName} from '../types/navigation';
+import { Ionicons } from '@expo/vector-icons';
+import { ScreenName } from '../types/navigation';
 
 interface Props {
   go: (screen: ScreenName) => void;
@@ -19,19 +19,19 @@ interface MissionCardProps {
 }
 
 const ranks = [
-  {rank: '1', dept: '컴퓨터공학과', credit: '112,894 크레딧'},
-  {rank: '2', dept: '디자인테크놀로지학과', credit: '112,894 크레딧'},
-  {rank: '3', dept: '기계공학과', credit: '112,894 크레딧'},
+  { rank: '1', dept: '컴퓨터공학과', credit: '112,894 크레딧' },
+  { rank: '2', dept: '디자인테크놀로지학과', credit: '112,894 크레딧' },
+  { rank: '3', dept: '기계공학과', credit: '112,894 크레딧' },
 ];
 
 const products = [
-  {id: '1', name: '빈티지 조명', price: '2,500 크레딧', liked: false, color: '#D4A96A'},
-  {id: '2', name: '곰돌이 인형', price: '500 크레딧', liked: true, color: '#C4956A'},
-  {id: '3', name: '각티슈 3묶음', price: '500 크레딧', liked: true, color: '#A8C4B8'},
-  {id: '4', name: '수저 세트', price: '700 크레딧', liked: false, color: '#B8B8C4'},
+  { id: '1', name: '빈티지 조명', price: '2,500 크레딧', liked: false, color: '#D4A96A' },
+  { id: '2', name: '곰돌이 인형', price: '500 크레딧', liked: true, color: '#C4956A' },
+  { id: '3', name: '각티슈 3묶음', price: '500 크레딧', liked: true, color: '#A8C4B8' },
+  { id: '4', name: '수저 세트', price: '700 크레딧', liked: false, color: '#B8B8C4' },
 ];
 
-const MissionCard: React.FC<MissionCardProps> = ({title, desc}) => (
+const MissionCard: React.FC<MissionCardProps> = ({ title, desc }) => (
   <View style={styles.missionCard}>
     <Text style={styles.missionTitle}>{title}</Text>
     <Text style={styles.missionDesc}>{desc}</Text>
@@ -42,7 +42,7 @@ const MissionCard: React.FC<MissionCardProps> = ({title, desc}) => (
   </View>
 );
 
-export const HomeScreen: React.FC<Props> = ({go}) => {
+export const HomeScreen: React.FC<Props> = ({ go }) => {
   return (
     <View style={styles.container}>
 
@@ -147,12 +147,12 @@ export const HomeScreen: React.FC<Props> = ({go}) => {
               style={styles.productCard}
               onPress={() => go('productDetail')}
               activeOpacity={0.8}>
-              <View style={[styles.productImage, {backgroundColor: item.color}]}>
+              <View style={[styles.productImage, { backgroundColor: item.color }]}>
                 <Text style={styles.productImageText}>{item.name}</Text>
               </View>
               <View style={styles.productBottom}>
                 <Text style={styles.productName}>{item.name}</Text>
-                <Text style={{fontSize: 18, color: item.liked ? '#5C8B5A' : '#CCCCCC'}}>
+                <Text style={{ fontSize: 18, color: item.liked ? '#5C8B5A' : '#CCCCCC' }}>
                   {item.liked ? '♥' : '♡'}
                 </Text>
               </View>
@@ -166,23 +166,23 @@ export const HomeScreen: React.FC<Props> = ({go}) => {
       {/* 하단 네비게이션 */}
       <View style={styles.bottomNav}>
         <TouchableOpacity style={styles.navItem} onPress={() => go('home')}>
-          <Icon name="home-outline" size={24} color="#5C8B5A" />
-          <Text style={[styles.navLabel, {color: '#5C8B5A'}]}>홈</Text>
+          <Ionicons name="home-outline" size={24} color="#5C8B5A" />
+          <Text style={[styles.navLabel, { color: '#5C8B5A' }]}>홈</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => go('map')}>
-          <Icon name="map-outline" size={24} color="#888888" />
+          <Ionicons name="map-outline" size={24} color="#888888" />
           <Text style={styles.navLabel}>지도</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => go('sharedItems')}>
-          <Icon name="pricetag-outline" size={24} color="#888888" />
+          <Ionicons name="pricetag-outline" size={24} color="#888888" />
           <Text style={styles.navLabel}>나눔</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => go('chatList')}>
-          <Icon name="chatbubble-outline" size={24} color="#888888" />
+          <Ionicons name="chatbubble-outline" size={24} color="#888888" />
           <Text style={styles.navLabel}>채팅</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.navItem} onPress={() => go('mypage')}>
-          <Icon name="person-outline" size={24} color="#888888" />
+          <Ionicons name="person-outline" size={24} color="#888888" />
           <Text style={styles.navLabel}>마이</Text>
         </TouchableOpacity>
       </View>
@@ -435,32 +435,7 @@ const styles = StyleSheet.create({
     color: '#888888',
     marginTop: 2,
   },
-rankItem: {
-  flexDirection: 'row',
-  alignItems: 'center',
-  backgroundColor: '#FFFFFF',
-  borderRadius: 8,
-  paddingHorizontal: 12,
-  paddingVertical: 10,
-  marginBottom: 6,
-},
-rankItemFirst: {
-  backgroundColor: '#EDE0C4',
-},
-rankNumber: {
-  fontWeight: 'bold',
-  fontSize: 14,
-  marginRight: 12,
-  color: '#1A1A1A',
-  width: 16,
-},
-rankDept: {
-  flex: 1,
-  fontSize: 14,
-  color: '#1A1A1A',
-},
-rankCredit: {
-  fontSize: 12,
-  color: '#1A1A1A',
-},
+  rankItemFirst: {
+    backgroundColor: '#EDE0C4',
+  },
 });

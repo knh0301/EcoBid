@@ -1,29 +1,66 @@
-import React from 'react';
-import {Text, TextInput, View} from 'react-native';
+import React, {useState} from 'react';
+import {
+  Text,
+  TextInput,
+  View,
+  TouchableOpacity,
+  SafeAreaView,
+  ScrollView,
+} from 'react-native';
 import {styles} from '../styles/commonStyles';
-import {GoToScreen} from '../types/navigation';
-import {AppLayout} from '../components/AppLayout';
 
-export function MapScreen({go}: {go: GoToScreen}) {
+export function MapScreen() {
+  const [activeFilter, setActiveFilter] = useState('전체');
+
+  const filters = ['전체', '나눔물품', '제휴매장', '제로웨이스트'];
+
   return (
-    <AppLayout active="map" go={go}>
-      <View style={styles.mapPage}>
-        <TextInput style={styles.searchInput} placeholder="우리 동네 에코 스팟 검색" />
+    <SafeAreaView style={styles.fullPage}>
+      <View style={styles.mapHeader}>
+        <Text style={styles.mapHeaderSub}>EcoBid</Text>
+        <Text style={styles.mapHeaderTitle}>지도</Text>
 
-        <View style={styles.filterRow}>
-          <Text style={styles.filterActive}>전체</Text>
-          <Text style={styles.filter}>나눔물품</Text>
-          <Text style={styles.filter}>제휴매장</Text>
-          <Text style={styles.filter}>제로웨이스트</Text>
+        <View style={styles.mapSearchContainer}>
+          <TextInput
+            style={styles.mapSearchInput}
+            placeholder=""
+            placeholderTextColor="#9CA3AF"
+          />
+          <TouchableOpacity style={styles.mapSearchBtn}>
+            <Text style={styles.mapSearchBtnText}>검색</Text>
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.fakeMap}>
-          <Text style={styles.fakeMapText}>지도 영역</Text>
-          <Text style={styles.pin}>📍</Text>
-          <Text style={[styles.pin, {top: 160, left: 220}]}>📍</Text>
-          <Text style={[styles.pin, {top: 260, left: 120}]}>📍</Text>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.mapFilterRow}
+          contentContainerStyle={{paddingRight: 16}}>
+          {filters.map(filter => (
+            <TouchableOpacity
+              key={filter}
+              onPress={() => setActiveFilter(filter)}
+              style={[
+                styles.mapChip,
+                activeFilter === filter && styles.mapChipActive,
+              ]}>
+              <Text
+                style={[
+                  styles.mapChipText,
+                  activeFilter === filter && styles.mapChipTextActive,
+                ]}>
+                {filter}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      <View style={{flex: 1, padding: 16, paddingTop: 0}}>
+        <View style={styles.mapMain}>
+          <Text style={styles.mapMainText}>지도</Text>
         </View>
       </View>
-    </AppLayout>
+    </SafeAreaView>
   );
 }

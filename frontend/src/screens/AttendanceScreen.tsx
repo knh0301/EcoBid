@@ -6,16 +6,11 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import {ScreenName} from '../types/navigation';
-
-interface Props {
-  go: (screen: ScreenName) => void;
-}
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const ATTENDED_DAYS = [1, 2, 4, 5, 6, 8];
 
-export const AttendanceScreen: React.FC<Props> = ({go}) => {
+export const AttendanceScreen: React.FC<any> = ({navigation}) => {
   const [year, setYear] = useState(2026);
   const [month, setMonth] = useState(5);
 
@@ -58,7 +53,7 @@ export const AttendanceScreen: React.FC<Props> = ({go}) => {
     <ScrollView style={styles.container}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => go('home')}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backArrow}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>출석 현황</Text>

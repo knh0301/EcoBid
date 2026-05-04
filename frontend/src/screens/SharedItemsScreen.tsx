@@ -24,7 +24,7 @@ const INITIAL_PRODUCTS = [
   {id: '6', name: '스마트폰', price: '10,000 크레딧', liked: false},
 ];
 
-export const SharedItemsScreen: React.FC<Props> = ({go}) => {
+export const SharedItemsScreen: React.FC<any> = ({navigation}) => {
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [products, setProducts] = useState(INITIAL_PRODUCTS);
 
@@ -38,7 +38,7 @@ export const SharedItemsScreen: React.FC<Props> = ({go}) => {
     <View style={styles.container}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => go('home')}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backArrow}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>나눔 물품</Text>
@@ -85,7 +85,7 @@ export const SharedItemsScreen: React.FC<Props> = ({go}) => {
         renderItem={({item}) => (
           <TouchableOpacity
             style={styles.productCard}
-            onPress={() => go('productDetail')}>
+            onPress={() => navigation.navigate('ProductDetail')}>
             <View style={styles.productImage} />
             <View style={styles.productBottom}>
               <Text style={styles.productName}>{item.name}</Text>
@@ -107,7 +107,7 @@ export const SharedItemsScreen: React.FC<Props> = ({go}) => {
       {/* 등록 FAB */}
       <TouchableOpacity
         style={styles.fab}
-        onPress={() => go('productRegister')}>
+        onPress={() => navigation.navigate('ProductRegister')}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
     </View>

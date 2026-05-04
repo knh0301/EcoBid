@@ -17,10 +17,11 @@ interface Props {
 
 const CATEGORIES = ['가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
 
-export const ProductRegisterScreen: React.FC<Props> = ({
-  go,
-  isEditMode = false,
+export const ProductRegisterScreen: React.FC<any> = ({
+  navigation,
+  route,
 }) => {
+  const isEditMode = route?.params?.isEditMode ?? false;
   const [name, setName] = useState(isEditMode ? '컴공 전공책' : '');
   const [price, setPrice] = useState(isEditMode ? '1500' : '');
   const [desc, setDesc] = useState(
@@ -46,7 +47,7 @@ export const ProductRegisterScreen: React.FC<Props> = ({
 
   const handleAlertConfirm = () => {
     setAlertVisible(false);
-    if (alertGoHome) go('sharedItems');
+    if (alertGoHome) navigation.navigate('SharedItems');
   };
 
   const handleSubmit = () => {
@@ -70,7 +71,7 @@ export const ProductRegisterScreen: React.FC<Props> = ({
     <View style={styles.container}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => go('sharedItems')}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backArrow}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>나눔 물품 등록</Text>

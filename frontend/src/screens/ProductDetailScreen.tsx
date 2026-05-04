@@ -12,12 +12,12 @@ interface Props {
   go: (screen: ScreenName) => void;
 }
 
-export const ProductDetailScreen: React.FC<Props> = ({go}) => {
+export const ProductDetailScreen: React.FC<any> = ({navigation}) => {
   return (
     <View style={styles.container}>
       {/* 헤더 */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => go('sharedItems')}>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backArrow}>{'<'}</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>컴공 전공책</Text>
@@ -41,7 +41,7 @@ export const ProductDetailScreen: React.FC<Props> = ({go}) => {
             </View>
             <Text style={styles.sellerName}>김나현</Text>
             <TouchableOpacity
-              onPress={() => go('productEdit')}
+              onPress={() => navigation.navigate('ProductRegister', {isEditMode: true})}
               style={{marginLeft: 'auto'}}>
               <Text style={styles.editLink}>수정하기</Text>
             </TouchableOpacity>
@@ -65,7 +65,7 @@ export const ProductDetailScreen: React.FC<Props> = ({go}) => {
       <View style={styles.bottomBar}>
         <TouchableOpacity
           style={styles.chatButton}
-          onPress={() => go('chatDetail')}>
+          onPress={() => navigation.navigate('ChatDetail')}>
           <Text style={styles.chatButtonText}>채팅하기</Text>
         </TouchableOpacity>
       </View>

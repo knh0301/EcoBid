@@ -1,14 +1,13 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, TextInput, View} from 'react-native';
 import {styles} from '../styles/commonStyles';
-import {GoToScreen} from '../types/navigation';
 import {Message} from '../components/Message';
 
-export function ChatDetailScreen({go}: {go: GoToScreen}) {
+export function ChatDetailScreen({navigation}: any) {
   return (
     <View style={styles.fullPage}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => go('chatList')}>
+        <Pressable onPress={() => navigation.goBack()}>
           <Text style={styles.backText}>{'<'}</Text>
         </Pressable>
         <Text style={styles.appTitle}>EcoBid</Text>

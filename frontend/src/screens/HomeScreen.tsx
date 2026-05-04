@@ -6,12 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { ScreenName } from '../types/navigation';
-
-interface Props {
-  go: (screen: ScreenName) => void;
-}
 
 interface MissionCardProps {
   title: string;
@@ -42,7 +36,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ title, desc }) => (
   </View>
 );
 
-export const HomeScreen: React.FC<Props> = ({ go }) => {
+export const HomeScreen: React.FC<any> = ({ navigation }) => {
   return (
     <View style={styles.container}>
 
@@ -56,7 +50,7 @@ export const HomeScreen: React.FC<Props> = ({ go }) => {
         {/* 출석 도장 카드 */}
         <TouchableOpacity
           style={styles.card}
-          onPress={() => go('attendance')}
+          onPress={() => navigation.navigate('Attendance')}
           activeOpacity={0.8}>
           <View style={styles.attendanceRow}>
             <View style={styles.attendanceLeft}>
@@ -114,7 +108,7 @@ export const HomeScreen: React.FC<Props> = ({ go }) => {
           </Text>
           <TouchableOpacity
             style={styles.outlineButton}
-            onPress={() => go('productRegister')}>
+            onPress={() => navigation.navigate('ProductRegister')}>
             <Text style={styles.outlineButtonText}>나눔 물품 등록하기</Text>
           </TouchableOpacity>
         </View>
@@ -135,7 +129,7 @@ export const HomeScreen: React.FC<Props> = ({ go }) => {
         {/* 나눔 물품 리스트 */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>나눔 물품 리스트</Text>
-          <TouchableOpacity onPress={() => go('sharedItems')}>
+          <TouchableOpacity onPress={() => navigation.navigate('SharedItems')}>
             <Text style={styles.seeAll}>전체보기 {'>'}</Text>
           </TouchableOpacity>
         </View>
@@ -145,7 +139,7 @@ export const HomeScreen: React.FC<Props> = ({ go }) => {
             <TouchableOpacity
               key={item.id}
               style={styles.productCard}
-              onPress={() => go('productDetail')}
+              onPress={() => navigation.navigate('ProductDetail')}
               activeOpacity={0.8}>
               <View style={[styles.productImage, { backgroundColor: item.color }]}>
                 <Text style={styles.productImageText}>{item.name}</Text>
@@ -162,30 +156,6 @@ export const HomeScreen: React.FC<Props> = ({ go }) => {
         </View>
 
       </ScrollView>
-
-      {/* 하단 네비게이션 */}
-      <View style={styles.bottomNav}>
-        <TouchableOpacity style={styles.navItem} onPress={() => go('home')}>
-          <Ionicons name="home-outline" size={24} color="#5C8B5A" />
-          <Text style={[styles.navLabel, { color: '#5C8B5A' }]}>홈</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => go('map')}>
-          <Ionicons name="map-outline" size={24} color="#888888" />
-          <Text style={styles.navLabel}>지도</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => go('sharedItems')}>
-          <Ionicons name="pricetag-outline" size={24} color="#888888" />
-          <Text style={styles.navLabel}>나눔</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => go('chatList')}>
-          <Ionicons name="chatbubble-outline" size={24} color="#888888" />
-          <Text style={styles.navLabel}>채팅</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.navItem} onPress={() => go('mypage')}>
-          <Ionicons name="person-outline" size={24} color="#888888" />
-          <Text style={styles.navLabel}>마이</Text>
-        </TouchableOpacity>
-      </View>
 
     </View>
   );
@@ -414,24 +384,6 @@ const styles = StyleSheet.create({
   },
   productPrice: {
     fontSize: 12,
-    color: '#888888',
-    marginTop: 2,
-  },
-  bottomNav: {
-    height: 72,
-    backgroundColor: '#FFFFFF',
-    borderTopWidth: 1,
-    borderTopColor: '#DDDDDD',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-around',
-  },
-  navItem: {
-    alignItems: 'center',
-    padding: 8,
-  },
-  navLabel: {
-    fontSize: 10,
     color: '#888888',
     marginTop: 2,
   },

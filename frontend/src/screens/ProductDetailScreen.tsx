@@ -6,11 +6,6 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
-import {ScreenName} from '../types/navigation';
-
-interface Props {
-  go: (screen: ScreenName) => void;
-}
 
 export const ProductDetailScreen: React.FC<any> = ({navigation}) => {
   return (

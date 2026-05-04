@@ -56,27 +56,29 @@ export function MyPageScreen() {
         showsVerticalScrollIndicator={false}>
         <Text style={styles.pageTitle}>내 정보</Text>
 
-        <View style={styles.profileCard}>
-          <View style={styles.profileImageOuter}>
-            <View style={styles.profileImageInner}>
-              <Text style={styles.profileEmoji}>🙂</Text>
-            </View>
-          </View>
+        <Pressable
+  style={styles.profileCard}
+  onPress={() => navigation.navigate('ProfileEdit')}>
+  <View style={styles.profileImageOuter}>
+    <View style={styles.profileImageInner}>
+      <Text style={styles.profileEmoji}>🙂</Text>
+    </View>
+  </View>
 
-          <Text style={styles.userName}>김나현</Text>
-          <Text style={styles.userInfo}>레벨 5. 2026년 4월 8일부터 활동중</Text>
+  <Text style={styles.userName}>김나현</Text>
+  <Text style={styles.userInfo}>레벨 5. 2026년 4월 8일부터 활동중</Text>
 
-          <View style={styles.levelArea}>
-            <Text style={styles.levelLabel}>레벨 6까지 남은 경험치</Text>
+  <View style={styles.levelArea}>
+    <Text style={styles.levelLabel}>레벨 6까지 남은 경험치</Text>
 
-            <View style={styles.progressRow}>
-              <View style={styles.progressTrack}>
-                <View style={styles.progressFill} />
-              </View>
-              <Text style={styles.progressText}>17,500/250,000</Text>
-            </View>
-          </View>
-        </View>
+    <View style={styles.progressRow}>
+      <View style={styles.progressTrack}>
+        <View style={styles.progressFill} />
+      </View>
+      <Text style={styles.progressText}>17,500/250,000</Text>
+    </View>
+  </View>
+</Pressable>
 
         <View style={styles.statRow}>
           <Pressable

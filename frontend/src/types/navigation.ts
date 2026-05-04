@@ -10,6 +10,8 @@ export type ScreenName =
   | 'likedItems'
   | 'sharedItems'
   | 'creditHistory'
-  | 'productDetail';
-
+  | 'productDetail'
+  | 'attendance'
+  | 'productRegister'
+  | 'productEdit';
 export type GoToScreen = (screen: ScreenName) => void;

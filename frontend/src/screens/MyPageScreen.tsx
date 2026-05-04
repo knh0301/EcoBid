@@ -1,15 +1,13 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
 import {styles} from '../styles/commonStyles';
+import {GoToScreen} from '../types/navigation';
 import {AppLayout} from '../components/AppLayout';
 import {MissionItem} from '../components/MissionItem';
 
-export function MyPageScreen() {
-  const navigation = useNavigation<any>();
-
+export function MyPageScreen({go}: {go: GoToScreen}) {
   return (
-    <AppLayout>
+    <AppLayout active="mypage" go={go}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.bgTitle}>내 정보</Text>
 
@@ -25,25 +23,19 @@ export function MyPageScreen() {
         </View>
 
         <View style={styles.statRow}>
-          <Pressable
-            style={styles.statCard}
-            onPress={() => navigation.navigate('LikedItems')}>
+          <Pressable style={styles.statCard} onPress={() => go('likedItems')}>
             <Text style={styles.statIcon}>❤️</Text>
             <Text style={styles.statNum}>0</Text>
             <Text>마음에 들어요</Text>
           </Pressable>
 
-          <Pressable
-            style={styles.statCard}
-            onPress={() => navigation.navigate('CreditHistory')}>
+          <Pressable style={styles.statCard} onPress={() => go('creditHistory')}>
             <Text style={styles.statIcon}>💰</Text>
             <Text style={styles.statNum}>1,250</Text>
             <Text>크레딧</Text>
           </Pressable>
 
-          <Pressable
-            style={styles.statCard}
-            onPress={() => navigation.navigate('SharedItems')}>
+          <Pressable style={styles.statCard} onPress={() => go('sharedItems')}>
             <Text style={styles.statIcon}>📦</Text>
             <Text style={styles.statNum}>3</Text>
             <Text>나눔한 물품</Text>

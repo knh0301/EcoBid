@@ -1,21 +1,17 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
 import {styles} from '../styles/commonStyles';
+import {GoToScreen} from '../types/navigation';
 import {MissionItem} from '../components/MissionItem';
 
-export function CreditHistoryScreen() {
-  const navigation = useNavigation<any>();
-
+export function CreditHistoryScreen({go}: {go: GoToScreen}) {
   return (
     <View style={styles.fullPage}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => navigation.goBack()}>
+        <Pressable onPress={() => go('mypage')}>
           <Text style={styles.backText}>{'<'}</Text>
         </Pressable>
-
         <Text style={styles.appTitle}>크레딧 내역</Text>
-
         <View style={{width: 24}} />
       </View>
 

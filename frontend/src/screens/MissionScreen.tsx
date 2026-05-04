@@ -1,12 +1,13 @@
 import React from 'react';
 import {ScrollView, Text, View} from 'react-native';
 import {styles} from '../styles/commonStyles';
+import {GoToScreen} from '../types/navigation';
 import {AppLayout} from '../components/AppLayout';
 import {MissionItem} from '../components/MissionItem';
 
-export function MissionScreen() {
+export function MissionScreen({go}: {go: GoToScreen}) {
   return (
-    <AppLayout>
+    <AppLayout active="mission" go={go}>
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.bgTitle}>미션</Text>
         <Text style={styles.subtitle}>

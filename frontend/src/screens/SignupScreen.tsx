@@ -1,13 +1,14 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
 import {styles} from '../styles/commonStyles';
+import {GoToScreen} from '../types/navigation';
 import {Input} from '../components/Input';
-import {PrimaryButton, SocialButton} from '../components/Buttons';
+import {
+  PrimaryButton,
+  SocialButton,
+} from '../components/Buttons';
 
-export function SignupScreen() {
-  const navigation = useNavigation<any>();
-
+export function SignupScreen({go}: {go: GoToScreen}) {
   return (
     <ScrollView contentContainerStyle={styles.centerPage}>
       <View style={styles.card}>
@@ -23,10 +24,7 @@ export function SignupScreen() {
         <Input label="비밀번호" placeholder="비밀번호를 생성하세요" secure />
         <Input label="비밀번호 확인" placeholder="비밀번호를 다시 입력하세요" secure />
 
-        <PrimaryButton
-          title="가입하기"
-          onPress={() => navigation.replace('MainTabs')}
-        />
+        <PrimaryButton title="가입하기" onPress={() => go('home')} />
 
         <Text style={styles.dividerText}>또는</Text>
 
@@ -36,7 +34,7 @@ export function SignupScreen() {
 
         <View style={styles.bottomTextRow}>
           <Text>이미 계정이 있으신가요? </Text>
-          <Pressable onPress={() => navigation.navigate('Login')}>
+          <Pressable onPress={() => go('login')}>
             <Text style={styles.linkText}>로그인</Text>
           </Pressable>
         </View>

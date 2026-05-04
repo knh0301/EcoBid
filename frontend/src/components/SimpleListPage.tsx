@@ -1,26 +1,24 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
 import {styles} from '../styles/commonStyles';
+import {GoToScreen} from '../types/navigation';
 
 export function SimpleListPage({
   title,
   subtitle,
+  go,
 }: {
   title: string;
   subtitle: string;
+  go: GoToScreen;
 }) {
-  const navigation = useNavigation<any>();
-
   return (
     <View style={styles.fullPage}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => navigation.goBack()}>
+        <Pressable onPress={() => go('mypage')}>
           <Text style={styles.backText}>{'<'}</Text>
         </Pressable>
-
         <Text style={styles.appTitle}>{title}</Text>
-
         <View style={{width: 24}} />
       </View>
 
@@ -33,9 +31,8 @@ export function SimpleListPage({
             <Pressable
               key={item}
               style={styles.itemCard}
-              onPress={() => navigation.navigate('ProductDetail')}>
+              onPress={() => go('productDetail')}>
               <View style={styles.itemImage} />
-
               <Text style={styles.itemTitle}>{item}</Text>
               <Text style={styles.itemPrice}>2500 크레딧</Text>
             </Pressable>

@@ -1,10 +1,8 @@
-import React from 'react';
-import {Text} from 'react-native';
-import {NavigationContainer} from '@react-navigation/native';
-import {createNativeStackNavigator} from '@react-navigation/native-stack';
-import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
+import React, {useState} from 'react';
+import {SafeAreaView} from 'react-native';
 
-import {RootStackParamList, MainTabParamList} from './src/types/navigation';
+import {styles} from './src/styles/commonStyles';
+import {ScreenName} from './src/types/navigation';
 
 import {LoginScreen} from './src/screens/LoginScreen';
 import {SignupScreen} from './src/screens/SignupScreen';
@@ -18,107 +16,33 @@ import {LikedItemsScreen} from './src/screens/LikedItemsScreen';
 import {SharedItemsScreen} from './src/screens/SharedItemsScreen';
 import {CreditHistoryScreen} from './src/screens/CreditHistoryScreen';
 import {ProductDetailScreen} from './src/screens/ProductDetailScreen';
-
-const Stack = createNativeStackNavigator<RootStackParamList>();
-const Tab = createBottomTabNavigator<MainTabParamList>();
-
-function MainTabs() {
-  return (
-    <Tab.Navigator
-      initialRouteName="HomeTab"
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#4E7B48',
-        tabBarInactiveTintColor: '#9CA3AF',
-        tabBarStyle: {
-          height: 70,
-          paddingTop: 8,
-          paddingBottom: 10,
-          backgroundColor: '#FFFFFF',
-          borderTopWidth: 1,
-          borderTopColor: '#E5E7EB',
-        },
-        tabBarLabelStyle: {
-          fontSize: 12,
-          fontWeight: '700',
-        },
-      }}>
-      <Tab.Screen
-        name="HomeTab"
-        component={HomeScreen}
-        options={{
-          title: '홈',
-          tabBarIcon: ({color}) => (
-            <Text style={{fontSize: 20, color}}>🏠</Text>
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="MapTab"
-        component={MapScreen}
-        options={{
-          title: '지도',
-          tabBarIcon: ({color}) => (
-            <Text style={{fontSize: 20, color}}>🗺️</Text>
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="MissionTab"
-        component={MissionScreen}
-        options={{
-          title: '미션',
-          tabBarIcon: ({color}) => (
-            <Text style={{fontSize: 20, color}}>🎯</Text>
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="ChatTab"
-        component={ChatListScreen}
-        options={{
-          title: '채팅',
-          tabBarIcon: ({color}) => (
-            <Text style={{fontSize: 20, color}}>💬</Text>
-          ),
-        }}
-      />
-
-      <Tab.Screen
-        name="MyPageTab"
-        component={MyPageScreen}
-        options={{
-          title: '마이페이지',
-          tabBarIcon: ({color}) => (
-            <Text style={{fontSize: 20, color}}>👤</Text>
-          ),
-        }}
-      />
-    </Tab.Navigator>
-  );
-}
+import {AttendanceScreen} from './src/screens/AttendanceScreen';
+import {ProductRegisterScreen} from './src/screens/ProductRegisterScreen';
 
 export default function App(): React.JSX.Element {
-  return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="Login"
-        screenOptions={{
-          headerShown: false,
-        }}>
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Signup" component={SignupScreen} />
-        <Stack.Screen name="MainTabs" component={MainTabs} />
+  const [screen, setScreen] = useState<ScreenName>('login');
 
-        <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-        <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
-        <Stack.Screen name="LikedItems" component={LikedItemsScreen} />
-        <Stack.Screen name="SharedItems" component={SharedItemsScreen} />
-        <Stack.Screen name="CreditHistory" component={CreditHistoryScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+  const go = (nextScreen: ScreenName) => {
+    setScreen(nextScreen);
+  };
+
+  return (
+    <SafeAreaView style={styles.root}>
+      {screen === 'login' && <LoginScreen go={go} />}
+      {screen === 'signup' && <SignupScreen go={go} />}
+      {screen === 'home' && <HomeScreen go={go} />}
+      {screen === 'mission' && <MissionScreen go={go} />}
+      {screen === 'chatList' && <ChatListScreen go={go} />}
+      {screen === 'chatDetail' && <ChatDetailScreen go={go} />}
+      {screen === 'map' && <MapScreen go={go} />}
+      {screen === 'mypage' && <MyPageScreen go={go} />}
+      {screen === 'likedItems' && <LikedItemsScreen go={go} />}
+      {screen === 'sharedItems' && <SharedItemsScreen go={go} />}
+      {screen === 'creditHistory' && <CreditHistoryScreen go={go} />}
+      {screen === 'productDetail' && <ProductDetailScreen go={go} />}
+      {screen === 'attendance' && <AttendanceScreen go={go} />}
+      {screen === 'productRegister' && <ProductRegisterScreen go={go} isEditMode={false} />}
+      {screen === 'productEdit' && <ProductRegisterScreen go={go} isEditMode={true} />}
+    </SafeAreaView>
   );
 }

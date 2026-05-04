@@ -1,21 +1,17 @@
 import React from 'react';
 import {Pressable, ScrollView, Text, TextInput, View} from 'react-native';
-import {useNavigation} from '@react-navigation/native';
 import {styles} from '../styles/commonStyles';
+import {GoToScreen} from '../types/navigation';
 import {Message} from '../components/Message';
 
-export function ChatDetailScreen() {
-  const navigation = useNavigation<any>();
-
+export function ChatDetailScreen({go}: {go: GoToScreen}) {
   return (
     <View style={styles.fullPage}>
       <View style={styles.headerRow}>
-        <Pressable onPress={() => navigation.goBack()}>
+        <Pressable onPress={() => go('chatList')}>
           <Text style={styles.backText}>{'<'}</Text>
         </Pressable>
-
         <Text style={styles.appTitle}>EcoBid</Text>
-
         <View style={{width: 24}} />
       </View>
 
@@ -35,7 +31,6 @@ export function ChatDetailScreen() {
 
       <View style={styles.chatInputArea}>
         <TextInput style={styles.chatInput} placeholder="메시지를 입력하세요" />
-
         <Pressable style={styles.sendBtn}>
           <Text style={styles.sendText}>전송</Text>
         </Pressable>

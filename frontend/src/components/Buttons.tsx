@@ -1,5 +1,5 @@
 import React from 'react';
-import {Pressable, Text} from 'react-native';
+import {Pressable, Text, TouchableOpacity} from 'react-native';
 import {styles} from '../styles/commonStyles';
 
 export function PrimaryButton({
@@ -37,3 +37,19 @@ export function SocialButton({title}: {title: string}) {
     </Pressable>
   );
 }
+
+interface AlertConfirmButtonProps {
+  onPress: () => void;
+  label?: string;
+}
+
+export const AlertConfirmButton: React.FC<AlertConfirmButtonProps> = ({
+  onPress,
+  label = '확인',
+}) => {
+  return (
+    <TouchableOpacity style={styles.alertConfirmButton} onPress={onPress}>
+      <Text style={styles.alertConfirmText}>{label}</Text>
+    </TouchableOpacity>
+  );
+};

@@ -2,280 +2,316 @@ import {StyleSheet} from 'react-native';
 
 export const homeStyles = StyleSheet.create({
   homeScroll: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
+  flex: 1,
+  backgroundColor: '#F5F5F3',
+},
+
   homeContainer: {
-    padding: 20,
-    paddingBottom: 100,
-  },
+  flexGrow: 1,
+  padding: 16,
+  paddingBottom: 120,
+  backgroundColor: '#F5F5F3',
+},
+
   homeAttendanceCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C9D8C1',
+    paddingHorizontal: 18,
+    paddingVertical: 18,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: '#ffffff',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
+    marginBottom: 14,
   },
+
   homeAttendanceTextBox: {
     flex: 1,
+    marginRight: 14,
   },
+
   homeCardTitle: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: '800',
-    color: '#1A1A1A',
+    color: '#2B2B2B',
     marginBottom: 6,
   },
+
   homeCardDescription: {
     fontSize: 13,
-    color: '#888888',
+    color: '#6E6E6E',
     lineHeight: 18,
   },
+
   homeStampCircle: {
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#5C8B5A',
+    backgroundColor: '#79AD6F',
     justifyContent: 'center',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.12,
+    shadowRadius: 4,
+    shadowOffset: {width: 0, height: 2},
+    elevation: 3,
   },
+
   homeStampText: {
-    color: '#ffffff',
-    fontWeight: '900',
-    fontSize: 12,
+    color: '#FFFFFF',
+    fontSize: 13,
+    fontWeight: '800',
   },
+
   homeCreditCard: {
-    backgroundColor: '#EAF2E9',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#C9D8C1',
+    padding: 18,
+    marginBottom: 14,
   },
+
   homeCreditTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
+    marginBottom: 16,
   },
+
   homeCreditRow: {
     flexDirection: 'row',
-    alignItems: 'baseline',
-    marginTop: 8,
+    alignItems: 'flex-end',
   },
+
   homeCreditAmount: {
-    fontSize: 28,
+    fontSize: 32,
     fontWeight: '900',
-    color: '#5C8B5A',
+    color: '#487043',
   },
+
   homeCreditUnit: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#5C8B5A',
-    marginLeft: 4,
+    fontSize: 18,
+    fontWeight: '600',
+    color: '#2B2B2B',
+    marginBottom: 4,
   },
+
   homeCreditButton: {
-    backgroundColor: '#5C8B5A',
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    marginTop: 12,
-    alignSelf: 'flex-start',
+    backgroundColor: '#79AD6F',
+    borderRadius: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 13,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: {width: 0, height: 2},
+    elevation: 3,
   },
+
   homeCreditButtonText: {
-    color: '#ffffff',
-    fontWeight: '800',
+    color: '#FFFFFF',
     fontSize: 14,
+    fontWeight: '800',
   },
+
   homeRankingCard: {
-    backgroundColor: '#ffffff',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 16,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: '#C9D8C1',
+    padding: 16,
+    marginBottom: 18,
   },
+
   homeRankingList: {
-    marginTop: 12,
+    marginTop: 10,
+    gap: 7,
   },
+
   homeRankingItem: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
-  },
-  homeRankingItemFirst: {
-    backgroundColor: '#FEF9C3',
+    backgroundColor: '#FFFFFF',
     borderRadius: 8,
-    paddingHorizontal: 10,
-    borderBottomWidth: 0,
+    paddingHorizontal: 12,
+    paddingVertical: 9,
   },
+
+  homeRankingItemFirst: {
+    backgroundColor: '#ECE6BD',
+  },
+
   homeRankingLeft: {
     flexDirection: 'row',
     alignItems: 'center',
   },
+
   homeRankingRank: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#1A1A1A',
-    width: 24,
-  },
-  homeRankingDept: {
-    fontSize: 14,
-    color: '#374151',
+    width: 18,
+    fontSize: 13,
     fontWeight: '700',
+    color: '#2B2B2B',
   },
+
+  homeRankingDept: {
+    fontSize: 13,
+    color: '#2B2B2B',
+    marginLeft: 8,
+  },
+
   homeRankingCredit: {
-    fontSize: 15,
-    fontWeight: '800',
-    color: '#5C8B5A',
-  },
-  homeRankingCreditUnit: {
     fontSize: 12,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  homeBannerCard: {
-    backgroundColor: '#F3F4F6',
-    padding: 20,
-    borderRadius: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
-  },
-  homeBannerDescription: {
-    fontSize: 14,
-    color: '#4B5563',
-    marginTop: 4,
-    marginBottom: 16,
-  },
-  homeBannerButton: {
-    backgroundColor: '#1F2937',
-    paddingVertical: 12,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  homeBannerButtonText: {
-    color: '#ffffff',
     fontWeight: '800',
-    fontSize: 14,
+    color: '#2B2B2B',
   },
+
+  homeRankingCreditUnit: {
+    fontSize: 9,
+    fontWeight: '400',
+    color: '#7A7A7A',
+  },
+
   homeSectionTitle: {
-    fontSize: 18,
+    fontSize: 22,
     fontWeight: '900',
-    color: '#1A1A1A',
+    color: '#2B2B2B',
     marginBottom: 12,
   },
+
+//   homeMissionRow: {
+//     flexDirection: 'row',
+//     justifyContent: 'space-between',
+//     gap: 10,
+//     marginBottom: 20,
+//   },
+
   homeMissionScrollContent: {
-    paddingRight: 20,
-    gap: 12,
-  },
+     paddingRight: 16,
+    paddingBottom: 20,
+    },
+
   homeMissionCard: {
-    backgroundColor: '#ffffff',
-    width: 240,
-    padding: 16,
-    borderRadius: 16,
-    marginRight: 12,
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
-  },
+  width: 240,
+  minHeight: 70,
+  backgroundColor: '#FFFFFF',
+  borderRadius: 16,
+  borderWidth: 1,
+  borderColor: '#C9D8C1',
+  padding: 14,
+  marginRight: 12,
+},
+
   homeMissionTitle: {
-    fontSize: 16,
-    fontWeight: '800',
-    color: '#1A1A1A',
-    marginBottom: 6,
-  },
-  homeMissionDescription: {
-    fontSize: 13,
-    color: '#6B7280',
-    marginBottom: 14,
-    lineHeight: 18,
-  },
-  homeMissionBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  homeMissionReward: {
     fontSize: 14,
     fontWeight: '800',
-    color: '#5C8B5A',
+    color: '#2B2B2B',
+    marginBottom: 6,
   },
-  homeMissionButton: {
-    backgroundColor: '#5C8B5A',
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 20,
+
+  homeMissionDescription: {
+    fontSize: 10,
+    color: '#707070',
+    lineHeight: 15,
+    marginBottom: 12,
   },
-  homeMissionButtonText: {
-    color: '#ffffff',
-    fontSize: 12,
+
+  homeMissionBottom: {
+    marginTop: 'auto',
+  },
+
+  homeMissionReward: {
+    fontSize: 11,
     fontWeight: '800',
+    color: '#4E7B48',
+    marginBottom: 8,
   },
+
+  homeMissionButton: {
+  alignSelf: 'flex-end',
+  backgroundColor: '#79AD6F',
+  borderRadius: 10,
+  paddingHorizontal: 18,
+  paddingVertical: 9,
+},
+
+  homeMissionButtonText: {
+  color: '#FFFFFF',
+  fontSize: 12,
+  fontWeight: '800',
+},
+
   homeSectionHeaderRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 24,
     marginBottom: 12,
   },
+
   homeMoreText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#9CA3AF',
+    fontSize: 13,
+    color: '#8D8D8D',
+    fontWeight: '500',
   },
+
   homeItemGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
   },
+
   homeItemCard: {
     width: '48%',
-    backgroundColor: '#ffffff',
-    borderRadius: 16,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
-    overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 14,
+    padding: 10,
+    marginBottom: 14,
   },
+
   homeItemImagePlaceholder: {
-    height: 140,
-    backgroundColor: '#F3F4F6',
+    width: '100%',
+    height: 138,
+    borderRadius: 10,
+    marginBottom: 10,
+    backgroundColor: '#E9E6DA',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   homeItemIcon: {
-    fontSize: 48,
+    fontSize: 58,
   },
+
   homeItemInfo: {
-    padding: 12,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
   },
+
   homeItemTitle: {
-    fontSize: 14,
+    fontSize: 16,
     fontWeight: '800',
-    color: '#1A1A1A',
+    color: '#1F1F1F',
     marginBottom: 4,
   },
+
   homeItemPrice: {
-    fontSize: 14,
-    fontWeight: '900',
-    color: '#5C8B5A',
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#2B2B2B',
   },
+
   homeHeartButton: {
-    position: 'absolute',
-    top: 10,
-    right: 10,
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: 'rgba(255, 255, 255, 0.8)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    paddingHorizontal: 4,
+    paddingVertical: 2,
   },
+
   homeHeartIcon: {
-    fontSize: 14,
-    color: '#FF5252',
+    fontSize: 27,
+    color: '#4E7B48',
+    fontWeight: '400',
   },
 });

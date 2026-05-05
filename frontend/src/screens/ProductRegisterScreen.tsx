@@ -7,13 +7,8 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
-import {ScreenName} from '../types/navigation';
 import {AlertDialog, ConfirmDialog} from '../components/EcoDialog';
 
-interface Props {
-  go: (screen: ScreenName) => void;
-  isEditMode?: boolean;
-}
 
 const CATEGORIES = ['가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
 

@@ -6,6 +6,8 @@ import {
   View,
   KeyboardAvoidingView,
   Platform,
+  Alert,
+  ActivityIndicator,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
@@ -15,6 +17,7 @@ import {loginStyles as styles} from '../styles/LoginScreenStyle';
 
 export function LoginScreen() {
   const navigation = useNavigation<any>();
+  const { signInWithGoogle, isLoading } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -25,6 +28,15 @@ export function LoginScreen() {
     await AsyncStorage.setItem('accessToken', 'mock-access-token');
 
     navigation.replace('MainTabs');
+  };
+
+const handleGoogleLogin = async () => {
+    try {
+      await signInWithGoogle();
+      // 성공 시 RootNavigator가 자동으로 화면 전환
+    } catch (error: any) {
+      Alert.alert('로그인 실패', error.message || '다시 시도해주세요.');
+    }
   };
 
   return (
@@ -77,9 +89,18 @@ export function LoginScreen() {
 
           <Text style={styles.dividerText}>또는</Text>
 
-          <Pressable style={styles.googleButton}>
-            <Text style={styles.googleIcon}>G</Text>
-            <Text style={styles.googleButtonText}>Sign up with Google</Text>
+          <Pressable
+            style={[styles.googleButton, isLoading && { opacity: 0.7 }]}
+            onPress={handleGoogleLogin}
+            disabled={isLoading}>
+            {isLoading ? (
+              <ActivityIndicator size="small" color="#4285F4" />
+            ) : (
+              <>
+                <Text style={styles.googleIcon}>G</Text>
+                <Text style={styles.googleButtonText}>Sign up with Google</Text>
+              </>
+            )}
           </Pressable>
 
           <View style={styles.signupRow}>

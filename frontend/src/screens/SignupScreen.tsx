@@ -1,43 +1,293 @@
-import React from 'react';
-import {Pressable, ScrollView, Text, View} from 'react-native';
-import {styles} from '../styles/commonStyles';
-import {Input} from '../components/Input';
+import React, {useState} from 'react';
 import {
-  PrimaryButton,
-  SocialButton,
-} from '../components/Buttons';
+  Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  Text,
+  TextInput,
+  View,
+} from 'react-native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {Ionicons} from '@expo/vector-icons';
+import {useNavigation} from '@react-navigation/native';
+import {signupStyles as styles} from '../styles/SignupScreenStyle';
 
-export function SignupScreen({navigation}: any) {
+// 학과 정보 추가 예정
+const DEPARTMENTS = [
+  '컴퓨터공학과',
+  '인공지능공학과',
+  '전자공학과',
+  '정보통신공학과',
+  '기계공학과',
+  '산업경영공학과',
+  '경영학과',
+  '디자인테크놀로지학과',
+  '의류디자인학과',
+  '기타',
+];
+
+export function SignupScreen() {
+  const navigation = useNavigation<any>();
+
+  const [name, setName] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [studentId, setStudentId] = useState('');
+  const [department, setDepartment] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [passwordCheck, setPasswordCheck] = useState('');
+
+  const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
+
+  const showAlert = (message: string) => {
+    Alert.alert('회원가입 실패', message);
+  };
+
+  const validateSignup = () => {
+    if (!name.trim()) {
+      showAlert('이름을 입력해주세요.');
+      return false;
+    }
+
+    if (!nickname.trim()) {
+      showAlert('닉네임을 입력해주세요.');
+      return false;
+    }
+
+    if (!studentId.trim()) {
+      showAlert('학번을 입력해주세요.');
+      return false;
+    }
+
+    if (!department) {
+      showAlert('학과를 선택해주세요.');
+      return false;
+    }
+
+    if (!email.trim()) {
+      showAlert('이메일을 입력해주세요.');
+      return false;
+    }
+
+    const emailRegex = /^[A-Za-z0-9._%+-]+@inha\.edu$/;
+
+    if (!emailRegex.test(email.trim())) {
+      showAlert('이메일은 반드시 @inha.edu로 끝나야 합니다.');
+      return false;
+    }
+
+    if (!password) {
+      showAlert('비밀번호를 입력해주세요.');
+      return false;
+    }
+
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+
+    if (!passwordRegex.test(password)) {
+      showAlert('비밀번호는 영문과 숫자를 포함해 8자리 이상이어야 합니다.');
+      return false;
+    }
+
+    if (!passwordCheck) {
+      showAlert('비밀번호 확인을 입력해주세요.');
+      return false;
+    }
+
+    if (password !== passwordCheck) {
+      showAlert('비밀번호와 비밀번호 확인이 일치하지 않습니다.');
+      return false;
+    }
+
+    return true;
+  };
+
+  const handleSignup = () => {
+    const isValid = validateSignup();
+
+    if (!isValid) {
+      return;
+    }
+
+    // 지금은 백엔드 연동 전이라 여기서 성공 처리만 함.
+    // 나중에는 이 위치에서 회원가입 API를 호출하면 됨.
+    Alert.alert('회원가입 완료', '회원가입이 완료되었습니다.', [
+      {
+        text: '확인',
+        onPress: () => navigation.navigate('Login'),
+      },
+    ]);
+  };
+
   return (
-    <ScrollView contentContainerStyle={styles.centerPage}>
-      <View style={styles.card}>
-        <View style={styles.logoBox}>
-          <Text style={styles.logoText}>LOGO</Text>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}>
+          <View style={styles.card}>
+            <Text style={styles.title}>회원가입</Text>
+
+            <View style={styles.profileArea}>
+              <View style={styles.logoCircle}>
+                <Ionicons name="leaf-outline" size={46} color="#7FA56F" />
+              </View>
+
+              <Pressable style={styles.cameraButton}>
+                <Ionicons name="camera-outline" size={14} color="#666666" />
+              </Pressable>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>이름</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="이름을 입력하세요."
+                placeholderTextColor="#999999"
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>닉네임</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="닉네임을 입력하세요."
+                placeholderTextColor="#999999"
+                value={nickname}
+                onChangeText={setNickname}
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>학번</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="학번을 입력하세요."
+                placeholderTextColor="#999999"
+                value={studentId}
+                onChangeText={setStudentId}
+                keyboardType="number-pad"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>학과</Text>
+
+              <Pressable
+                style={styles.selectBox}
+                onPress={() => setDepartmentModalVisible(true)}>
+                <Text
+                  style={[
+                    styles.selectText,
+                    !department && styles.placeholderText,
+                  ]}>
+                  {department || '학과'}
+                </Text>
+
+                <Ionicons name="chevron-down" size={18} color="#777777" />
+              </Pressable>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>이메일</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="@inha.edu"
+                placeholderTextColor="#999999"
+                value={email}
+                onChangeText={setEmail}
+                autoCapitalize="none"
+                keyboardType="email-address"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>비밀번호</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="영문 + 숫자 조합 8자 이상"
+                placeholderTextColor="#999999"
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>비밀번호 확인</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="비밀번호를 다시 입력하세요."
+                placeholderTextColor="#999999"
+                value={passwordCheck}
+                onChangeText={setPasswordCheck}
+                secureTextEntry
+              />
+            </View>
+
+            <Pressable style={styles.signupButton} onPress={handleSignup}>
+              <Text style={styles.signupButtonText}>가입하기</Text>
+            </Pressable>
+
+            <View style={styles.loginRow}>
+              <Text style={styles.loginText}>이미 계정이 있으신가요?</Text>
+
+              <Pressable onPress={() => navigation.navigate('Login')}>
+                <Text style={styles.loginLink}> 로그인 하기</Text>
+              </Pressable>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
+
+      <Modal visible={departmentModalVisible} transparent animationType="fade">
+        <View style={styles.modalOverlay}>
+          <View style={styles.departmentSheet}>
+            <Text style={styles.departmentSheetTitle}>학과 선택</Text>
+
+            {DEPARTMENTS.map(item => {
+              const isSelected = department === item;
+
+              return (
+                <Pressable
+                  key={item}
+                  style={[
+                    styles.departmentOption,
+                    isSelected && styles.departmentOptionSelected,
+                  ]}
+                  onPress={() => {
+                    setDepartment(item);
+                    setDepartmentModalVisible(false);
+                  }}>
+                  <Text
+                    style={[
+                      styles.departmentOptionText,
+                      isSelected && styles.departmentOptionTextSelected,
+                    ]}>
+                    {item}
+                  </Text>
+
+                  {isSelected && (
+                    <Ionicons name="checkmark" size={18} color="#79AD6F" />
+                  )}
+                </Pressable>
+              );
+            })}
+
+            <Pressable
+              style={styles.departmentCancelButton}
+              onPress={() => setDepartmentModalVisible(false)}>
+              <Text style={styles.departmentCancelText}>닫기</Text>
+            </Pressable>
+          </View>
         </View>
-
-        <Text style={styles.title}>회원가입</Text>
-        <Text style={styles.subtitle}>새로운 계정을 생성하세요.</Text>
-
-        <Input label="이름" placeholder="이름을 입력하세요" />
-        <Input label="이메일" placeholder="이메일을 입력하세요" />
-        <Input label="비밀번호" placeholder="비밀번호를 생성하세요" secure />
-        <Input label="비밀번호 확인" placeholder="비밀번호를 다시 입력하세요" secure />
-
-        <PrimaryButton title="가입하기" onPress={() => navigation.navigate('MainTabs')} />
-
-        <Text style={styles.dividerText}>또는</Text>
-
-        <SocialButton title="카카오로 가입하기" />
-        <SocialButton title="네이버로 가입하기" />
-        <SocialButton title="구글로 가입하기" />
-
-        <View style={styles.bottomTextRow}>
-          <Text>이미 계정이 있으신가요? </Text>
-          <Pressable onPress={() => navigation.navigate('Login')}>
-            <Text style={styles.linkText}>로그인</Text>
-          </Pressable>
-        </View>
-      </View>
-    </ScrollView>
+      </Modal>
+    </SafeAreaView>
   );
 }

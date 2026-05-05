@@ -4,7 +4,7 @@ const GREEN = '#2F6F3E';
 const LIGHT_GREEN = '#79AD6F';
 const PAGE_BG = '#F7F9F6';
 
-export const sharedItemsStyles = StyleSheet.create({
+export const mySharedItemsStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: PAGE_BG,

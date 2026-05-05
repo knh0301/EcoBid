@@ -99,7 +99,7 @@ export function MyPageScreen() {
 
           <Pressable
             style={styles.statCard}
-            onPress={() => navigation.navigate('SharedItems')}>
+            onPress={() => navigation.navigate('MySharedItems')}>
             <Ionicons name="bag-handle-outline" size={32} color="#30406D" />
             <Text style={styles.statNumber}>1</Text>
             <Text style={styles.statLabel}>나눔한 물품</Text>

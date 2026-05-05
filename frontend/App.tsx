@@ -20,6 +20,7 @@ import {LikedItemsScreen} from './src/screens/LikedItemsScreen';
 import {CreditHistoryScreen} from './src/screens/CreditHistoryScreen';
 import {MissionVerifyScreen} from './src/screens/MissionVerifyScreen';
 import {ProfileEditScreen} from './src/screens/ProfileEditScreen';
+import {MySharedItemsScreen} from './src/screens/MySharedItemsScreen';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -79,6 +80,7 @@ export default function App(): React.JSX.Element {
         <Stack.Screen name="CreditHistory" component={CreditHistoryScreen} />
         <Stack.Screen name="MissionVerify" component={MissionVerifyScreen} />
         <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+        <Stack.Screen name="MySharedItems" component={MySharedItemsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

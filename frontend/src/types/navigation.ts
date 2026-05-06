@@ -43,4 +43,5 @@ export type RootStackParamList = {
   ProductEdit: undefined;
 
   ProfileEdit: undefined;
+  MySharedItems: undefined;
 };

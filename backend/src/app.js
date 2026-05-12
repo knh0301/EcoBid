@@ -5,6 +5,7 @@ require('dotenv').config();
 
 const { syncDatabase } = require('./models');
 const authRoutes = require('./routes/auth.routes');
+const productRoutes = require('./routes/productRoutes');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get('/health', (req, res) => {
 
 // ── 라우터 ──
 app.use('/api/auth', authRoutes);
+app.use('/api/products', productRoutes);
 
 // ── 404 처리 ──
 app.use((req, res) => {

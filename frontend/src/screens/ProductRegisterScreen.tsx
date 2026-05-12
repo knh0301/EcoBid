@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,10 @@ import {
   TouchableOpacity,
   ScrollView,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
-import {AlertDialog, ConfirmDialog} from '../components/EcoDialog';
-
+import { AlertDialog, ConfirmDialog } from '../components/EcoDialog';
+import { productsApi, Product } from '../api/products';
 
 const CATEGORIES = ['가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
 
@@ -17,17 +18,13 @@ export const ProductRegisterScreen: React.FC<any> = ({
   route,
 }) => {
   const isEditMode = route?.params?.isEditMode ?? false;
-  const [name, setName] = useState(isEditMode ? '컴공 전공책' : '');
-  const [price, setPrice] = useState(isEditMode ? '1500' : '');
-  const [desc, setDesc] = useState(
-    isEditMode
-      ? '전공 평점 4.48 학생이 쓰던 책입니다.\n메모 많이 적었어요.\n취업해서 팔아요.'
-      : '',
-  );
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    isEditMode ? '도서' : null,
-  );
-  const [imageCount, setImageCount] = useState(isEditMode ? 3 : 0);
+  const initialProduct = route?.params?.product as Product | undefined;
+
+  const [title, setTitle] = useState(isEditMode ? initialProduct?.title || '' : '');
+  const [price, setPrice] = useState(isEditMode ? String(initialProduct?.creditPrice || '') : '');
+  const [desc, setDesc] = useState(isEditMode ? initialProduct?.description || '' : '');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(isEditMode ? '기타' : null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
@@ -42,24 +39,58 @@ export const ProductRegisterScreen: React.FC<any> = ({
 
   const handleAlertConfirm = () => {
     setAlertVisible(false);
-    if (alertGoHome) navigation.navigate('SharedItems');
+    if (alertGoHome) navigation.navigate('MainTabs');
   };
 
-  const handleSubmit = () => {
-    if (!name.trim()) {
+  const handleSubmit = async () => {
+    if (!title.trim()) {
       showAlert('물품 이름을 적어주세요.');
       return;
     }
-    if (isEditMode) {
-      showAlert('나눔 물품글 수정이 완료되었어요!', true);
-    } else {
-      showAlert('나눔 물품 등록이 완료되었어요!', true);
+    if (!price.trim()) {
+      showAlert('가격을 입력해주세요.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      if (isEditMode && initialProduct) {
+        await productsApi.updateProduct(initialProduct.id, {
+          title,
+          description: desc,
+          creditPrice: parseInt(price, 10),
+        });
+        showAlert('나눔 물품글 수정이 완료되었어요!', true);
+      } else {
+        await productsApi.createProduct({
+          title,
+          description: desc,
+          creditPrice: parseInt(price, 10),
+          sellerId: 1, // 테스트용 하드코딩 (인증 연동 전)
+        });
+        showAlert('나눔 물품 등록이 완료되었어요!', true);
+      }
+    } catch (error) {
+      console.error('Submit product error:', error);
+      showAlert('저장 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
+    if (!initialProduct) return;
     setConfirmVisible(false);
-    showAlert('나눔 물품글이 삭제되었습니다.', true);
+    setIsSubmitting(true);
+    try {
+      await productsApi.deleteProduct(initialProduct.id);
+      showAlert('나눔 물품글이 삭제되었습니다.', true);
+    } catch (error) {
+      console.error('Delete product error:', error);
+      showAlert('삭제 중 오류가 발생했습니다.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -69,24 +100,17 @@ export const ProductRegisterScreen: React.FC<any> = ({
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backArrow}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>나눔 물품 등록</Text>
-        <View style={{width: 24}} />
+        <Text style={styles.headerTitle}>{isEditMode ? '나눔 물품 수정' : '나눔 물품 등록'}</Text>
+        <View style={{ width: 24 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         {/* 이미지 피커 */}
         <View style={styles.imagePicker}>
-          <TouchableOpacity
-            style={styles.addImageBox}
-            onPress={() => {
-              if (imageCount < 5) setImageCount(c => c + 1);
-            }}>
+          <TouchableOpacity style={styles.addImageBox}>
             <Text style={styles.addImagePlus}>+</Text>
-            <Text style={styles.addImageCount}>{imageCount}/5</Text>
+            <Text style={styles.addImageCount}>0/5</Text>
           </TouchableOpacity>
-          {Array.from({length: imageCount}).map((_, i) => (
-            <View key={i} style={styles.imageThumb} />
-          ))}
         </View>
 
         {/* 물품 이름 */}
@@ -95,8 +119,8 @@ export const ProductRegisterScreen: React.FC<any> = ({
           style={styles.input}
           placeholder="물품 이름을 입력하세요."
           placeholderTextColor="#888888"
-          value={name}
-          onChangeText={setName}
+          value={title}
+          onChangeText={setTitle}
         />
 
         {/* 물품 카테고리 */}
@@ -128,7 +152,7 @@ export const ProductRegisterScreen: React.FC<any> = ({
         <Text style={styles.label}>물품 가격</Text>
         <View style={styles.priceRow}>
           <TextInput
-            style={[styles.input, {flex: 1, marginBottom: 0}]}
+            style={[styles.input, { flex: 1, marginBottom: 0 }]}
             placeholder="물품 가격을 입력하세요."
             placeholderTextColor="#888888"
             keyboardType="numeric"
@@ -139,7 +163,7 @@ export const ProductRegisterScreen: React.FC<any> = ({
         </View>
 
         {/* 물품 설명 */}
-        <Text style={[styles.label, {marginTop: 20}]}>물품 설명</Text>
+        <Text style={[styles.label, { marginTop: 20 }]}>물품 설명</Text>
         <TextInput
           style={styles.textArea}
           placeholder="물품의 상태, 구입 시기, 사용감 등 상세한 정보를 공유해주세요."
@@ -150,11 +174,15 @@ export const ProductRegisterScreen: React.FC<any> = ({
           onChangeText={setDesc}
           textAlignVertical="top"
         />
-        <View style={{height: 100}} />
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* 하단 버튼 */}
-      {isEditMode ? (
+      {isSubmitting ? (
+        <View style={styles.bottomBar}>
+          <ActivityIndicator size="small" color="#5C8B5A" />
+        </View>
+      ) : isEditMode ? (
         <View style={styles.editButtonRow}>
           <TouchableOpacity
             style={styles.deleteButton}
@@ -177,14 +205,12 @@ export const ProductRegisterScreen: React.FC<any> = ({
         </View>
       )}
 
-      {/* 알림 다이얼로그 */}
       <AlertDialog
         visible={alertVisible}
         message={alertMessage}
         onConfirm={handleAlertConfirm}
       />
 
-      {/* 삭제 확인 다이얼로그 */}
       <ConfirmDialog
         visible={confirmVisible}
         title="나눔 물품글을 정말 삭제하시겠어요?"
@@ -246,12 +272,6 @@ const styles = StyleSheet.create({
   addImageCount: {
     fontSize: 12,
     color: '#888888',
-  },
-  imageThumb: {
-    width: 90,
-    height: 90,
-    borderRadius: 8,
-    backgroundColor: '#DDDDDD',
   },
   label: {
     fontSize: 15,

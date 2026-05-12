@@ -1,13 +1,47 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
+import { productsApi, Product } from '../api/products';
 
-export const ProductDetailScreen: React.FC<any> = ({navigation}) => {
+export const ProductDetailScreen: React.FC<any> = ({ navigation, route }) => {
+  const { productId } = route.params;
+  const [product, setProduct] = useState<Product | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        const data = await productsApi.getProductById(productId);
+        setProduct(data);
+      } catch (error) {
+        console.error('Fetch product detail error:', error);
+        Alert.alert('오류', '상품 정보를 불러오는 중 오류가 발생했습니다.');
+        navigation.goBack();
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [productId]);
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color="#5C8B5A" />
+      </View>
+    );
+  }
+
+  if (!product) return null;
+
   return (
     <View style={styles.container}>
       {/* 헤더 */}
@@ -15,44 +49,49 @@ export const ProductDetailScreen: React.FC<any> = ({navigation}) => {
         <TouchableOpacity onPress={() => navigation.goBack()}>
           <Text style={styles.backArrow}>{'<'}</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>컴공 전공책</Text>
+        <Text style={styles.headerTitle} numberOfLines={1}>{product.title}</Text>
         <View style={styles.creditBadge}>
-          <Text style={styles.creditBadgeText}>1,250 크레딧</Text>
+          <Text style={styles.creditBadgeText}>{product.creditPrice.toLocaleString()} 크레딧</Text>
         </View>
       </View>
 
       <ScrollView>
         {/* 이미지 */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          <View style={styles.imageBox} />
-          <View style={[styles.imageBox, {opacity: 0.7}]} />
+          <View style={styles.imageBox}>
+            {product.imageUrl ? (
+               <Text style={{ textAlign: 'center', marginTop: 100 }}>이미지 영역</Text>
+            ) : (
+               <Text style={{ textAlign: 'center', marginTop: 100 }}>이미지 없음</Text>
+            )}
+          </View>
         </ScrollView>
 
         <View style={styles.bodyPadding}>
           {/* 판매자 정보 */}
           <View style={styles.sellerRow}>
             <View style={styles.avatar}>
-              <Text style={{fontSize: 20}}>:)</Text>
+              <Text style={{ fontSize: 20 }}>:)</Text>
             </View>
-            <Text style={styles.sellerName}>김나현</Text>
+            <Text style={styles.sellerName}>{product.seller?.name || '익명 사용자'}</Text>
             <TouchableOpacity
-              onPress={() => navigation.navigate('ProductRegister', {isEditMode: true})}
-              style={{marginLeft: 'auto'}}>
+              onPress={() => navigation.navigate('ProductRegister', { isEditMode: true, product })}
+              style={{ marginLeft: 'auto' }}>
               <Text style={styles.editLink}>수정하기</Text>
             </TouchableOpacity>
           </View>
 
           {/* 제목 */}
-          <Text style={styles.itemName}>컴공 전공책</Text>
-          <Text style={styles.itemCategory}>도서</Text>
+          <Text style={styles.itemName}>{product.title}</Text>
+          <Text style={styles.itemCategory}>{product.status === 'AVAILABLE' ? '나눔 중' : product.status}</Text>
 
           {/* 설명 */}
           <Text style={styles.itemDesc}>
-            {'전공 평점 4.48 학생이 쓰던 책입니다.\n메모 많이 적었어요.\n취업해서 팔아요.'}
+            {product.description || '상품 설명이 없습니다.'}
           </Text>
 
           {/* 가격 */}
-          <Text style={styles.itemPrice}>1,500 크레딧</Text>
+          <Text style={styles.itemPrice}>{product.creditPrice.toLocaleString()} 크레딧</Text>
         </View>
       </ScrollView>
 
@@ -73,6 +112,10 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
+  centered: {
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -89,6 +132,9 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: 'bold',
     color: '#1A1A1A',
+    flex: 1,
+    marginHorizontal: 10,
+    textAlign: 'center',
   },
   creditBadge: {
     backgroundColor: '#EAF2E9',
@@ -102,9 +148,9 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   imageBox: {
-    width: 200,
-    height: 220,
-    backgroundColor: '#DDDDDD',
+    width: 250,
+    height: 250,
+    backgroundColor: '#F5F5F5',
     marginRight: 2,
   },
   bodyPadding: {
@@ -173,4 +219,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
   },
-});
+});

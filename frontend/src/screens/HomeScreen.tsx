@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
+import { productsApi, Product } from '../api/products';
 
 interface MissionCardProps {
   title: string;
@@ -16,13 +19,6 @@ const ranks = [
   { rank: '1', dept: '컴퓨터공학과', credit: '112,894 크레딧' },
   { rank: '2', dept: '디자인테크놀로지학과', credit: '112,894 크레딧' },
   { rank: '3', dept: '기계공학과', credit: '112,894 크레딧' },
-];
-
-const products = [
-  { id: '1', name: '빈티지 조명', price: '2,500 크레딧', liked: false, color: '#D4A96A' },
-  { id: '2', name: '곰돌이 인형', price: '500 크레딧', liked: true, color: '#C4956A' },
-  { id: '3', name: '각티슈 3묶음', price: '500 크레딧', liked: true, color: '#A8C4B8' },
-  { id: '4', name: '수저 세트', price: '700 크레딧', liked: false, color: '#B8B8C4' },
 ];
 
 const MissionCard: React.FC<MissionCardProps> = ({ title, desc }) => (
@@ -37,6 +33,35 @@ const MissionCard: React.FC<MissionCardProps> = ({ title, desc }) => (
 );
 
 export const HomeScreen: React.FC<any> = ({ navigation }) => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchProducts = async (showLoading = true) => {
+    if (showLoading) setIsLoading(true);
+    setError(null);
+    try {
+      const data = await productsApi.getProducts();
+      setProducts(data);
+    } catch (err: any) {
+      console.error('Fetch products error:', err);
+      setError('상품을 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const onRefresh = () => {
+    setIsRefreshing(true);
+    fetchProducts(false);
+  };
+
   return (
     <View style={styles.container}>
 
@@ -45,7 +70,12 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
         <Text style={styles.appTitle}>EcoBid</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView 
+        contentContainerStyle={styles.content}
+        refreshControl={
+          <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor="#5C8B5A" />
+        }
+      >
 
         {/* 출석 도장 카드 */}
         <TouchableOpacity
@@ -134,26 +164,38 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.productGrid}>
-          {products.map(item => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.productCard}
-              onPress={() => navigation.navigate('ProductDetail')}
-              activeOpacity={0.8}>
-              <View style={[styles.productImage, { backgroundColor: item.color }]}>
-                <Text style={styles.productImageText}>{item.name}</Text>
-              </View>
-              <View style={styles.productBottom}>
-                <Text style={styles.productName}>{item.name}</Text>
-                <Text style={{ fontSize: 18, color: item.liked ? '#5C8B5A' : '#CCCCCC' }}>
-                  {item.liked ? '♥' : '♡'}
-                </Text>
-              </View>
-              <Text style={styles.productPrice}>{item.price}</Text>
-            </TouchableOpacity>
-          ))}
-        </View>
+        {isLoading ? (
+          <ActivityIndicator size="large" color="#5C8B5A" style={{ marginTop: 20 }} />
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : products.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>등록된 나눔 물품이 없습니다.</Text>
+          </View>
+        ) : (
+          <View style={styles.productGrid}>
+            {products.map(item => (
+              <TouchableOpacity
+                key={item.id}
+                style={styles.productCard}
+                onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}
+                activeOpacity={0.8}>
+                <View style={[styles.productImage, { backgroundColor: '#EAF2E9' }]}>
+                  {item.imageUrl ? (
+                    <Text style={styles.productImageText}>이미지 있음</Text>
+                  ) : (
+                    <Text style={styles.productImageText}>{item.title}</Text>
+                  )}
+                </View>
+                <View style={styles.productBottom}>
+                  <Text style={styles.productName} numberOfLines={1}>{item.title}</Text>
+                  <Text style={{ fontSize: 18, color: '#CCCCCC' }}>♡</Text>
+                </View>
+                <Text style={styles.productPrice}>{item.creditPrice.toLocaleString()} 크레딧</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
       </ScrollView>
 
@@ -389,5 +431,20 @@ const styles = StyleSheet.create({
   },
   rankItemFirst: {
     backgroundColor: '#EDE0C4',
+  },
+  errorText: {
+    color: '#FF5252',
+    textAlign: 'center',
+    marginTop: 20,
+    fontSize: 14,
+  },
+  emptyContainer: {
+    padding: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyText: {
+    color: '#888888',
+    fontSize: 14,
   },
 });

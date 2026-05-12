@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,29 +6,44 @@ import {
   ScrollView,
   FlatList,
   StyleSheet,
+  ActivityIndicator,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
+import { productsApi, Product } from '../api/products';
 
 const CATEGORIES = ['전체', '가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
-
-const INITIAL_PRODUCTS = [
-  {id: '1', name: '빈티지 조명', price: '2,500 크레딧', liked: false},
-  {id: '2', name: '곰돌이 인형', price: '500 크레딧', liked: true},
-  {id: '3', name: '각티슈 3묶음', price: '500 크레딧', liked: true},
-  {id: '4', name: '수저 세트', price: '700 크레딧', liked: false},
-  {id: '5', name: '전공책', price: '1,500 크레딧', liked: false},
-  {id: '6', name: '스마트폰', price: '10,000 크레딧', liked: false},
-];
 
 export function SharedItemsScreen() {
   const navigation = useNavigation<any>();
 
   const [selectedCategory, setSelectedCategory] = useState('전체');
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const toggleLike = (id: string) => {
-    setProducts(prev =>
-      prev.map(p => (p.id === id ? {...p, liked: !p.liked} : p)),
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const data = await productsApi.getProducts();
+      setProducts(data);
+    } catch (err: any) {
+      console.error('Fetch shared items error:', err);
+      setError('상품을 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  // 좋아요 기능은 현재 UI 상에서만 동작 (백엔드 미구현)
+  const [likedIds, setLikedIds] = useState<number[]>([]);
+  const toggleLike = (id: number) => {
+    setLikedIds(prev => 
+      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
 
@@ -77,36 +92,49 @@ export function SharedItemsScreen() {
       </ScrollView>
 
       {/* 상품 그리드 */}
-      <FlatList
-        data={products}
-        numColumns={2}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.grid}
-        columnWrapperStyle={styles.gridRow}
-        renderItem={({item}) => (
-          <TouchableOpacity
-            style={styles.productCard}
-            onPress={() => navigation.navigate('ProductDetail')}>
-            <View style={styles.productImage} />
+      {isLoading ? (
+        <ActivityIndicator size="large" color="#5C8B5A" style={{ marginTop: 40 }} />
+      ) : error ? (
+        <Text style={{ textAlign: 'center', marginTop: 40, color: 'red' }}>{error}</Text>
+      ) : products.length === 0 ? (
+        <Text style={{ textAlign: 'center', marginTop: 40, color: '#888' }}>등록된 나눔 물품이 없습니다.</Text>
+      ) : (
+        <FlatList
+          data={products}
+          numColumns={2}
+          keyExtractor={item => String(item.id)}
+          contentContainerStyle={styles.grid}
+          columnWrapperStyle={styles.gridRow}
+          renderItem={({ item }) => {
+            const isLiked = likedIds.includes(item.id);
+            return (
+              <TouchableOpacity
+                style={styles.productCard}
+                onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}>
+                <View style={[styles.productImage, { backgroundColor: '#EAF2E9', justifyContent: 'center', alignItems: 'center' }]}>
+                   <Text style={{ color: '#5C8B5A', fontWeight: 'bold' }}>IMAGE</Text>
+                </View>
 
-            <View style={styles.productBottom}>
-              <Text style={styles.productName}>{item.name}</Text>
+                <View style={styles.productBottom}>
+                  <Text style={styles.productName} numberOfLines={1}>{item.title}</Text>
 
-              <TouchableOpacity onPress={() => toggleLike(item.id)}>
-                <Text
-                  style={[
-                    styles.heartIcon,
-                    item.liked && {color: '#5C8B5A'},
-                  ]}>
-                  {item.liked ? '♥' : '♡'}
-                </Text>
+                  <TouchableOpacity onPress={() => toggleLike(item.id)}>
+                    <Text
+                      style={[
+                        styles.heartIcon,
+                        isLiked && { color: '#5C8B5A' },
+                      ]}>
+                      {isLiked ? '♥' : '♡'}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+
+                <Text style={styles.productPrice}>{item.creditPrice.toLocaleString()} 크레딧</Text>
               </TouchableOpacity>
-            </View>
-
-            <Text style={styles.productPrice}>{item.price}</Text>
-          </TouchableOpacity>
-        )}
-      />
+            );
+          }}
+        />
+      )}
 
       {/* 등록 FAB */}
       <TouchableOpacity

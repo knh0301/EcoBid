@@ -2,6 +2,7 @@
   "expo": {
     "name": "frontend_expo_migration",
     "slug": "frontend_expo_migration",
+    "scheme": "myapp",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -14,8 +15,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.ecobid",
-      "googleServicesFile": "./GoogleService-Info.plist"
+      "bundleIdentifier": "com.yourcompany.ecobid"
     },
     "android": {
       "adaptiveIcon": {

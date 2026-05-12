@@ -21,6 +21,7 @@ import {CreditHistoryScreen} from './src/screens/CreditHistoryScreen';
 import {MissionVerifyScreen} from './src/screens/MissionVerifyScreen';
 import {ProfileEditScreen} from './src/screens/ProfileEditScreen';
 import {MySharedItemsScreen} from './src/screens/MySharedItemsScreen';
+import {SafeAreaProvider} from 'react-native-safe-area-context';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -66,6 +67,7 @@ function TabNavigator() {
 
 export default function App(): React.JSX.Element {
   return (
+   <SafeAreaProvider>
     <NavigationContainer>
       <Stack.Navigator screenOptions={{headerShown: false}}>
         <Stack.Screen name="MainTabs" component={TabNavigator} />
@@ -83,5 +85,6 @@ export default function App(): React.JSX.Element {
         <Stack.Screen name="MySharedItems" component={MySharedItemsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+   </SafeAreaProvider>
   );
 }

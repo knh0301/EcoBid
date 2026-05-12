@@ -1,9 +1,32 @@
 const sequelize = require('../config/database');
 const User = require('./User');
+const Product = require('./Product');
+const Attendance = require('./Attendance');
+const Mission = require('./Mission');
+const MissionSubmission = require('./MissionSubmission');
+const CreditTransaction = require('./CreditTransaction');
 
-// ── 추후 모델 간 관계 정의 위치 ──
-// 예: User.hasMany(Meeting, { foreignKey: 'ownerId' });
-// 예: Meeting.belongsTo(User, { foreignKey: 'ownerId' });
+// ── 모델 간 관계 정의 ──
+
+// User 관계
+User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
+User.hasMany(Attendance, { foreignKey: 'userId', as: 'attendances' });
+User.hasMany(MissionSubmission, { foreignKey: 'userId', as: 'submissions' });
+User.hasMany(CreditTransaction, { foreignKey: 'userId', as: 'transactions' });
+
+// Product 관계
+Product.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+
+// Attendance 관계
+Attendance.belongsTo(User, { foreignKey: 'userId' });
+
+// Mission & MissionSubmission 관계
+Mission.hasMany(MissionSubmission, { foreignKey: 'missionId', as: 'submissions' });
+MissionSubmission.belongsTo(Mission, { foreignKey: 'missionId' });
+MissionSubmission.belongsTo(User, { foreignKey: 'userId' });
+
+// CreditTransaction 관계
+CreditTransaction.belongsTo(User, { foreignKey: 'userId' });
 
 // DB 연결 및 테이블 동기화
 const syncDatabase = async () => {
@@ -21,4 +44,13 @@ const syncDatabase = async () => {
   }
 };
 
-module.exports = { sequelize, syncDatabase, User };
+module.exports = {
+  sequelize,
+  syncDatabase,
+  User,
+  Product,
+  Attendance,
+  Mission,
+  MissionSubmission,
+  CreditTransaction,
+};

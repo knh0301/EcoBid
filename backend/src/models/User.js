@@ -66,6 +66,13 @@ const User = sequelize.define('User', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+
+  // 보유 크레딧 잔액 캐시
+  credits: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  },
 },
 {
   tableName: 'users',

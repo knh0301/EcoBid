@@ -5,8 +5,8 @@ import {
   View,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const MISSION_DATA = [
   {
@@ -155,8 +155,10 @@ const MissionCard = ({item, navigation}: {item: any; navigation: any}) => (
 );
 
 export function MissionScreen({navigation}: any) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={missionStyles.container}>
+    <View style={[missionStyles.container, {paddingTop: insets.top, paddingBottom: insets.bottom}]}>
       <View style={missionStyles.header}>
         <Text style={missionStyles.headerLogo}>EcoBid</Text>
       </View>
@@ -187,7 +189,7 @@ export function MissionScreen({navigation}: any) {
           <MissionCard key={item.id} item={item} navigation={navigation} />
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

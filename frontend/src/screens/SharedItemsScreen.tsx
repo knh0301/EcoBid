@@ -10,10 +10,12 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { productsApi, Product } from '../api/products';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const CATEGORIES = ['전체', '가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
 
 export function SharedItemsScreen() {
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation<any>();
 
   const [selectedCategory, setSelectedCategory] = useState('전체');
@@ -39,16 +41,15 @@ export function SharedItemsScreen() {
     fetchProducts();
   }, []);
 
-  // 좋아요 기능은 현재 UI 상에서만 동작 (백엔드 미구현)
   const [likedIds, setLikedIds] = useState<number[]>([]);
   const toggleLike = (id: number) => {
-    setLikedIds(prev => 
+    setLikedIds(prev =>
       prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
     );
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -103,7 +104,7 @@ export function SharedItemsScreen() {
           data={products}
           numColumns={2}
           keyExtractor={item => String(item.id)}
-          contentContainerStyle={styles.grid}
+          contentContainerStyle={[styles.grid, {paddingBottom: insets.bottom + 80}]}
           columnWrapperStyle={styles.gridRow}
           renderItem={({ item }) => {
             const isLiked = likedIds.includes(item.id);
@@ -112,7 +113,7 @@ export function SharedItemsScreen() {
                 style={styles.productCard}
                 onPress={() => navigation.navigate('ProductDetail', { productId: item.id })}>
                 <View style={[styles.productImage, { backgroundColor: '#EAF2E9', justifyContent: 'center', alignItems: 'center' }]}>
-                   <Text style={{ color: '#5C8B5A', fontWeight: 'bold' }}>IMAGE</Text>
+                  <Text style={{ color: '#5C8B5A', fontWeight: 'bold' }}>IMAGE</Text>
                 </View>
 
                 <View style={styles.productBottom}>
@@ -138,7 +139,7 @@ export function SharedItemsScreen() {
 
       {/* 등록 FAB */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, {bottom: insets.bottom + 24}]}
         onPress={() => navigation.navigate('ProductRegister')}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>

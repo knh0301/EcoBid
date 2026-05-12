@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { AlertDialog, ConfirmDialog } from '../components/EcoDialog';
 import { productsApi, Product } from '../api/products';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const CATEGORIES = ['가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
 
@@ -17,6 +18,7 @@ export const ProductRegisterScreen: React.FC<any> = ({
   navigation,
   route,
 }) => {
+  const insets = useSafeAreaInsets();
   const isEditMode = route?.params?.isEditMode ?? false;
   const initialProduct = route?.params?.product as Product | undefined;
 
@@ -66,7 +68,7 @@ export const ProductRegisterScreen: React.FC<any> = ({
           title,
           description: desc,
           creditPrice: parseInt(price, 10),
-          sellerId: 1, // 테스트용 하드코딩 (인증 연동 전)
+          sellerId: 1,
         });
         showAlert('나눔 물품 등록이 완료되었어요!', true);
       }
@@ -94,7 +96,7 @@ export const ProductRegisterScreen: React.FC<any> = ({
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -179,11 +181,11 @@ export const ProductRegisterScreen: React.FC<any> = ({
 
       {/* 하단 버튼 */}
       {isSubmitting ? (
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
           <ActivityIndicator size="small" color="#5C8B5A" />
         </View>
       ) : isEditMode ? (
-        <View style={styles.editButtonRow}>
+        <View style={[styles.editButtonRow, {paddingBottom: insets.bottom + 16}]}>
           <TouchableOpacity
             style={styles.deleteButton}
             onPress={() => setConfirmVisible(true)}>
@@ -196,7 +198,7 @@ export const ProductRegisterScreen: React.FC<any> = ({
           </TouchableOpacity>
         </View>
       ) : (
-        <View style={styles.bottomBar}>
+        <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
           <TouchableOpacity
             style={styles.submitButtonFull}
             onPress={handleSubmit}>
@@ -339,6 +341,7 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     padding: 16,
+    paddingBottom: 16,
     backgroundColor: '#F5F5F5',
   },
   submitButtonFull: {
@@ -350,6 +353,7 @@ const styles = StyleSheet.create({
   editButtonRow: {
     flexDirection: 'row',
     padding: 16,
+    paddingBottom: 16,
     gap: 12,
     backgroundColor: '#F5F5F5',
   },

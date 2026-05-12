@@ -9,8 +9,10 @@ import {
   Alert,
 } from 'react-native';
 import { productsApi, Product } from '../api/products';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 export const ProductDetailScreen: React.FC<any> = ({ navigation, route }) => {
+  const insets = useSafeAreaInsets();
   const { productId } = route.params;
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,7 +36,7 @@ export const ProductDetailScreen: React.FC<any> = ({ navigation, route }) => {
 
   if (isLoading) {
     return (
-      <View style={[styles.container, styles.centered]}>
+      <View style={[styles.container, styles.centered, {paddingTop: insets.top}]}>
         <ActivityIndicator size="large" color="#5C8B5A" />
       </View>
     );
@@ -43,7 +45,7 @@ export const ProductDetailScreen: React.FC<any> = ({ navigation, route }) => {
   if (!product) return null;
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>
@@ -96,7 +98,7 @@ export const ProductDetailScreen: React.FC<any> = ({ navigation, route }) => {
       </ScrollView>
 
       {/* 채팅하기 버튼 */}
-      <View style={styles.bottomBar}>
+      <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
         <TouchableOpacity
           style={styles.chatButton}
           onPress={() => navigation.navigate('ChatDetail')}>
@@ -206,6 +208,7 @@ const styles = StyleSheet.create({
   },
   bottomBar: {
     padding: 16,
+    paddingBottom: 16,
     backgroundColor: '#FFFFFF',
   },
   chatButton: {
@@ -219,4 +222,4 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
   },
-});
+});

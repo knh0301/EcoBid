@@ -5,20 +5,20 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
-  Image,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 export function ChatDetailScreen({navigation, route}: any) {
   const {name} = route.params || {name: '김애리'};
   const [message, setMessage] = useState('');
+  const insets = useSafeAreaInsets();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top, paddingBottom: insets.bottom}]}>
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -41,8 +41,7 @@ export function ChatDetailScreen({navigation, route}: any) {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{flex: 1}}
-      >
+        style={{flex: 1}}>
         <ScrollView contentContainerStyle={styles.chatContent}>
           {/* 상대방 메시지 */}
           <View style={styles.receivedMessageWrapper}>
@@ -50,7 +49,7 @@ export function ChatDetailScreen({navigation, route}: any) {
               <Text style={styles.receivedText}>빈티지 조명 나눔 받고싶어요!</Text>
             </View>
           </View>
-          
+
           <View style={styles.receivedMessageWrapper}>
             <View style={styles.receivedBubble}>
               <Text style={styles.receivedText}>상태가 어떤가요?</Text>
@@ -79,7 +78,7 @@ export function ChatDetailScreen({navigation, route}: any) {
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
-    </SafeAreaView>
+    </View>
   );
 }
 

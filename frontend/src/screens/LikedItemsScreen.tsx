@@ -6,6 +6,7 @@ import {useNavigation} from '@react-navigation/native';
 import {likedItemsStyles as styles} from '../styles/LikedItemsScreenStyle';
 import {creditsApi} from '../api/creditsApi';
 import {ItemCard} from '../components/ItemCard';
+import {CategoryFilter} from '../components/CategoryFilter';
 
 const CATEGORIES = [
   '전체',
@@ -84,7 +85,7 @@ export function LikedItemsScreen() {
         <Pressable
           onPress={() => navigation.goBack()}
           hitSlop={10}
-          style={{zIndex: 2}}>
+          style={styles.backButton}>
           <Ionicons name="chevron-back" size={26} color="#222222" />
         </Pressable>
 
@@ -97,34 +98,11 @@ export function LikedItemsScreen() {
         </View>
       </View>
 
-      <View style={styles.categoryArea}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryScrollContent}>
-          {CATEGORIES.map(category => {
-            const isSelected = selectedCategory === category;
-
-            return (
-              <Pressable
-                key={category}
-                style={[
-                  styles.categoryChip,
-                  isSelected && styles.categoryChipActive,
-                ]}
-                onPress={() => setSelectedCategory(category)}>
-                <Text
-                  style={[
-                    styles.categoryText,
-                    isSelected && styles.categoryTextActive,
-                  ]}>
-                  {category}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
+      <CategoryFilter
+        categories={CATEGORIES}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
       <ScrollView
         contentContainerStyle={styles.content}
@@ -138,7 +116,9 @@ export function LikedItemsScreen() {
               icon={item.icon}
               backgroundColor={item.backgroundColor}
               isLiked={true}
-              onPress={() => navigation.navigate('ProductDetail')}
+              onPress={() =>
+                navigation.navigate('ProductDetail', {productId: item.id})
+              }
               onHeartPress={() => {
                 console.log('찜 해제:', item.id);
               }}

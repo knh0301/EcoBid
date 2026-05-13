@@ -228,48 +228,11 @@ export const homeScreenStyles = StyleSheet.create({
   },
 
   productGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-
-  productCard: {
-    width: '47%',
-  },
-
-  productImage: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: 8,
-    marginBottom: 8,
-    justifyContent: 'flex-end',
-    padding: 8,
-  },
-
-  productImageText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-
-  productBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  productName: {
-    fontWeight: 'bold',
-    fontSize: 14,
-    color: '#1A1A1A',
-    flex: 1,
-  },
-
-  productPrice: {
-    fontSize: 12,
-    color: '#888888',
-    marginTop: 2,
-  },
+  flexDirection: 'row',
+  flexWrap: 'wrap',
+  justifyContent: 'space-between',
+  rowGap: 8,
+},
 
   errorText: {
     color: '#FF5252',
@@ -287,11 +250,6 @@ export const homeScreenStyles = StyleSheet.create({
   emptyText: {
     color: '#888888',
     fontSize: 14,
-  },
-
-  productHeart: {
-    fontSize: 18,
-    color: '#CCCCCC',
   },
 
   loadingIndicator: {

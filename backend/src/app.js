@@ -7,6 +7,7 @@ const { syncDatabase } = require('./models');
 const authRoutes = require('./routes/auth.routes');
 const productRoutes = require('./routes/productRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
+const creditRoutes = require('./routes/creditRoutes');
 
 const app = express();
 
@@ -29,6 +30,7 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/attendance', attendanceRoutes);
+app.use('/api/credits', creditRoutes);
 
 // ── 404 처리 ──
 app.use((req, res) => {

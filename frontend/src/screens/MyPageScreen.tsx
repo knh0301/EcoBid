@@ -1,14 +1,12 @@
-import React from 'react';
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
-import { myPageStyles as styles } from '../styles/MyPageScreenStyle';
+import {myPageStyles as styles} from '../styles/MyPageScreenStyle';
+import {creditsApi} from '../api/creditsApi';
+
+const MOCK_USER_ID = 3;
 
 const BADGES = [
   {id: 1, emoji: '🛍️', title: '나눔 천사', desc: '물품을 나눈 따뜻한 마음'},
@@ -45,6 +43,27 @@ const ACTIVITIES = [
 export function MyPageScreen() {
   const navigation = useNavigation<any>();
 
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [creditLoading, setCreditLoading] = useState(true);
+
+  const fetchCreditBalance = async () => {
+    try {
+      setCreditLoading(true);
+
+      const balance = await creditsApi.getCreditBalance(MOCK_USER_ID);
+
+      setCreditBalance(balance);
+    } catch (err: any) {
+      console.warn('Fetch credit balance error:', err);
+    } finally {
+      setCreditLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCreditBalance();
+  }, []);
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.topHeader}>
@@ -57,28 +76,30 @@ export function MyPageScreen() {
         <Text style={styles.pageTitle}>내 정보</Text>
 
         <Pressable
-  style={styles.profileCard}
-  onPress={() => navigation.navigate('ProfileEdit')}>
-  <View style={styles.profileImageOuter}>
-    <View style={styles.profileImageInner}>
-      <Text style={styles.profileEmoji}>🙂</Text>
-    </View>
-  </View>
+          style={styles.profileCard}
+          onPress={() => navigation.navigate('ProfileEdit')}>
+          <View style={styles.profileImageOuter}>
+            <View style={styles.profileImageInner}>
+              <Text style={styles.profileEmoji}>🙂</Text>
+            </View>
+          </View>
 
-  <Text style={styles.userName}>김나현</Text>
-  <Text style={styles.userInfo}>레벨 5. 2026년 4월 8일부터 활동중</Text>
+          <Text style={styles.userName}>김나현</Text>
+          <Text style={styles.userInfo}>
+            레벨 5. 2026년 4월 8일부터 활동중
+          </Text>
 
-  <View style={styles.levelArea}>
-    <Text style={styles.levelLabel}>레벨 6까지 남은 경험치</Text>
+          <View style={styles.levelArea}>
+            <Text style={styles.levelLabel}>레벨 6까지 남은 경험치</Text>
 
-    <View style={styles.progressRow}>
-      <View style={styles.progressTrack}>
-        <View style={styles.progressFill} />
-      </View>
-      <Text style={styles.progressText}>17,500/250,000</Text>
-    </View>
-  </View>
-</Pressable>
+            <View style={styles.progressRow}>
+              <View style={styles.progressTrack}>
+                <View style={styles.progressFill} />
+              </View>
+              <Text style={styles.progressText}>17,500/250,000</Text>
+            </View>
+          </View>
+        </Pressable>
 
         <View style={styles.statRow}>
           <Pressable
@@ -93,7 +114,9 @@ export function MyPageScreen() {
             style={styles.statCard}
             onPress={() => navigation.navigate('CreditHistory')}>
             <Ionicons name="cash-outline" size={32} color="#F2A72C" />
-            <Text style={styles.statNumber}>1,250</Text>
+            <Text style={styles.statNumber}>
+              {creditLoading ? '...' : creditBalance.toLocaleString()}
+            </Text>
             <Text style={styles.statLabel}>크레딧</Text>
           </Pressable>
 
@@ -112,16 +135,16 @@ export function MyPageScreen() {
           <View style={styles.badgeGrid}>
             {BADGES.map(badge => (
               <View key={badge.id} style={styles.badgeItem}>
-  <Text style={styles.badgeEmoji}>{badge.emoji}</Text>
+                <Text style={styles.badgeEmoji}>{badge.emoji}</Text>
 
-  <Text style={styles.badgeTitle} numberOfLines={1}>
-    {badge.title}
-  </Text>
+                <Text style={styles.badgeTitle} numberOfLines={1}>
+                  {badge.title}
+                </Text>
 
-  <Text style={styles.badgeDesc} numberOfLines={2}>
-    {badge.desc}
-  </Text>
-</View>
+                <Text style={styles.badgeDesc} numberOfLines={2}>
+                  {badge.desc}
+                </Text>
+              </View>
             ))}
           </View>
         </View>

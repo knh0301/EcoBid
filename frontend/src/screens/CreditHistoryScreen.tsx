@@ -1,9 +1,10 @@
-import React, {useMemo, useState} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {Modal, Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {creditHistoryStyles as styles} from '../styles/CreditHistoryScreenStyle';
+import {creditsApi, CreditTransaction} from '../api/creditsApi';
 
 type CreditType = 'earn' | 'use';
 type FilterType = 'all' | 'earn' | 'use';
@@ -16,64 +17,9 @@ type CreditHistoryItem = {
   type: CreditType;
 };
 
-const CREDIT_HISTORY: CreditHistoryItem[] = [
-  {
-    id: 1,
-    date: '2026-05-03',
-    title: '물품 구매 : 빈티지 조명',
-    amount: -2500,
-    type: 'use',
-  },
-  {
-    id: 2,
-    date: '2026-05-03',
-    title: '미션 완료 : 텀블러 사용하기',
-    amount: 500,
-    type: 'earn',
-  },
-  {
-    id: 3,
-    date: '2026-05-03',
-    title: '미션 완료 : 매일 출석',
-    amount: 10,
-    type: 'earn',
-  },
-  {
-    id: 4,
-    date: '2026-05-02',
-    title: '미션 완료 : 텀블러 사용하기',
-    amount: 500,
-    type: 'earn',
-  },
-  {
-    id: 5,
-    date: '2026-05-02',
-    title: '미션 완료 : 대중교통 이용하기',
-    amount: 500,
-    type: 'earn',
-  },
-  {
-    id: 6,
-    date: '2026-05-02',
-    title: '미션 완료 : 매일 출석',
-    amount: 10,
-    type: 'earn',
-  },
-  {
-    id: 7,
-    date: '2026-05-01',
-    title: '미션 완료 : 대중교통 이용하기',
-    amount: 500,
-    type: 'earn',
-  },
-  {
-    id: 8,
-    date: '2026-05-01',
-    title: '미션 완료 : 매일 출석',
-    amount: 10,
-    type: 'earn',
-  },
-];
+// 로그인 연동 전 임시 사용자 ID
+// 나중에 로그인/JWT 연동 후 실제 로그인한 userId로 교체
+const MOCK_USER_ID = 3;
 
 const FILTER_LABELS: Record<FilterType, string> = {
   all: '전체',
@@ -96,8 +42,36 @@ export function CreditHistoryScreen() {
   const [dateModalVisible, setDateModalVisible] = useState(false);
   const [filterModalVisible, setFilterModalVisible] = useState(false);
 
+  const [creditHistory, setCreditHistory] = useState<CreditHistoryItem[]>([]);
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchCreditHistory = async () => {
+    try {
+      setIsLoading(true);
+
+      const transactions = await creditsApi.getCreditTransactions(MOCK_USER_ID);
+
+      const mappedHistory = transactions.map(mapTransactionToHistory);
+      const balance = transactions.reduce((sum, item) => {
+        return sum + Number(item.amount);
+      }, 0);
+
+      setCreditHistory(mappedHistory);
+      setCreditBalance(balance);
+    } catch (err: any) {
+      console.warn('Fetch credit history error:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCreditHistory();
+  }, []);
+
   const filteredHistory = useMemo(() => {
-    return CREDIT_HISTORY.filter(item => {
+    return creditHistory.filter(item => {
       const [year, month] = item.date.split('-').map(Number);
 
       const isSameMonth = year === selectedYear && month === selectedMonth;
@@ -105,7 +79,7 @@ export function CreditHistoryScreen() {
 
       return isSameMonth && isSameFilter;
     });
-  }, [selectedYear, selectedMonth, filter]);
+  }, [creditHistory, selectedYear, selectedMonth, filter]);
 
   const groupedHistory = useMemo(() => {
     return filteredHistory.reduce<Record<string, CreditHistoryItem[]>>(
@@ -172,7 +146,9 @@ export function CreditHistoryScreen() {
         <Text style={styles.headerTitle}>크레딧</Text>
 
         <View style={styles.creditBadge}>
-          <Text style={styles.creditBadgeText}>1,250 크레딧</Text>
+          <Text style={styles.creditBadgeText}>
+            {isLoading ? '...' : `${creditBalance.toLocaleString()} 크레딧`}
+          </Text>
         </View>
       </View>
 
@@ -215,7 +191,7 @@ export function CreditHistoryScreen() {
           </View>
         ))}
 
-        {filteredHistory.length === 0 && (
+        {!isLoading && filteredHistory.length === 0 && (
           <View style={styles.emptyBox}>
             <Text style={styles.emptyText}>해당 내역이 없습니다.</Text>
           </View>
@@ -314,6 +290,31 @@ export function CreditHistoryScreen() {
       </Modal>
     </SafeAreaView>
   );
+}
+
+function mapTransactionToHistory(
+  transaction: CreditTransaction,
+): CreditHistoryItem {
+  return {
+    id: transaction.id,
+    date: transaction.createdAt.split('T')[0],
+    title: transaction.description || getDefaultTitle(transaction.referenceType),
+    amount: Number(transaction.amount),
+    type: transaction.amount > 0 ? 'earn' : 'use',
+  };
+}
+
+function getDefaultTitle(referenceType: CreditTransaction['referenceType']) {
+  switch (referenceType) {
+    case 'ATTENDANCE':
+      return '출석 보상';
+    case 'MISSION':
+      return '미션 완료';
+    case 'PRODUCT':
+      return '물품 거래';
+    default:
+      return '크레딧 내역';
+  }
 }
 
 function formatDateLabel(date: string) {

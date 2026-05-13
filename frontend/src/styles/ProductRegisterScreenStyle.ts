@@ -1,9 +1,10 @@
 import {StyleSheet} from 'react-native';
+import {colors} from './colors';
 
 export const productRegisterStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.grayBackground,
   },
 
   header: {
@@ -12,18 +13,18 @@ export const productRegisterStyles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.grayBackground,
   },
 
   backArrow: {
     fontSize: 18,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   headerRightSpace: {
@@ -46,38 +47,38 @@ export const productRegisterStyles = StyleSheet.create({
     height: 90,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
-    backgroundColor: '#F0F0F0',
+    borderColor: colors.borderLight,
+    backgroundColor: colors.lightGrayBackground,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   addImagePlus: {
     fontSize: 22,
-    color: '#888888',
+    color: colors.textMuted,
   },
 
   addImageCount: {
     fontSize: 12,
-    color: '#888888',
+    color: colors.textMuted,
   },
 
   label: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
     marginBottom: 8,
   },
 
   input: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.borderLight,
     borderRadius: 8,
     paddingHorizontal: 14,
     paddingVertical: 14,
     fontSize: 14,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
     marginBottom: 20,
   },
 
@@ -98,22 +99,22 @@ export const productRegisterStyles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.borderLight,
+    backgroundColor: colors.white,
   },
 
   categoryChipSelected: {
-    backgroundColor: '#5C8B5A',
-    borderColor: '#5C8B5A',
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
   },
 
   categoryChipText: {
     fontSize: 13,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   categoryChipTextSelected: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontWeight: 'bold',
   },
 
@@ -127,7 +128,7 @@ export const productRegisterStyles = StyleSheet.create({
   creditUnit: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   descriptionLabel: {
@@ -135,13 +136,13 @@ export const productRegisterStyles = StyleSheet.create({
   },
 
   textArea: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.borderLight,
     borderRadius: 8,
     padding: 14,
     fontSize: 14,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
     minHeight: 140,
   },
 
@@ -152,11 +153,11 @@ export const productRegisterStyles = StyleSheet.create({
   bottomBar: {
     padding: 16,
     paddingBottom: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.grayBackground,
   },
 
   submitButtonFull: {
-    backgroundColor: '#5C8B5A',
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 16,
     alignItems: 'center',
@@ -167,7 +168,7 @@ export const productRegisterStyles = StyleSheet.create({
     padding: 16,
     paddingBottom: 16,
     gap: 12,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.grayBackground,
   },
 
   deleteButton: {
@@ -175,27 +176,27 @@ export const productRegisterStyles = StyleSheet.create({
     paddingVertical: 16,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.borderLight,
+    backgroundColor: colors.white,
     alignItems: 'center',
   },
 
   deleteButtonText: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   submitButton: {
     flex: 3,
-    backgroundColor: '#5C8B5A',
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 16,
     alignItems: 'center',
   },
 
   submitButtonText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 15,
     fontWeight: 'bold',
   },

@@ -1,13 +1,10 @@
 import {StyleSheet} from 'react-native';
-
-const GREEN = '#79AD6F';
-const DARK_GREEN = '#2F6F3E';
-const PAGE_BG = '#F7F9F6';
+import {colors} from './colors';
 
 export const signupStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: PAGE_BG,
+    backgroundColor: colors.pageBackground,
   },
 
   keyboardView: {
@@ -22,10 +19,10 @@ export const signupStyles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.borderLight,
     paddingHorizontal: 24,
     paddingVertical: 26,
   },
@@ -33,7 +30,7 @@ export const signupStyles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#222222',
+    color: colors.textDark,
     textAlign: 'center',
     marginBottom: 18,
   },
@@ -49,9 +46,9 @@ export const signupStyles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#E5E5E5',
+    borderColor: colors.borderSoft,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -63,7 +60,7 @@ export const signupStyles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: '#CCCCCC',
     alignItems: 'center',
@@ -77,7 +74,7 @@ export const signupStyles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#333333',
+    color: colors.textDark,
     marginBottom: 5,
   },
 
@@ -85,19 +82,19 @@ export const signupStyles = StyleSheet.create({
     height: 42,
     borderRadius: 9,
     borderWidth: 1,
-    borderColor: '#D8D8D8',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.borderLight,
+    backgroundColor: colors.white,
     paddingHorizontal: 14,
     fontSize: 13,
-    color: '#222222',
+    color: colors.textDark,
   },
 
   selectBox: {
     height: 42,
     borderRadius: 9,
     borderWidth: 1,
-    borderColor: '#D8D8D8',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.borderLight,
+    backgroundColor: colors.white,
     paddingHorizontal: 14,
     flexDirection: 'row',
     alignItems: 'center',
@@ -106,7 +103,7 @@ export const signupStyles = StyleSheet.create({
 
   selectText: {
     fontSize: 13,
-    color: '#222222',
+    color: colors.textDark,
   },
 
   placeholderText: {
@@ -116,14 +113,14 @@ export const signupStyles = StyleSheet.create({
   signupButton: {
     height: 46,
     borderRadius: 9,
-    backgroundColor: GREEN,
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 10,
   },
 
   signupButtonText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 14,
     fontWeight: '900',
   },
@@ -136,19 +133,19 @@ export const signupStyles = StyleSheet.create({
 
   loginText: {
     fontSize: 11,
-    color: '#777777',
+    color: colors.textTertiary,
   },
 
   loginLink: {
     fontSize: 11,
-    color: DARK_GREEN,
+    color: colors.primaryDark,
     fontWeight: '900',
     textDecorationLine: 'underline',
   },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: colors.modalOverlay,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
@@ -156,7 +153,7 @@ export const signupStyles = StyleSheet.create({
 
   departmentSheet: {
     width: '100%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 18,
     paddingHorizontal: 18,
     paddingTop: 20,
@@ -166,7 +163,7 @@ export const signupStyles = StyleSheet.create({
   departmentSheetTitle: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#222222',
+    color: colors.textDark,
     textAlign: 'center',
     marginBottom: 14,
   },
@@ -188,11 +185,11 @@ export const signupStyles = StyleSheet.create({
   departmentOptionText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#333333',
+    color: colors.textDark,
   },
 
   departmentOptionTextSelected: {
-    color: DARK_GREEN,
+    color: colors.primaryDark,
     fontWeight: '900',
   },
 

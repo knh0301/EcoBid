@@ -51,4 +51,13 @@ export const colors = {
   profileGold: '#D0B100',
   badgeBackground: '#D8EDC2',
   badgeText: '#52724D',
+
+  profileBorder: '#C9D8C1',
+profileBlue: '#95B9EE',
+profileGold: '#D0B100',
+textSoft: '#8A8A8A',
+gray100: '#EFEFEF',
+gray150: '#E4E4E4',
+gray400: '#CCCCCC',
+departmentSelected: '#F0F6EE',
 };

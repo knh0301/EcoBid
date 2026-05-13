@@ -1,12 +1,7 @@
 import React from 'react';
-import {
-  ScrollView,
-  Text,
-  View,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import {ScrollView, Text, View, TouchableOpacity} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {missionStyles} from '../styles/MissionScreenStyle';
 
 const MISSION_DATA = [
   {
@@ -122,11 +117,14 @@ const MissionCard = ({item, navigation}: {item: any; navigation: any}) => (
   <View style={missionStyles.card}>
     <View style={missionStyles.cardHeader}>
       <Text style={missionStyles.cardTitle}>{item.title}</Text>
+
       {item.credit ? (
         <Text style={missionStyles.cardCredit}>{item.credit}</Text>
       ) : null}
     </View>
+
     <Text style={missionStyles.cardDesc}>{item.desc}</Text>
+
     <TouchableOpacity
       style={[
         missionStyles.button,
@@ -158,13 +156,18 @@ export function MissionScreen({navigation}: any) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[missionStyles.container, {paddingTop: insets.top, paddingBottom: insets.bottom}]}>
+    <View
+      style={[
+        missionStyles.container,
+        {paddingTop: insets.top, paddingBottom: insets.bottom},
+      ]}>
       <View style={missionStyles.header}>
         <Text style={missionStyles.headerLogo}>EcoBid</Text>
       </View>
 
       <ScrollView contentContainerStyle={missionStyles.scrollContent}>
         <Text style={missionStyles.pageTitle}>미션</Text>
+
         <Text style={missionStyles.pageSubtitle}>
           매일 미션을 수행하고 크레딧을 모아보세요!
         </Text>
@@ -180,6 +183,7 @@ export function MissionScreen({navigation}: any) {
             <Text style={missionStyles.progressTitle}>오늘의 진행도</Text>
             <Text style={missionStyles.progressValue}>50/250</Text>
           </View>
+
           <View style={missionStyles.progressBarTrack}>
             <View style={[missionStyles.progressBarFill, {width: '20%'}]} />
           </View>
@@ -192,131 +196,3 @@ export function MissionScreen({navigation}: any) {
     </View>
   );
 }
-
-const missionStyles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  header: {
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
-  },
-  headerLogo: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#000000',
-  },
-  scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
-  },
-  pageTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#1F2937',
-    marginBottom: 8,
-  },
-  pageSubtitle: {
-    fontSize: 16,
-    color: '#6B7280',
-    marginBottom: 24,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: 'bold',
-    color: '#000000',
-    marginTop: 32,
-    marginBottom: 16,
-  },
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 8,
-  },
-  cardTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#111827',
-    flex: 1,
-  },
-  cardCredit: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#5C8B5A',
-  },
-  cardDesc: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginBottom: 20,
-    lineHeight: 20,
-  },
-  button: {
-    backgroundColor: '#86B27A',
-    borderRadius: 14,
-    paddingVertical: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  buttonCompleted: {
-    backgroundColor: '#E5E7EB',
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  buttonTextCompleted: {
-    color: '#9CA3AF',
-  },
-  progressCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 16,
-    borderWidth: 1,
-    borderColor: '#E5E7EB',
-  },
-  progressHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  progressTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#111827',
-  },
-  progressValue: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#5C8B5A',
-  },
-  progressBarTrack: {
-    height: 12,
-    backgroundColor: '#F3F4F6',
-    borderRadius: 6,
-    overflow: 'hidden',
-  },
-  progressBarFill: {
-    height: '100%',
-    backgroundColor: '#5C8B5A',
-  },
-});

@@ -4,13 +4,13 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  StyleSheet,
   ActivityIndicator,
   RefreshControl,
 } from 'react-native';
 import {productsApi, Product} from '../api/products';
 import {creditsApi} from '../api/creditsApi';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {homeScreenStyles as styles} from '../styles/HomeScreenStyle';
 
 interface MissionCardProps {
   title: string;
@@ -87,17 +87,13 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
   const onRefresh = async () => {
     setIsRefreshing(true);
 
-    await Promise.all([
-      fetchProducts(false),
-      fetchCreditBalance(),
-    ]);
+    await Promise.all([fetchProducts(false), fetchCreditBalance()]);
 
     setIsRefreshing(false);
   };
 
   return (
     <View style={[styles.container, {paddingTop: insets.top}]}>
-      {/* 상단 타이틀 */}
       <View style={styles.header}>
         <Text style={styles.appTitle}>EcoBid</Text>
       </View>
@@ -111,7 +107,6 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
             tintColor="#5C8B5A"
           />
         }>
-        {/* 출석 도장 카드 */}
         <TouchableOpacity
           style={styles.card}
           onPress={() => navigation.navigate('Attendance')}
@@ -130,7 +125,6 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           </View>
         </TouchableOpacity>
 
-        {/* 크레딧 잔액 카드 */}
         <View style={styles.card}>
           <View style={styles.creditTopRow}>
             <Text style={styles.cardTitle}>나의 크레딧 잔액</Text>
@@ -150,7 +144,6 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           </TouchableOpacity>
         </View>
 
-        {/* 학과 순위 카드 */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>크레딧 총액 학과 순위</Text>
 
@@ -170,7 +163,6 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           </View>
         </View>
 
-        {/* 나눔 물품 등록 배너 */}
         <View style={styles.card}>
           <Text style={styles.cardTitle}>
             나눔 물품을 등록하고 크레딧을 받아보세요!
@@ -187,7 +179,6 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           </TouchableOpacity>
         </View>
 
-        {/* 추천 미션 */}
         <Text style={styles.sectionTitle}>추천 미션</Text>
 
         <View style={styles.missionRow}>
@@ -202,7 +193,6 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           />
         </View>
 
-        {/* 나눔 물품 리스트 */}
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>나눔 물품 리스트</Text>
 
@@ -215,7 +205,7 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           <ActivityIndicator
             size="large"
             color="#5C8B5A"
-            style={{marginTop: 20}}
+            style={styles.loadingIndicator}
           />
         ) : error ? (
           <Text style={styles.errorText}>{error}</Text>
@@ -250,7 +240,7 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
                     {item.title}
                   </Text>
 
-                  <Text style={{fontSize: 18, color: '#CCCCCC'}}>♡</Text>
+                  <Text style={styles.productHeart}>♡</Text>
                 </View>
 
                 <Text style={styles.productPrice}>
@@ -264,293 +254,3 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-
-  header: {
-    backgroundColor: '#FFFFFF',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    borderBottomWidth: 1,
-    borderBottomColor: '#DDDDDD',
-  },
-
-  appTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-  },
-
-  content: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-  },
-
-  cardTitle: {
-    fontSize: 15,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    marginBottom: 4,
-  },
-
-  cardSubText: {
-    fontSize: 12,
-    color: '#888888',
-    marginBottom: 12,
-    lineHeight: 18,
-  },
-
-  attendanceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  attendanceLeft: {
-    flex: 1,
-    paddingRight: 12,
-  },
-
-  stampButton: {
-    width: 70,
-    height: 70,
-    borderRadius: 35,
-    backgroundColor: '#5C8B5A',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  stampText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-
-  creditTopRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-
-  creditAmountRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-  },
-
-  creditAmount: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#5C8B5A',
-  },
-
-  creditUnit: {
-    fontSize: 14,
-    color: '#1A1A1A',
-  },
-
-  primaryButton: {
-    backgroundColor: '#5C8B5A',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-
-  primaryButtonText: {
-    color: '#FFFFFF',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-
-  outlineButton: {
-    borderWidth: 1,
-    borderColor: '#5C8B5A',
-    borderRadius: 8,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-
-  outlineButtonText: {
-    color: '#5C8B5A',
-    fontSize: 15,
-    fontWeight: '600',
-  },
-
-  rankList: {
-    marginTop: 12,
-  },
-
-  rankItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FDF8EC',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 6,
-  },
-
-  rankItemFirst: {
-    backgroundColor: '#EDE0C4',
-  },
-
-  rankNumber: {
-    fontWeight: 'bold',
-    fontSize: 14,
-    marginRight: 12,
-    color: '#1A1A1A',
-    width: 16,
-  },
-
-  rankDept: {
-    flex: 1,
-    fontSize: 14,
-    color: '#1A1A1A',
-  },
-
-  rankCredit: {
-    fontSize: 12,
-    color: '#888888',
-  },
-
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
-    marginBottom: 12,
-  },
-
-  seeAll: {
-    fontSize: 13,
-    color: '#888888',
-    marginBottom: 12,
-  },
-
-  missionRow: {
-    flexDirection: 'row',
-    gap: 12,
-    marginBottom: 24,
-  },
-
-  missionCard: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
-  },
-
-  missionTitle: {
-    fontWeight: 'bold',
-    fontSize: 13,
-    color: '#1A1A1A',
-    marginBottom: 6,
-  },
-
-  missionDesc: {
-    fontSize: 11,
-    color: '#888888',
-    marginBottom: 8,
-    lineHeight: 16,
-  },
-
-  missionCredit: {
-    fontSize: 11,
-    color: '#5C8B5A',
-    fontWeight: 'bold',
-    marginBottom: 8,
-  },
-
-  missionButton: {
-    backgroundColor: '#5C8B5A',
-    borderRadius: 6,
-    paddingVertical: 6,
-    alignItems: 'center',
-  },
-
-  missionButtonText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-  },
-
-  productGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-
-  productCard: {
-    width: '47%',
-  },
-
-  productImage: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: 8,
-    marginBottom: 8,
-    justifyContent: 'flex-end',
-    padding: 8,
-  },
-
-  productImageText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-
-  productBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  productName: {
-    fontWeight: 'bold',
-    fontSize: 14,
-    color: '#1A1A1A',
-    flex: 1,
-  },
-
-  productPrice: {
-    fontSize: 12,
-    color: '#888888',
-    marginTop: 2,
-  },
-
-  errorText: {
-    color: '#FF5252',
-    textAlign: 'center',
-    marginTop: 20,
-    fontSize: 14,
-  },
-
-  emptyContainer: {
-    padding: 40,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  emptyText: {
-    color: '#888888',
-    fontSize: 14,
-  },
-});

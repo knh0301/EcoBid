@@ -1,13 +1,8 @@
 import React from 'react';
-import {
-  ScrollView,
-  Text,
-  View,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import {ScrollView, Text, View, TouchableOpacity} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {chatListStyles as styles} from '../styles/ChatListScreenStyle';
 
 const CHAT_DATA = [
   {
@@ -37,7 +32,11 @@ export function ChatListScreen({navigation}: any) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.container, {paddingTop: insets.top, paddingBottom: insets.bottom}]}>
+    <View
+      style={[
+        styles.container,
+        {paddingTop: insets.top, paddingBottom: insets.bottom},
+      ]}>
       {/* 1단계 헤더: EcoBid 로고 */}
       <View style={styles.topHeader}>
         <Text style={styles.headerLogo}>EcoBid</Text>
@@ -55,14 +54,17 @@ export function ChatListScreen({navigation}: any) {
             style={styles.chatItem}
             onPress={() => navigation.navigate('ChatDetail', {name: item.name})}
             activeOpacity={0.7}>
-            {/* 시안의 아바타를 재현한 아이콘 포함 원형 박스 */}
             <View style={[styles.avatar, {backgroundColor: item.color}]}>
-              <Ionicons name={item.icon as any} size={36} color="rgba(0,0,0,0.5)" />
+              <Ionicons
+                name={item.icon as any}
+                size={36}
+                color="rgba(0,0,0,0.5)"
+              />
             </View>
 
-            {/* 이름 및 마지막 메시지 */}
             <View style={styles.chatInfo}>
               <Text style={styles.userName}>{item.name}</Text>
+
               <Text style={styles.lastMessage} numberOfLines={1}>
                 {item.lastMessage}
               </Text>
@@ -73,66 +75,3 @@ export function ChatListScreen({navigation}: any) {
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#FFFFFF',
-  },
-  topHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
-  },
-  headerLogo: {
-    fontSize: 18,
-    fontWeight: '900',
-    color: '#000',
-  },
-  titleHeader: {
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
-  },
-  pageTitle: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  scrollContent: {
-    flexGrow: 1,
-  },
-  chatItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
-  },
-  avatar: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 12,
-  },
-  chatInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#000',
-    marginBottom: 2,
-  },
-  lastMessage: {
-    fontSize: 14,
-    color: '#888',
-    fontWeight: '400',
-  },
-});

@@ -1,23 +1,21 @@
 import {StyleSheet} from 'react-native';
-
-const LIGHT_GREEN = '#79AD6F';
-const PAGE_BG = '#F7F9F6';
+import {colors} from './colors';
 
 export const sharedItemsStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: PAGE_BG,
+    backgroundColor: colors.pageBackground,
   },
 
   header: {
     height: 58,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: colors.border,
     position: 'relative',
   },
 
@@ -27,7 +25,7 @@ export const sharedItemsStyles = StyleSheet.create({
 
   backArrow: {
     fontSize: 18,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   headerTitle: {
@@ -37,14 +35,14 @@ export const sharedItemsStyles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '900',
-    color: '#222222',
+    color: colors.textDark,
   },
 
   creditBadge: {
     minWidth: 92,
     height: 30,
     borderRadius: 15,
-    backgroundColor: LIGHT_GREEN,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
@@ -53,7 +51,7 @@ export const sharedItemsStyles = StyleSheet.create({
   },
 
   creditBadgeText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 12,
     fontWeight: '800',
   },
@@ -71,13 +69,13 @@ export const sharedItemsStyles = StyleSheet.create({
   errorText: {
     textAlign: 'center',
     marginTop: 40,
-    color: 'red',
+    color: colors.error,
   },
 
   emptyText: {
     textAlign: 'center',
     marginTop: 40,
-    color: '#888888',
+    color: colors.textMuted,
   },
 
   fab: {
@@ -87,7 +85,7 @@ export const sharedItemsStyles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#5C8B5A',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -98,7 +96,7 @@ export const sharedItemsStyles = StyleSheet.create({
   },
 
   fabText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 28,
     lineHeight: 32,
   },

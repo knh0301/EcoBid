@@ -1,35 +1,36 @@
 import {StyleSheet} from 'react-native';
+import {colors} from './colors';
 
 export const chatListStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
 
   topHeader: {
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: colors.grayBackground,
   },
 
   headerLogo: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#000',
+    color: colors.textPrimary,
   },
 
   titleHeader: {
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: colors.grayBackground,
   },
 
   pageTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.textDark,
   },
 
   scrollContent: {
@@ -42,7 +43,7 @@ export const chatListStyles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#F5F5F5',
+    borderBottomColor: colors.grayBackground,
   },
 
   avatar: {
@@ -62,13 +63,13 @@ export const chatListStyles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
+    color: colors.textPrimary,
     marginBottom: 2,
   },
 
   lastMessage: {
     fontSize: 14,
-    color: '#888',
+    color: colors.textMuted,
     fontWeight: '400',
   },
 });

@@ -1,18 +1,28 @@
 import {StyleSheet} from 'react-native';
 
+const LIGHT_GREEN = '#79AD6F';
+const PAGE_BG = '#F7F9F6';
+
 export const sharedItemsStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: PAGE_BG,
   },
 
   header: {
+    height: 58,
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#F5F5F5',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+    position: 'relative',
+  },
+
+  backButton: {
+    zIndex: 2,
   },
 
   backArrow: {
@@ -21,56 +31,31 @@ export const sharedItemsStyles = StyleSheet.create({
   },
 
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#222222',
   },
 
   creditBadge: {
-    backgroundColor: '#EAF2E9',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
+    minWidth: 92,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: LIGHT_GREEN,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    marginLeft: 'auto',
+    zIndex: 2,
   },
 
   creditBadgeText: {
-    color: '#5C8B5A',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-
-  categoryScroll: {
-    maxHeight: 52,
-  },
-
-  categoryContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-
-  categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
-    backgroundColor: '#FFFFFF',
-    marginRight: 8,
-  },
-
-  categoryChipSelected: {
-    backgroundColor: '#5C8B5A',
-    borderColor: '#5C8B5A',
-  },
-
-  categoryChipText: {
-    fontSize: 13,
-    color: '#1A1A1A',
-  },
-
-  categoryChipTextSelected: {
     color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontSize: 12,
+    fontWeight: '800',
   },
 
   grid: {
@@ -80,7 +65,7 @@ export const sharedItemsStyles = StyleSheet.create({
 
   gridRow: {
     justifyContent: 'space-between',
-    marginBottom: 20,
+    marginBottom: 8,
   },
 
   errorText: {

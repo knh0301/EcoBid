@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   FlatList,
   ActivityIndicator,
 } from 'react-native';
@@ -13,6 +12,7 @@ import {creditsApi} from '../api/creditsApi';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {sharedItemsStyles as styles} from '../styles/SharedItemsScreenStyle';
 import {ItemCard} from '../components/ItemCard';
+import {CategoryFilter} from '../components/CategoryFilter';
 
 const CATEGORIES = [
   '전체',
@@ -83,8 +83,10 @@ export function SharedItemsScreen() {
   return (
     <View style={[styles.container, {paddingTop: insets.top}]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backArrow}>{'<'}</Text>
+        <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}>
+            <Text style={styles.backArrow}>{'<'}</Text>
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>나눔 물품</Text>
@@ -96,33 +98,11 @@ export function SharedItemsScreen() {
         </View>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryScroll}
-        contentContainerStyle={styles.categoryContent}>
-        {CATEGORIES.map(cat => {
-          const isSelected = selectedCategory === cat;
-
-          return (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.categoryChip,
-                isSelected && styles.categoryChipSelected,
-              ]}
-              onPress={() => setSelectedCategory(cat)}>
-              <Text
-                style={[
-                  styles.categoryChipText,
-                  isSelected && styles.categoryChipTextSelected,
-                ]}>
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <CategoryFilter
+        categories={CATEGORIES}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
       {isLoading ? (
         <ActivityIndicator

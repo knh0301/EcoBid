@@ -1,14 +1,11 @@
-import React from 'react';
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
-import { myPageStyles as styles } from '../styles/MyPageScreenStyle';
+import {myPageStyles as styles} from '../styles/MyPageScreenStyle';
+import {creditsApi, CreditTransaction} from '../api/creditsApi';
+import {authApi} from '../api/authApi';
 
 const BADGES = [
   {id: 1, emoji: '🛍️', title: '나눔 천사', desc: '물품을 나눈 따뜻한 마음'},
@@ -21,29 +18,77 @@ const BADGES = [
   {id: 8, emoji: '🎯', title: '미션러너', desc: '미션 꾸준히 완료'},
 ];
 
-const ACTIVITIES = [
-  {
-    id: 1,
-    title: '물품 구매 : 빈티지 조명',
-    credit: '- 2,500 크레딧',
-    type: 'minus',
-  },
-  {
-    id: 2,
-    title: '미션 완료 : 텀블러 사용하기',
-    credit: '+ 500 크레딧',
-    type: 'plus',
-  },
-  {
-    id: 3,
-    title: '미션 완료 : 매일 출석',
-    credit: '+ 10 크레딧',
-    type: 'plus',
-  },
-];
+type ActivityItem = {
+  id: number;
+  title: string;
+  credit: string;
+  type: 'plus' | 'minus';
+};
 
 export function MyPageScreen() {
   const navigation = useNavigation<any>();
+
+  const [userName, setUserName] = useState('이름 확인 중');
+  const [joinedDateText, setJoinedDateText] = useState('활동 시작일 확인 중');
+
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [creditLoading, setCreditLoading] = useState(true);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [totalEarnedCredits, setTotalEarnedCredits] = useState(0);
+
+  const levelInfo = getLevelInfo(totalEarnedCredits);
+
+  const fetchMyPageData = async () => {
+    try {
+      setCreditLoading(true);
+
+      const user = await authApi.getMe();
+
+      setUserName(user.name);
+
+      const joinedDate = user.createdAt || user.created_at;
+
+      if (joinedDate) {
+        setJoinedDateText(formatJoinedDate(joinedDate));
+      }
+
+      const transactions = await creditsApi.getCreditTransactions(user.id);
+
+      const balance = transactions.reduce((sum, item) => {
+        return sum + Number(item.amount);
+      }, 0);
+
+      const earnedCredits = transactions
+        .filter(item => Number(item.amount) > 0)
+        .reduce((sum, item) => {
+          return sum + Number(item.amount);
+        }, 0);
+
+      const recentActivities = transactions
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        )
+        .slice(0, 3)
+        .map(mapTransactionToActivity);
+
+      setCreditBalance(balance);
+      setTotalEarnedCredits(earnedCredits);
+      setActivities(recentActivities);
+    } catch (err: any) {
+      console.warn('Fetch mypage data error:', err);
+
+      setUserName('이름 확인 중');
+      setJoinedDateText('활동 시작일 확인 중');
+    } finally {
+      setCreditLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMyPageData();
+  }, []);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -57,28 +102,42 @@ export function MyPageScreen() {
         <Text style={styles.pageTitle}>내 정보</Text>
 
         <Pressable
-  style={styles.profileCard}
-  onPress={() => navigation.navigate('ProfileEdit')}>
-  <View style={styles.profileImageOuter}>
-    <View style={styles.profileImageInner}>
-      <Text style={styles.profileEmoji}>🙂</Text>
-    </View>
-  </View>
+          style={styles.profileCard}
+          onPress={() => navigation.navigate('ProfileEdit')}>
+          <View style={styles.profileImageOuter}>
+            <View style={styles.profileImageInner}>
+              <Text style={styles.profileEmoji}>🙂</Text>
+            </View>
+          </View>
 
-  <Text style={styles.userName}>김나현</Text>
-  <Text style={styles.userInfo}>레벨 5. 2026년 4월 8일부터 활동중</Text>
+          <Text style={styles.userName}>{userName}</Text>
 
-  <View style={styles.levelArea}>
-    <Text style={styles.levelLabel}>레벨 6까지 남은 경험치</Text>
+          <Text style={styles.userInfo}>
+            레벨 {levelInfo.level}. {joinedDateText}
+          </Text>
 
-    <View style={styles.progressRow}>
-      <View style={styles.progressTrack}>
-        <View style={styles.progressFill} />
-      </View>
-      <Text style={styles.progressText}>17,500/250,000</Text>
-    </View>
-  </View>
-</Pressable>
+          <View style={styles.levelArea}>
+            <Text style={styles.levelLabel}>
+              레벨 {levelInfo.level + 1}까지 남은 경험치
+            </Text>
+
+            <View style={styles.progressRow}>
+              <View style={styles.progressTrack}>
+                <View
+                  style={[
+                    styles.progressFill,
+                    {width: `${Math.min(levelInfo.progressPercent, 100)}%`},
+                  ]}
+                />
+              </View>
+
+              <Text style={styles.progressText}>
+                {totalEarnedCredits.toLocaleString()}/
+                {levelInfo.nextLevelCredit.toLocaleString()}
+              </Text>
+            </View>
+          </View>
+        </Pressable>
 
         <View style={styles.statRow}>
           <Pressable
@@ -93,7 +152,11 @@ export function MyPageScreen() {
             style={styles.statCard}
             onPress={() => navigation.navigate('CreditHistory')}>
             <Ionicons name="cash-outline" size={32} color="#F2A72C" />
-            <Text style={styles.statNumber}>1,250</Text>
+
+            <Text style={styles.statNumber}>
+              {creditLoading ? '...' : creditBalance.toLocaleString()}
+            </Text>
+
             <Text style={styles.statLabel}>크레딧</Text>
           </Pressable>
 
@@ -112,16 +175,16 @@ export function MyPageScreen() {
           <View style={styles.badgeGrid}>
             {BADGES.map(badge => (
               <View key={badge.id} style={styles.badgeItem}>
-  <Text style={styles.badgeEmoji}>{badge.emoji}</Text>
+                <Text style={styles.badgeEmoji}>{badge.emoji}</Text>
 
-  <Text style={styles.badgeTitle} numberOfLines={1}>
-    {badge.title}
-  </Text>
+                <Text style={styles.badgeTitle} numberOfLines={1}>
+                  {badge.title}
+                </Text>
 
-  <Text style={styles.badgeDesc} numberOfLines={2}>
-    {badge.desc}
-  </Text>
-</View>
+                <Text style={styles.badgeDesc} numberOfLines={2}>
+                  {badge.desc}
+                </Text>
+              </View>
             ))}
           </View>
         </View>
@@ -129,22 +192,122 @@ export function MyPageScreen() {
         <Text style={styles.activityTitle}>최근 활동</Text>
 
         <View style={styles.activityList}>
-          {ACTIVITIES.map(activity => (
-            <View key={activity.id} style={styles.activityItem}>
-              <Text style={styles.activityText}>{activity.title}</Text>
-              <Text
-                style={[
-                  styles.activityCredit,
-                  activity.type === 'minus'
-                    ? styles.minusCredit
-                    : styles.plusCredit,
-                ]}>
-                {activity.credit}
-              </Text>
+          {creditLoading ? (
+            <View style={styles.activityItem}>
+              <Text style={styles.activityText}>최근 활동을 불러오는 중...</Text>
+              <Text style={styles.activityCredit}>...</Text>
             </View>
-          ))}
+          ) : activities.length === 0 ? (
+            <View style={styles.activityItem}>
+              <Text style={styles.activityText}>최근 활동이 없습니다.</Text>
+              <Text style={styles.activityCredit}>0 크레딧</Text>
+            </View>
+          ) : (
+            activities.map(activity => (
+              <View key={activity.id} style={styles.activityItem}>
+                <Text style={styles.activityText}>{activity.title}</Text>
+
+                <Text
+                  style={[
+                    styles.activityCredit,
+                    activity.type === 'minus'
+                      ? styles.minusCredit
+                      : styles.plusCredit,
+                  ]}>
+                  {activity.credit}
+                </Text>
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function mapTransactionToActivity(
+  transaction: CreditTransaction,
+): ActivityItem {
+  const amount = Number(transaction.amount);
+
+  return {
+    id: transaction.id,
+    title:
+      transaction.description ||
+      getDefaultActivityTitle(transaction.referenceType),
+    credit: formatCredit(amount),
+    type: amount > 0 ? 'plus' : 'minus',
+  };
+}
+
+function getDefaultActivityTitle(
+  referenceType: CreditTransaction['referenceType'],
+) {
+  switch (referenceType) {
+    case 'ATTENDANCE':
+      return '출석 보상';
+    case 'MISSION':
+      return '미션 완료';
+    case 'PRODUCT':
+      return '물품 거래';
+    default:
+      return '크레딧 활동';
+  }
+}
+
+function formatCredit(amount: number) {
+  const absAmount = Math.abs(amount).toLocaleString();
+
+  if (amount > 0) {
+    return `+ ${absAmount} 크레딧`;
+  }
+
+  return `- ${absAmount} 크레딧`;
+}
+
+function getLevelInfo(totalEarnedCredits: number) {
+  if (totalEarnedCredits < 5000) {
+    return {
+      level: 1,
+      nextLevelCredit: 5000,
+      progressPercent: (totalEarnedCredits / 5000) * 100,
+    };
+  }
+
+  if (totalEarnedCredits < 10000) {
+    return {
+      level: 2,
+      nextLevelCredit: 10000,
+      progressPercent: ((totalEarnedCredits - 5000) / 5000) * 100,
+    };
+  }
+
+  const levelAfterThree = Math.floor((totalEarnedCredits - 10000) / 10000);
+
+  const level = 3 + levelAfterThree;
+  const currentLevelStart = 10000 + levelAfterThree * 10000;
+  const nextLevelCredit = currentLevelStart + 10000;
+
+  return {
+    level,
+    nextLevelCredit,
+    progressPercent:
+      ((totalEarnedCredits - currentLevelStart) /
+        (nextLevelCredit - currentLevelStart)) *
+      100,
+  };
+}
+
+function formatJoinedDate(dateString: string) {
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return '활동 시작일 확인 중';
+  }
+
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  return `${year}년 ${month}월 ${day}일부터 활동중`;
 }

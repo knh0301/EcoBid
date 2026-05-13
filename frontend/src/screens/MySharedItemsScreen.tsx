@@ -6,8 +6,17 @@ import {useNavigation} from '@react-navigation/native';
 import {mySharedItemsStyles as styles} from '../styles/MySharedItemsScreenStyle';
 import {creditsApi} from '../api/creditsApi';
 import {ItemCard} from '../components/ItemCard';
+import {CategoryFilter} from '../components/CategoryFilter';
 
-const CATEGORIES = ['전체', '가구', '가전', '도서', '의류/잡화'];
+const CATEGORIES = [
+  '전체',
+  '가구',
+  '가전',
+  '도서',
+  '의류/잡화',
+  '생활용품',
+  '기타',
+];
 
 const SHARED_ITEMS = [
   {
@@ -73,34 +82,11 @@ export function MySharedItemsScreen() {
         </View>
       </View>
 
-      <View style={styles.categoryArea}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryScrollContent}>
-          {CATEGORIES.map(category => {
-            const isSelected = selectedCategory === category;
-
-            return (
-              <Pressable
-                key={category}
-                style={[
-                  styles.categoryChip,
-                  isSelected && styles.categoryChipActive,
-                ]}
-                onPress={() => setSelectedCategory(category)}>
-                <Text
-                  style={[
-                    styles.categoryText,
-                    isSelected && styles.categoryTextActive,
-                  ]}>
-                  {category}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
+      <CategoryFilter
+        categories={CATEGORIES}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
       <ScrollView
         contentContainerStyle={styles.content}

@@ -5,6 +5,7 @@ import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {myPageStyles as styles} from '../styles/MyPageScreenStyle';
 import {creditsApi, CreditTransaction} from '../api/creditsApi';
+import {authApi} from '../api/authApi';
 
 const MOCK_USER_ID = 3;
 
@@ -29,9 +30,22 @@ type ActivityItem = {
 export function MyPageScreen() {
   const navigation = useNavigation<any>();
 
+  const [userName, setUserName] = useState('...');
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+
+  const fetchUserProfile = async () => {
+    try {
+      const user = await authApi.getMe();
+      setUserName(user.name);
+    } catch (err: any) {
+      console.warn('Fetch user profile error:', err);
+
+      // 로그인 토큰 연동 전 테스트용 fallback
+      setUserName('나봉');
+    }
+  };
 
   const fetchCreditData = async () => {
     try {
@@ -62,6 +76,7 @@ export function MyPageScreen() {
   };
 
   useEffect(() => {
+    fetchUserProfile();
     fetchCreditData();
   }, []);
 
@@ -85,7 +100,8 @@ export function MyPageScreen() {
             </View>
           </View>
 
-          <Text style={styles.userName}>김나현</Text>
+          <Text style={styles.userName}>{userName}</Text>
+
           <Text style={styles.userInfo}>
             레벨 5. 2026년 4월 8일부터 활동중
           </Text>
@@ -97,6 +113,7 @@ export function MyPageScreen() {
               <View style={styles.progressTrack}>
                 <View style={styles.progressFill} />
               </View>
+
               <Text style={styles.progressText}>17,500/250,000</Text>
             </View>
           </View>
@@ -115,9 +132,11 @@ export function MyPageScreen() {
             style={styles.statCard}
             onPress={() => navigation.navigate('CreditHistory')}>
             <Ionicons name="cash-outline" size={32} color="#F2A72C" />
+
             <Text style={styles.statNumber}>
               {creditLoading ? '...' : creditBalance.toLocaleString()}
             </Text>
+
             <Text style={styles.statLabel}>크레딧</Text>
           </Pressable>
 
@@ -167,6 +186,7 @@ export function MyPageScreen() {
             activities.map(activity => (
               <View key={activity.id} style={styles.activityItem}>
                 <Text style={styles.activityText}>{activity.title}</Text>
+
                 <Text
                   style={[
                     styles.activityCredit,
@@ -192,13 +212,16 @@ function mapTransactionToActivity(
 
   return {
     id: transaction.id,
-    title: transaction.description || getDefaultActivityTitle(transaction.referenceType),
+    title:
+      transaction.description || getDefaultActivityTitle(transaction.referenceType),
     credit: formatCredit(amount),
     type: amount > 0 ? 'plus' : 'minus',
   };
 }
 
-function getDefaultActivityTitle(referenceType: CreditTransaction['referenceType']) {
+function getDefaultActivityTitle(
+  referenceType: CreditTransaction['referenceType'],
+) {
   switch (referenceType) {
     case 'ATTENDANCE':
       return '출석 보상';

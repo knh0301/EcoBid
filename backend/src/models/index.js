@@ -36,7 +36,7 @@ const syncDatabase = async () => {
 
     // force: false → 기존 테이블 유지
     // alter: true  → 스키마 변경 사항 자동 반영
-    await sequelize.sync({ alter: true });
+    await sequelize.sync({ alter: false });
     console.log('✅ DB 동기화 완료');
   } catch (error) {
     console.error('❌ DB 연결 실패:', error);
@@ -53,4 +53,4 @@ module.exports = {
   Mission,
   MissionSubmission,
   CreditTransaction,
-};
+};

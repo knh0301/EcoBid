@@ -7,6 +7,8 @@ import {myPageStyles as styles} from '../styles/MyPageScreenStyle';
 import {creditsApi, CreditTransaction} from '../api/creditsApi';
 import {authApi} from '../api/authApi';
 
+// 로그인/JWT 완전 연동 전 임시 사용자 ID
+// 나중에 로그인한 사용자 id로 교체하면 됨
 const MOCK_USER_ID = 3;
 
 const BADGES = [
@@ -34,6 +36,9 @@ export function MyPageScreen() {
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
+  const [totalEarnedCredits, setTotalEarnedCredits] = useState(0);
+
+  const levelInfo = getLevelInfo(totalEarnedCredits);
 
   const fetchUserProfile = async () => {
     try {
@@ -53,10 +58,20 @@ export function MyPageScreen() {
 
       const transactions = await creditsApi.getCreditTransactions(MOCK_USER_ID);
 
+      // 현재 보유 크레딧: 지급/사용 내역 전체 합계
       const balance = transactions.reduce((sum, item) => {
         return sum + Number(item.amount);
       }, 0);
 
+      // 레벨 경험치: 누적 획득 크레딧만 계산
+      // 사용한 크레딧은 경험치에서 차감하지 않음
+      const earnedCredits = transactions
+        .filter(item => Number(item.amount) > 0)
+        .reduce((sum, item) => {
+          return sum + Number(item.amount);
+        }, 0);
+
+      // 최근 활동: 최신 크레딧 거래 3개
       const recentActivities = transactions
         .slice()
         .sort(
@@ -67,6 +82,7 @@ export function MyPageScreen() {
         .map(mapTransactionToActivity);
 
       setCreditBalance(balance);
+      setTotalEarnedCredits(earnedCredits);
       setActivities(recentActivities);
     } catch (err: any) {
       console.warn('Fetch mypage credit data error:', err);
@@ -103,18 +119,28 @@ export function MyPageScreen() {
           <Text style={styles.userName}>{userName}</Text>
 
           <Text style={styles.userInfo}>
-            레벨 5. 2026년 4월 8일부터 활동중
+            레벨 {levelInfo.level}. 2026년 4월 8일부터 활동중
           </Text>
 
           <View style={styles.levelArea}>
-            <Text style={styles.levelLabel}>레벨 6까지 남은 경험치</Text>
+            <Text style={styles.levelLabel}>
+              레벨 {levelInfo.level + 1}까지 남은 경험치
+            </Text>
 
             <View style={styles.progressRow}>
               <View style={styles.progressTrack}>
-                <View style={styles.progressFill} />
+                <View
+                  style={[
+                    styles.progressFill,
+                    {width: `${Math.min(levelInfo.progressPercent, 100)}%`},
+                  ]}
+                />
               </View>
 
-              <Text style={styles.progressText}>17,500/250,000</Text>
+              <Text style={styles.progressText}>
+                {totalEarnedCredits.toLocaleString()}/
+                {levelInfo.nextLevelCredit.toLocaleString()}
+              </Text>
             </View>
           </View>
         </Pressable>
@@ -213,7 +239,8 @@ function mapTransactionToActivity(
   return {
     id: transaction.id,
     title:
-      transaction.description || getDefaultActivityTitle(transaction.referenceType),
+      transaction.description ||
+      getDefaultActivityTitle(transaction.referenceType),
     credit: formatCredit(amount),
     type: amount > 0 ? 'plus' : 'minus',
   };
@@ -242,4 +269,40 @@ function formatCredit(amount: number) {
   }
 
   return `- ${absAmount} 크레딧`;
+}
+
+function getLevelInfo(totalEarnedCredits: number) {
+  if (totalEarnedCredits < 5000) {
+    return {
+      level: 1,
+      currentLevelStart: 0,
+      nextLevelCredit: 5000,
+      progressPercent: (totalEarnedCredits / 5000) * 100,
+    };
+  }
+
+  if (totalEarnedCredits < 10000) {
+    return {
+      level: 2,
+      currentLevelStart: 5000,
+      nextLevelCredit: 10000,
+      progressPercent: ((totalEarnedCredits - 5000) / 5000) * 100,
+    };
+  }
+
+  const levelAfterThree = Math.floor((totalEarnedCredits - 10000) / 10000);
+
+  const level = 3 + levelAfterThree;
+  const currentLevelStart = 10000 + levelAfterThree * 10000;
+  const nextLevelCredit = currentLevelStart + 10000;
+
+  return {
+    level,
+    currentLevelStart,
+    nextLevelCredit,
+    progressPercent:
+      ((totalEarnedCredits - currentLevelStart) /
+        (nextLevelCredit - currentLevelStart)) *
+      100,
+  };
 }

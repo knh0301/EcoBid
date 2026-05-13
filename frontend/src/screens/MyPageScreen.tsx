@@ -33,6 +33,8 @@ export function MyPageScreen() {
   const navigation = useNavigation<any>();
 
   const [userName, setUserName] = useState('...');
+  const [joinedDateText, setJoinedDateText] = useState('가입일 확인 중');
+
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
@@ -43,12 +45,20 @@ export function MyPageScreen() {
   const fetchUserProfile = async () => {
     try {
       const user = await authApi.getMe();
+
       setUserName(user.name);
+
+      const joinedDate = user.createdAt || user.created_at;
+
+      if (joinedDate) {
+        setJoinedDateText(formatJoinedDate(joinedDate));
+      }
     } catch (err: any) {
       console.warn('Fetch user profile error:', err);
 
       // 로그인 토큰 연동 전 테스트용 fallback
-      setUserName('나봉');
+      setUserName('...');
+      setJoinedDateText('활동 시작일 확인 중');
     }
   };
 
@@ -119,7 +129,7 @@ export function MyPageScreen() {
           <Text style={styles.userName}>{userName}</Text>
 
           <Text style={styles.userInfo}>
-            레벨 {levelInfo.level}. 2026년 4월 8일부터 활동중
+            레벨 {levelInfo.level}. {joinedDateText}
           </Text>
 
           <View style={styles.levelArea}>
@@ -305,4 +315,18 @@ function getLevelInfo(totalEarnedCredits: number) {
         (nextLevelCredit - currentLevelStart)) *
       100,
   };
+}
+
+function formatJoinedDate(dateString: string) {
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return '가입일 확인 중';
+  }
+
+  const year = date.getFullYear();
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+
+  return `${year}년 ${month}월 ${day}일부터 활동중`;
 }

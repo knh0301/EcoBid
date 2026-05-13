@@ -78,6 +78,8 @@ export type UserProfile = {
   name: string;
   profileImage?: string | null;
   credits?: number;
+  createdAt?: string;
+  created_at?: string;
 };
 
 type AuthResponse = {

@@ -11,27 +11,53 @@ import {
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {useNavigation} from '@react-navigation/native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import {Ionicons} from '@expo/vector-icons';
 import {loginStyles as styles} from '../styles/LoginScreenStyle';
-import { useAuth } from '../context/AuthContext';
+import {useAuth} from '../context/AuthContext';
+import {authApi} from '../api/authApi';
 
 export function LoginScreen() {
   const navigation = useNavigation<any>();
-  const { signInWithGoogle, isLoading } = useAuth();
+  const {signInWithGoogle, isLoading: googleLoading} = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loginLoading, setLoginLoading] = useState(false);
 
   const handleLogin = async () => {
-    // 지금은 백엔드 연동 전이므로 임시 토큰 저장
-    // 나중에는 login API 응답으로 받은 accessToken을 저장하면 됨.
-    await AsyncStorage.setItem('accessToken', 'mock-access-token');
+    if (!email.trim()) {
+      Alert.alert('로그인 실패', '이메일을 입력해주세요.');
+      return;
+    }
 
-    navigation.replace('MainTabs');
+    if (!password.trim()) {
+      Alert.alert('로그인 실패', '비밀번호를 입력해주세요.');
+      return;
+    }
+
+    try {
+      setLoginLoading(true);
+
+      await authApi.login({
+        email: email.trim(),
+        password,
+      });
+
+      navigation.replace('MainTabs');
+    } catch (error: any) {
+      console.warn('Login error:', error);
+
+      const message =
+        error.response?.data?.message ||
+        '이메일 또는 비밀번호를 확인해주세요.';
+
+      Alert.alert('로그인 실패', message);
+    } finally {
+      setLoginLoading(false);
+    }
   };
 
-const handleGoogleLogin = async () => {
+  const handleGoogleLogin = async () => {
     try {
       await signInWithGoogle();
       // 성공 시 RootNavigator가 자동으로 화면 전환
@@ -39,6 +65,8 @@ const handleGoogleLogin = async () => {
       Alert.alert('로그인 실패', error.message || '다시 시도해주세요.');
     }
   };
+
+  const isButtonLoading = loginLoading || googleLoading;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -84,17 +112,24 @@ const handleGoogleLogin = async () => {
             </Pressable>
           </View>
 
-          <Pressable style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>로그인</Text>
+          <Pressable
+            style={[styles.loginButton, loginLoading && {opacity: 0.7}]}
+            onPress={handleLogin}
+            disabled={isButtonLoading}>
+            {loginLoading ? (
+              <ActivityIndicator size="small" color="#FFFFFF" />
+            ) : (
+              <Text style={styles.loginButtonText}>로그인</Text>
+            )}
           </Pressable>
 
           <Text style={styles.dividerText}>또는</Text>
 
           <Pressable
-            style={[styles.googleButton, isLoading && { opacity: 0.7 }]}
+            style={[styles.googleButton, googleLoading && {opacity: 0.7}]}
             onPress={handleGoogleLogin}
-            disabled={isLoading}>
-            {isLoading ? (
+            disabled={isButtonLoading}>
+            {googleLoading ? (
               <ActivityIndicator size="small" color="#4285F4" />
             ) : (
               <>

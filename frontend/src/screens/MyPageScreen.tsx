@@ -4,7 +4,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {myPageStyles as styles} from '../styles/MyPageScreenStyle';
-import {creditsApi} from '../api/creditsApi';
+import {creditsApi, CreditTransaction} from '../api/creditsApi';
 
 const MOCK_USER_ID = 3;
 
@@ -19,49 +19,50 @@ const BADGES = [
   {id: 8, emoji: '🎯', title: '미션러너', desc: '미션 꾸준히 완료'},
 ];
 
-const ACTIVITIES = [
-  {
-    id: 1,
-    title: '물품 구매 : 빈티지 조명',
-    credit: '- 2,500 크레딧',
-    type: 'minus',
-  },
-  {
-    id: 2,
-    title: '미션 완료 : 텀블러 사용하기',
-    credit: '+ 500 크레딧',
-    type: 'plus',
-  },
-  {
-    id: 3,
-    title: '미션 완료 : 매일 출석',
-    credit: '+ 10 크레딧',
-    type: 'plus',
-  },
-];
+type ActivityItem = {
+  id: number;
+  title: string;
+  credit: string;
+  type: 'plus' | 'minus';
+};
 
 export function MyPageScreen() {
   const navigation = useNavigation<any>();
 
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
+  const [activities, setActivities] = useState<ActivityItem[]>([]);
 
-  const fetchCreditBalance = async () => {
+  const fetchCreditData = async () => {
     try {
       setCreditLoading(true);
 
-      const balance = await creditsApi.getCreditBalance(MOCK_USER_ID);
+      const transactions = await creditsApi.getCreditTransactions(MOCK_USER_ID);
+
+      const balance = transactions.reduce((sum, item) => {
+        return sum + Number(item.amount);
+      }, 0);
+
+      const recentActivities = transactions
+        .slice()
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+        )
+        .slice(0, 3)
+        .map(mapTransactionToActivity);
 
       setCreditBalance(balance);
+      setActivities(recentActivities);
     } catch (err: any) {
-      console.warn('Fetch credit balance error:', err);
+      console.warn('Fetch mypage credit data error:', err);
     } finally {
       setCreditLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCreditBalance();
+    fetchCreditData();
   }, []);
 
   return (
@@ -152,22 +153,70 @@ export function MyPageScreen() {
         <Text style={styles.activityTitle}>최근 활동</Text>
 
         <View style={styles.activityList}>
-          {ACTIVITIES.map(activity => (
-            <View key={activity.id} style={styles.activityItem}>
-              <Text style={styles.activityText}>{activity.title}</Text>
-              <Text
-                style={[
-                  styles.activityCredit,
-                  activity.type === 'minus'
-                    ? styles.minusCredit
-                    : styles.plusCredit,
-                ]}>
-                {activity.credit}
-              </Text>
+          {creditLoading ? (
+            <View style={styles.activityItem}>
+              <Text style={styles.activityText}>최근 활동을 불러오는 중...</Text>
+              <Text style={styles.activityCredit}>...</Text>
             </View>
-          ))}
+          ) : activities.length === 0 ? (
+            <View style={styles.activityItem}>
+              <Text style={styles.activityText}>최근 활동이 없습니다.</Text>
+              <Text style={styles.activityCredit}>0 크레딧</Text>
+            </View>
+          ) : (
+            activities.map(activity => (
+              <View key={activity.id} style={styles.activityItem}>
+                <Text style={styles.activityText}>{activity.title}</Text>
+                <Text
+                  style={[
+                    styles.activityCredit,
+                    activity.type === 'minus'
+                      ? styles.minusCredit
+                      : styles.plusCredit,
+                  ]}>
+                  {activity.credit}
+                </Text>
+              </View>
+            ))
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
   );
+}
+
+function mapTransactionToActivity(
+  transaction: CreditTransaction,
+): ActivityItem {
+  const amount = Number(transaction.amount);
+
+  return {
+    id: transaction.id,
+    title: transaction.description || getDefaultActivityTitle(transaction.referenceType),
+    credit: formatCredit(amount),
+    type: amount > 0 ? 'plus' : 'minus',
+  };
+}
+
+function getDefaultActivityTitle(referenceType: CreditTransaction['referenceType']) {
+  switch (referenceType) {
+    case 'ATTENDANCE':
+      return '출석 보상';
+    case 'MISSION':
+      return '미션 완료';
+    case 'PRODUCT':
+      return '물품 거래';
+    default:
+      return '크레딧 활동';
+  }
+}
+
+function formatCredit(amount: number) {
+  const absAmount = Math.abs(amount).toLocaleString();
+
+  if (amount > 0) {
+    return `+ ${absAmount} 크레딧`;
+  }
+
+  return `- ${absAmount} 크레딧`;
 }

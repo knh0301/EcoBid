@@ -1,6 +1,17 @@
+import { Platform } from 'react-native';
+
+const getBaseUrl = () => {
+  if (__DEV__) {
+    // 개발 환경
+    return Platform.OS === 'android'
+      ? 'http://10.0.2.2:3000/api'    // Android 에뮬레이터
+      : 'http://localhost:3000/api';   // iOS 시뮬레이터
+  }
+  // 프로덕션 환경
+  return 'https://실제서버주소.com';
+};
+
 export const API_CONFIG = {
-  // 백엔드 API 서버의 기본 URL입니다. 
-  // 실제 서버 주소로 변경하여 사용하세요. (예: http://192.168.0.10:8080)
-  BASE_URL: 'http://localhost:8080',
+  BASE_URL: getBaseUrl(),
   TIMEOUT: 10000,
 };

@@ -1,16 +1,24 @@
-import React, {useMemo, useState} from 'react';
-import {
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import React, {useEffect, useMemo, useState} from 'react';
+import {Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {likedItemsStyles as styles} from '../styles/LikedItemsScreenStyle';
+import {creditsApi} from '../api/creditsApi';
 
-const CATEGORIES = ['전체', '가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
+const CATEGORIES = [
+  '전체',
+  '가구',
+  '가전',
+  '도서',
+  '의류/잡화',
+  '생활용품',
+  '기타',
+];
+
+// 로그인 연동 전 임시 사용자 ID
+// 나중에 로그인/JWT 연동 후 실제 로그인한 userId로 교체
+const MOCK_USER_ID = 3;
 
 const LIKED_ITEMS = [
   {
@@ -41,7 +49,28 @@ const LIKED_ITEMS = [
 
 export function LikedItemsScreen() {
   const navigation = useNavigation<any>();
+
   const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [creditBalance, setCreditBalance] = useState(0);
+  const [creditLoading, setCreditLoading] = useState(true);
+
+  const fetchCreditBalance = async () => {
+    try {
+      setCreditLoading(true);
+
+      const balance = await creditsApi.getCreditBalance(MOCK_USER_ID);
+
+      setCreditBalance(balance);
+    } catch (err: any) {
+      console.warn('Fetch credit balance error:', err);
+    } finally {
+      setCreditLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchCreditBalance();
+  }, []);
 
   const filteredItems = useMemo(() => {
     if (selectedCategory === '전체') {
@@ -54,14 +83,19 @@ export function LikedItemsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} hitSlop={10} style={{zIndex: 2}}>
+        <Pressable
+          onPress={() => navigation.goBack()}
+          hitSlop={10}
+          style={{zIndex: 2}}>
           <Ionicons name="chevron-back" size={26} color="#222222" />
         </Pressable>
 
         <Text style={styles.headerTitle}>내가 찜한 물품</Text>
 
         <View style={styles.creditBadge}>
-          <Text style={styles.creditBadgeText}>1,250 크레딧</Text>
+          <Text style={styles.creditBadgeText}>
+            {creditLoading ? '...' : `${creditBalance.toLocaleString()} 크레딧`}
+          </Text>
         </View>
       </View>
 

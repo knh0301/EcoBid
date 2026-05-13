@@ -83,54 +83,6 @@ export const sharedItemsStyles = StyleSheet.create({
     marginBottom: 20,
   },
 
-  productCard: {
-    width: '47%',
-  },
-
-  productImage: {
-    width: '100%',
-    aspectRatio: 1,
-    backgroundColor: '#EAF2E9',
-    borderRadius: 8,
-    marginBottom: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  productImageText: {
-    color: '#5C8B5A',
-    fontWeight: 'bold',
-  },
-
-  productBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  productName: {
-    flex: 1,
-    fontWeight: 'bold',
-    fontSize: 14,
-    color: '#1A1A1A',
-    marginRight: 6,
-  },
-
-  heartIcon: {
-    fontSize: 18,
-    color: '#888888',
-  },
-
-  heartIconActive: {
-    color: '#5C8B5A',
-  },
-
-  productPrice: {
-    fontSize: 12,
-    color: '#888888',
-    marginTop: 2,
-  },
-
   errorText: {
     textAlign: 'center',
     marginTop: 40,

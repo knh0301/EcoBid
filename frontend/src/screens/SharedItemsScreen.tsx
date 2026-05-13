@@ -12,6 +12,7 @@ import {productsApi, Product} from '../api/products';
 import {creditsApi} from '../api/creditsApi';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {sharedItemsStyles as styles} from '../styles/SharedItemsScreenStyle';
+import {ItemCard} from '../components/ItemCard';
 
 const CATEGORIES = [
   '전체',
@@ -147,35 +148,17 @@ export function SharedItemsScreen() {
             const isLiked = likedIds.includes(item.id);
 
             return (
-              <TouchableOpacity
-                style={styles.productCard}
+              <ItemCard
+                title={item.title}
+                price={`${item.creditPrice.toLocaleString()} 크레딧`}
+                icon="📦"
+                backgroundColor="#EAF2E9"
+                isLiked={isLiked}
                 onPress={() =>
                   navigation.navigate('ProductDetail', {productId: item.id})
-                }>
-                <View style={styles.productImage}>
-                  <Text style={styles.productImageText}>IMAGE</Text>
-                </View>
-
-                <View style={styles.productBottom}>
-                  <Text style={styles.productName} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-
-                  <TouchableOpacity onPress={() => toggleLike(item.id)}>
-                    <Text
-                      style={[
-                        styles.heartIcon,
-                        isLiked && styles.heartIconActive,
-                      ]}>
-                      {isLiked ? '♥' : '♡'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.productPrice}>
-                  {item.creditPrice.toLocaleString()} 크레딧
-                </Text>
-              </TouchableOpacity>
+                }
+                onHeartPress={() => toggleLike(item.id)}
+              />
             );
           }}
         />

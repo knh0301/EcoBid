@@ -1,29 +1,25 @@
 import {StyleSheet} from 'react-native';
-
-const GREEN = '#2F6F3E';
-const LIGHT_GREEN = '#C9D8C1';
-const CARD_BG = '#FFFFFF';
-const PAGE_BG = '#F7F9F6';
+import {colors} from './colors';
 
 export const myPageStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: PAGE_BG,
+    backgroundColor: colors.pageBackground,
   },
 
   topHeader: {
     height: 48,
     justifyContent: 'center',
     paddingHorizontal: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: colors.border,
   },
 
   headerLogo: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#111111',
+    color: colors.cardTitle,
   },
 
   scrollContent: {
@@ -35,15 +31,15 @@ export const myPageStyles = StyleSheet.create({
   pageTitle: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#2B2B2B',
+    color: colors.pageTitleDark,
     marginBottom: 12,
   },
 
   profileCard: {
-    backgroundColor: CARD_BG,
+    backgroundColor: colors.white,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: LIGHT_GREEN,
+    borderColor: colors.profileBorder,
     paddingHorizontal: 18,
     paddingVertical: 20,
     alignItems: 'center',
@@ -54,7 +50,7 @@ export const myPageStyles = StyleSheet.create({
     width: 82,
     height: 82,
     borderRadius: 41,
-    backgroundColor: '#95B9EE',
+    backgroundColor: colors.profileBlue,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
@@ -64,7 +60,7 @@ export const myPageStyles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: 32,
-    backgroundColor: '#D0B100',
+    backgroundColor: colors.profileGold,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -76,13 +72,13 @@ export const myPageStyles = StyleSheet.create({
   userName: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#333333',
+    color: colors.textDark,
     marginTop: 4,
   },
 
   userInfo: {
     fontSize: 12,
-    color: '#8A8A8A',
+    color: colors.textSoft,
     marginTop: 6,
     marginBottom: 16,
   },
@@ -94,7 +90,7 @@ export const myPageStyles = StyleSheet.create({
   levelLabel: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#333333',
+    color: colors.textDark,
     marginBottom: 8,
   },
 
@@ -107,7 +103,7 @@ export const myPageStyles = StyleSheet.create({
     flex: 1,
     height: 8,
     borderRadius: 8,
-    backgroundColor: '#D9D9D9',
+    backgroundColor: colors.gray200,
     overflow: 'hidden',
     marginRight: 12,
   },
@@ -116,13 +112,13 @@ export const myPageStyles = StyleSheet.create({
     width: '45%',
     height: '100%',
     borderRadius: 8,
-    backgroundColor: GREEN,
+    backgroundColor: colors.primaryDark,
   },
 
   progressText: {
     fontSize: 12,
     fontWeight: '800',
-    color: GREEN,
+    color: colors.primaryDark,
   },
 
   statRow: {
@@ -135,10 +131,10 @@ export const myPageStyles = StyleSheet.create({
   statCard: {
     flex: 1,
     height: 92,
-    backgroundColor: CARD_BG,
+    backgroundColor: colors.white,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: LIGHT_GREEN,
+    borderColor: colors.profileBorder,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -146,22 +142,22 @@ export const myPageStyles = StyleSheet.create({
   statNumber: {
     fontSize: 20,
     fontWeight: '900',
-    color: GREEN,
+    color: colors.primaryDark,
     marginTop: 4,
   },
 
   statLabel: {
     fontSize: 12,
-    color: '#333333',
+    color: colors.textDark,
     fontWeight: '700',
     marginTop: 2,
   },
 
   badgeCard: {
-    backgroundColor: CARD_BG,
+    backgroundColor: colors.white,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: LIGHT_GREEN,
+    borderColor: colors.profileBorder,
     padding: 18,
     marginBottom: 14,
   },
@@ -169,7 +165,7 @@ export const myPageStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#222222',
+    color: colors.textDark,
     marginBottom: 14,
   },
 
@@ -184,7 +180,7 @@ export const myPageStyles = StyleSheet.create({
     width: '23%',
     aspectRatio: 1,
     borderRadius: 10,
-    backgroundColor: '#D8EDC2',
+    backgroundColor: colors.badgeBackground,
     alignItems: 'center',
     paddingHorizontal: 4,
     paddingTop: 8,
@@ -204,7 +200,7 @@ export const myPageStyles = StyleSheet.create({
     fontSize: 8,
     lineHeight: 10,
     fontWeight: '900',
-    color: GREEN,
+    color: colors.primaryDark,
     textAlign: 'center',
     marginBottom: 2,
   },
@@ -213,14 +209,14 @@ export const myPageStyles = StyleSheet.create({
     height: 14,
     fontSize: 5.5,
     lineHeight: 7,
-    color: '#52724D',
+    color: colors.badgeText,
     textAlign: 'center',
   },
 
   activityTitle: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#222222',
+    color: colors.textDark,
     marginBottom: 10,
   },
 
@@ -230,10 +226,10 @@ export const myPageStyles = StyleSheet.create({
 
   activityItem: {
     minHeight: 48,
-    backgroundColor: CARD_BG,
+    backgroundColor: colors.white,
     borderRadius: 14,
     borderWidth: 1,
-    borderColor: LIGHT_GREEN,
+    borderColor: colors.profileBorder,
     paddingHorizontal: 16,
     paddingVertical: 12,
     flexDirection: 'row',
@@ -245,7 +241,7 @@ export const myPageStyles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '700',
-    color: '#333333',
+    color: colors.textDark,
     marginRight: 10,
   },
 
@@ -255,10 +251,10 @@ export const myPageStyles = StyleSheet.create({
   },
 
   plusCredit: {
-    color: GREEN,
+    color: colors.primaryDark,
   },
 
   minusCredit: {
-    color: GREEN,
+    color: colors.primaryDark,
   },
 });

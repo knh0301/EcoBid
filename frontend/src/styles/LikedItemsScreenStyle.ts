@@ -1,23 +1,21 @@
 import {StyleSheet} from 'react-native';
-
-const LIGHT_GREEN = '#79AD6F';
-const PAGE_BG = '#F7F9F6';
+import {colors} from './colors';
 
 export const likedItemsStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: PAGE_BG,
+    backgroundColor: colors.pageBackground,
   },
 
   header: {
     height: 58,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: colors.border,
     position: 'relative',
   },
 
@@ -32,14 +30,14 @@ export const likedItemsStyles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '900',
-    color: '#222222',
+    color: colors.textDark,
   },
 
   creditBadge: {
     minWidth: 92,
     height: 30,
     borderRadius: 15,
-    backgroundColor: LIGHT_GREEN,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
@@ -48,7 +46,7 @@ export const likedItemsStyles = StyleSheet.create({
   },
 
   creditBadgeText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 12,
     fontWeight: '800',
   },

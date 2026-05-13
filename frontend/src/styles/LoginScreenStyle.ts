@@ -1,13 +1,10 @@
 import {StyleSheet} from 'react-native';
-
-const GREEN = '#79AD6F';
-const DARK_GREEN = '#2F6F3E';
-const PAGE_BG = '#F7F9F6';
+import {colors} from './colors';
 
 export const loginStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: PAGE_BG,
+    backgroundColor: colors.pageBackground,
   },
 
   keyboardView: {
@@ -17,10 +14,10 @@ export const loginStyles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.borderLight,
     paddingHorizontal: 24,
     paddingVertical: 34,
     alignItems: 'center',
@@ -30,11 +27,11 @@ export const loginStyles = StyleSheet.create({
     width: 66,
     height: 66,
     borderRadius: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 18,
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOpacity: 0.12,
     shadowRadius: 6,
     shadowOffset: {width: 0, height: 3},
@@ -44,7 +41,7 @@ export const loginStyles = StyleSheet.create({
   title: {
     fontSize: 27,
     fontWeight: '900',
-    color: '#222222',
+    color: colors.textDark,
     marginBottom: 24,
   },
 
@@ -56,7 +53,7 @@ export const loginStyles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#333333',
+    color: colors.textDark,
     marginBottom: 6,
   },
 
@@ -65,11 +62,11 @@ export const loginStyles = StyleSheet.create({
     height: 44,
     borderRadius: 9,
     borderWidth: 1,
-    borderColor: '#D8D8D8',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.borderLight,
+    backgroundColor: colors.white,
     paddingHorizontal: 14,
     fontSize: 13,
-    color: '#222222',
+    color: colors.textDark,
   },
 
   findPasswordRow: {
@@ -82,12 +79,12 @@ export const loginStyles = StyleSheet.create({
 
   findPasswordText: {
     fontSize: 11,
-    color: '#888888',
+    color: colors.textMuted,
   },
 
   findPasswordLink: {
     fontSize: 11,
-    color: DARK_GREEN,
+    color: colors.primaryDark,
     fontWeight: '800',
     textDecorationLine: 'underline',
   },
@@ -96,13 +93,13 @@ export const loginStyles = StyleSheet.create({
     width: '100%',
     height: 46,
     borderRadius: 9,
-    backgroundColor: GREEN,
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   loginButtonText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 14,
     fontWeight: '900',
   },
@@ -110,20 +107,20 @@ export const loginStyles = StyleSheet.create({
   dividerText: {
     marginVertical: 20,
     fontSize: 13,
-    color: '#777777',
+    color: colors.textTertiary,
   },
 
   googleButton: {
     height: 42,
     paddingHorizontal: 18,
     borderRadius: 3,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1,
-    borderColor: '#EEEEEE',
+    borderColor: colors.border,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOpacity: 0.08,
     shadowRadius: 3,
     shadowOffset: {width: 0, height: 2},
@@ -133,14 +130,14 @@ export const loginStyles = StyleSheet.create({
   googleIcon: {
     fontSize: 18,
     fontWeight: '900',
-    color: '#4285F4',
+    color: colors.googleBlue,
     marginRight: 10,
   },
 
   googleButtonText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#333333',
+    color: colors.textDark,
   },
 
   signupRow: {
@@ -151,12 +148,12 @@ export const loginStyles = StyleSheet.create({
 
   signupText: {
     fontSize: 11,
-    color: '#777777',
+    color: colors.textTertiary,
   },
 
   signupLink: {
     fontSize: 11,
-    color: DARK_GREEN,
+    color: colors.primaryDark,
     fontWeight: '900',
     textDecorationLine: 'underline',
   },

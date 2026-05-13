@@ -1,14 +1,15 @@
 import {StyleSheet} from 'react-native';
+import {colors} from './colors';
 
 export const itemCardStyles = StyleSheet.create({
   itemCard: {
     width: '48.5%',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 8,
     padding: 12,
     marginBottom: 0,
 
-    shadowColor: '#000',
+    shadowColor: colors.black,
     shadowOffset: {width: 0, height: 1},
     shadowOpacity: 0.05,
     shadowRadius: 4,
@@ -42,12 +43,12 @@ export const itemCardStyles = StyleSheet.create({
   itemTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   itemPrice: {
     fontSize: 12,
-    color: '#888888',
+    color: colors.textMuted,
     marginTop: 2,
   },
 

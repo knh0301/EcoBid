@@ -1,6 +1,5 @@
 import {StyleSheet} from 'react-native';
 
-const GREEN = '#2F6F3E';
 const LIGHT_GREEN = '#79AD6F';
 const PAGE_BG = '#F7F9F6';
 
@@ -94,7 +93,7 @@ export const mySharedItemsStyles = StyleSheet.create({
 
   content: {
     paddingHorizontal: 18,
-    paddingTop: 18,
+    paddingTop: 14,
     paddingBottom: 40,
   },
 
@@ -102,50 +101,6 @@ export const mySharedItemsStyles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 18,
-  },
-
-  itemCard: {
-    width: '48%',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 14,
-    padding: 10,
-  },
-
-  itemImage: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: 10,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 12,
-  },
-
-  itemIcon: {
-    fontSize: 64,
-  },
-
-  itemInfoRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    justifyContent: 'space-between',
-  },
-
-  itemTextBox: {
-    flex: 1,
-    marginRight: 8,
-  },
-
-  itemTitle: {
-    fontSize: 16,
-    fontWeight: '900',
-    color: '#111111',
-    marginBottom: 6,
-  },
-
-  itemPrice: {
-    fontSize: 12,
-    fontWeight: '800',
-    color: '#111111',
+    rowGap: 8,
   },
 });

@@ -5,6 +5,7 @@ import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {likedItemsStyles as styles} from '../styles/LikedItemsScreenStyle';
 import {creditsApi} from '../api/creditsApi';
+import {ItemCard} from '../components/ItemCard';
 
 const CATEGORIES = [
   '전체',
@@ -130,29 +131,18 @@ export function LikedItemsScreen() {
         showsVerticalScrollIndicator={false}>
         <View style={styles.grid}>
           {filteredItems.map(item => (
-            <Pressable
+            <ItemCard
               key={item.id}
-              style={styles.itemCard}
-              onPress={() => navigation.navigate('ProductDetail')}>
-              <View
-                style={[
-                  styles.itemImage,
-                  {backgroundColor: item.backgroundColor},
-                ]}>
-                <Text style={styles.itemIcon}>{item.icon}</Text>
-              </View>
-
-              <View style={styles.itemInfoRow}>
-                <View style={styles.itemTextBox}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={styles.itemPrice}>{item.price}</Text>
-                </View>
-
-                <Pressable hitSlop={8}>
-                  <Ionicons name="heart" size={28} color="#2F6F3E" />
-                </Pressable>
-              </View>
-            </Pressable>
+              title={item.title}
+              price={item.price}
+              icon={item.icon}
+              backgroundColor={item.backgroundColor}
+              isLiked={true}
+              onPress={() => navigation.navigate('ProductDetail')}
+              onHeartPress={() => {
+                console.log('찜 해제:', item.id);
+              }}
+            />
           ))}
         </View>
       </ScrollView>

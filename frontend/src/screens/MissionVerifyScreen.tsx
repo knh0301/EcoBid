@@ -5,7 +5,6 @@ import {
   TouchableOpacity,
   TextInput,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   Modal,
   Image,
@@ -13,11 +12,13 @@ import {
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const {width} = Dimensions.get('window');
 const BOX_SIZE = (width - 55) / 2;
 
 export function MissionVerifyScreen({navigation, route}: any) {
+  const insets = useSafeAreaInsets();
   const {missionTitle} = route.params || {missionTitle: '미션 인증'};
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<string[]>([]);
@@ -66,10 +67,8 @@ export function MissionVerifyScreen({navigation, route}: any) {
     }
   };
 
-  // 그리드 데이터 구성 (추가버튼 + 이미지들 + 빈칸들)
   const renderGridItem = (index: number) => {
     if (index === 0) {
-      // 1번째 칸: 무조건 추가 버튼
       return (
         <TouchableOpacity style={styles.grayBox} onPress={pickImage} activeOpacity={0.7}>
           <Ionicons name="add" size={40} color="#333" />
@@ -80,7 +79,6 @@ export function MissionVerifyScreen({navigation, route}: any) {
 
     const imageUri = images[index - 1];
     if (imageUri) {
-      // 사진이 있는 칸
       return (
         <View style={styles.grayBox}>
           <Image source={{uri: imageUri}} style={styles.selectedImage} />
@@ -91,12 +89,11 @@ export function MissionVerifyScreen({navigation, route}: any) {
       );
     }
 
-    // 빈 칸
     return <View style={styles.grayBox} />;
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -137,7 +134,7 @@ export function MissionVerifyScreen({navigation, route}: any) {
       </ScrollView>
 
       {/* 하단 영역 */}
-      <View style={styles.footer}>
+      <View style={[styles.footer, {paddingBottom: insets.bottom + 20}]}>
         <Text style={styles.creditText}>+ 500 크레딧</Text>
         <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
           <Text style={styles.submitText}>크레딧 신청 하기</Text>
@@ -160,14 +157,14 @@ export function MissionVerifyScreen({navigation, route}: any) {
             {modalType === 'desc_error' && (
               <Text style={styles.modalTitle}>활동 설명을 입력해주세요.</Text>
             )}
-            
+
             <TouchableOpacity style={styles.modalBtn} onPress={handleModalClose}>
               <Text style={styles.modalBtnText}>확인</Text>
             </TouchableOpacity>
           </View>
         </View>
       </Modal>
-    </SafeAreaView>
+    </View>
   );
 }
 
@@ -258,6 +255,7 @@ const styles = StyleSheet.create({
   },
   footer: {
     padding: 20,
+    paddingBottom: 20,
     borderTopWidth: 1,
     borderTopColor: '#F0F0F0',
   },

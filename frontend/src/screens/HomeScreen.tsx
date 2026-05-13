@@ -9,6 +9,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { productsApi, Product } from '../api/products';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 interface MissionCardProps {
   title: string;
@@ -33,6 +34,7 @@ const MissionCard: React.FC<MissionCardProps> = ({ title, desc }) => (
 );
 
 export const HomeScreen: React.FC<any> = ({ navigation }) => {
+  const insets = useSafeAreaInsets();
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -63,19 +65,18 @@ export const HomeScreen: React.FC<any> = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top}]}>
 
       {/* 상단 타이틀 */}
       <View style={styles.header}>
         <Text style={styles.appTitle}>EcoBid</Text>
       </View>
 
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.content}
         refreshControl={
           <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} tintColor="#5C8B5A" />
-        }
-      >
+        }>
 
         {/* 출석 도장 카드 */}
         <TouchableOpacity

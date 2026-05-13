@@ -5,9 +5,9 @@ import {
   View,
   TouchableOpacity,
   StyleSheet,
-  SafeAreaView,
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const CHAT_DATA = [
   {
@@ -34,8 +34,10 @@ const CHAT_DATA = [
 ];
 
 export function ChatListScreen({navigation}: any) {
+  const insets = useSafeAreaInsets();
+
   return (
-    <SafeAreaView style={styles.container}>
+    <View style={[styles.container, {paddingTop: insets.top, paddingBottom: insets.bottom}]}>
       {/* 1단계 헤더: EcoBid 로고 */}
       <View style={styles.topHeader}>
         <Text style={styles.headerLogo}>EcoBid</Text>
@@ -47,13 +49,12 @@ export function ChatListScreen({navigation}: any) {
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {CHAT_DATA.map((item) => (
+        {CHAT_DATA.map(item => (
           <TouchableOpacity
             key={item.id}
             style={styles.chatItem}
             onPress={() => navigation.navigate('ChatDetail', {name: item.name})}
-            activeOpacity={0.7}
-          >
+            activeOpacity={0.7}>
             {/* 시안의 아바타를 재현한 아이콘 포함 원형 박스 */}
             <View style={[styles.avatar, {backgroundColor: item.color}]}>
               <Ionicons name={item.icon as any} size={36} color="rgba(0,0,0,0.5)" />
@@ -69,7 +70,7 @@ export function ChatListScreen({navigation}: any) {
           </TouchableOpacity>
         ))}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

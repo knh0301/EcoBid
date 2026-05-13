@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "570393271454",
+    "project_id": "ecobid-3158c",
+    "storage_bucket": "ecobid-3158c.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:570393271454:android:c8e36d75f75cc35ff8ef8f",
+        "android_client_info": {
+          "package_name": "com.jio.ecobid"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2sy9creXRST45HZvQ7TMjuHheBwTvR2U"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

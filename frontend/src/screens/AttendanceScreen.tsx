@@ -6,11 +6,13 @@ import {
   ScrollView,
   StyleSheet,
 } from 'react-native';
+import {useSafeAreaInsets} from 'react-native-safe-area-context';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const ATTENDED_DAYS = [1, 2, 4, 5, 6, 8];
 
 export const AttendanceScreen: React.FC<any> = ({navigation}) => {
+  const insets = useSafeAreaInsets();
   const [year, setYear] = useState(2026);
   const [month, setMonth] = useState(5);
 
@@ -50,7 +52,9 @@ export const AttendanceScreen: React.FC<any> = ({navigation}) => {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, {paddingTop: insets.top}]}
+      contentContainerStyle={{paddingBottom: insets.bottom}}>
       {/* 헤더 */}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()}>

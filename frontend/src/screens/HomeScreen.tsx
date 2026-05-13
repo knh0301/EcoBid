@@ -17,8 +17,6 @@ interface MissionCardProps {
   desc: string;
 }
 
-const MOCK_USER_ID = 3;
-
 const ranks = [
   {rank: '1', dept: '컴퓨터공학과', credit: '112,894 크레딧'},
   {rank: '2', dept: '디자인테크놀로지학과', credit: '112,894 크레딧'},
@@ -67,22 +65,19 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
   };
 
   const fetchCreditBalance = async () => {
-  try {
-    setCreditLoading(true);
+    try {
+      setCreditLoading(true);
 
-    console.log('MOCK_USER_ID:', MOCK_USER_ID);
+      const balance = await creditsApi.getMyCreditBalance();
 
-    const balance = await creditsApi.getCreditBalance(MOCK_USER_ID);
-
-    console.log('HomeScreen balance:', balance);
-
-    setCreditBalance(balance);
-  } catch (err: any) {
-    console.warn('Fetch credit balance error:', err);
-  } finally {
-    setCreditLoading(false);
-  }
-};
+      setCreditBalance(balance);
+    } catch (err: any) {
+      console.warn('Fetch credit balance error:', err);
+      setCreditBalance(0);
+    } finally {
+      setCreditLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchProducts();

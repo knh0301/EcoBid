@@ -8,10 +8,6 @@ import {creditsApi} from '../api/creditsApi';
 
 const CATEGORIES = ['전체', '가구', '가전', '도서', '의류/잡화'];
 
-// 로그인 연동 전 임시 사용자 ID
-// 나중에 로그인/JWT 연동 후 실제 로그인한 userId로 교체
-const MOCK_USER_ID = 3;
-
 const SHARED_ITEMS = [
   {
     id: 1,
@@ -34,11 +30,12 @@ export function MySharedItemsScreen() {
     try {
       setCreditLoading(true);
 
-      const balance = await creditsApi.getCreditBalance(MOCK_USER_ID);
+      const balance = await creditsApi.getMyCreditBalance();
 
       setCreditBalance(balance);
     } catch (err: any) {
       console.warn('Fetch credit balance error:', err);
+      setCreditBalance(0);
     } finally {
       setCreditLoading(false);
     }

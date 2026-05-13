@@ -17,10 +17,6 @@ type CreditHistoryItem = {
   type: CreditType;
 };
 
-// 로그인 연동 전 임시 사용자 ID
-// 나중에 로그인/JWT 연동 후 실제 로그인한 userId로 교체
-const MOCK_USER_ID = 3;
-
 const FILTER_LABELS: Record<FilterType, string> = {
   all: '전체',
   earn: '지급',
@@ -50,9 +46,10 @@ export function CreditHistoryScreen() {
     try {
       setIsLoading(true);
 
-      const transactions = await creditsApi.getCreditTransactions(MOCK_USER_ID);
+      const transactions = await creditsApi.getMyCreditTransactions();
 
       const mappedHistory = transactions.map(mapTransactionToHistory);
+
       const balance = transactions.reduce((sum, item) => {
         return sum + Number(item.amount);
       }, 0);
@@ -61,6 +58,8 @@ export function CreditHistoryScreen() {
       setCreditBalance(balance);
     } catch (err: any) {
       console.warn('Fetch credit history error:', err);
+      setCreditHistory([]);
+      setCreditBalance(0);
     } finally {
       setIsLoading(false);
     }
@@ -300,7 +299,7 @@ function mapTransactionToHistory(
     date: transaction.createdAt.split('T')[0],
     title: transaction.description || getDefaultTitle(transaction.referenceType),
     amount: Number(transaction.amount),
-    type: transaction.amount > 0 ? 'earn' : 'use',
+    type: Number(transaction.amount) > 0 ? 'earn' : 'use',
   };
 }
 

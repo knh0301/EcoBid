@@ -7,10 +7,6 @@ import {myPageStyles as styles} from '../styles/MyPageScreenStyle';
 import {creditsApi, CreditTransaction} from '../api/creditsApi';
 import {authApi} from '../api/authApi';
 
-// 로그인/JWT 완전 연동 전 임시 사용자 ID
-// 나중에 로그인한 사용자 id로 교체하면 됨
-const MOCK_USER_ID = 3;
-
 const BADGES = [
   {id: 1, emoji: '🛍️', title: '나눔 천사', desc: '물품을 나눈 따뜻한 마음'},
   {id: 2, emoji: '🌎', title: '지구수호대', desc: '친환경 활동 참여'},
@@ -32,8 +28,8 @@ type ActivityItem = {
 export function MyPageScreen() {
   const navigation = useNavigation<any>();
 
-  const [userName, setUserName] = useState('...');
-  const [joinedDateText, setJoinedDateText] = useState('가입일 확인 중');
+  const [userName, setUserName] = useState('이름 확인 중');
+  const [joinedDateText, setJoinedDateText] = useState('활동 시작일 확인 중');
 
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
@@ -42,8 +38,10 @@ export function MyPageScreen() {
 
   const levelInfo = getLevelInfo(totalEarnedCredits);
 
-  const fetchUserProfile = async () => {
+  const fetchMyPageData = async () => {
     try {
+      setCreditLoading(true);
+
       const user = await authApi.getMe();
 
       setUserName(user.name);
@@ -53,35 +51,19 @@ export function MyPageScreen() {
       if (joinedDate) {
         setJoinedDateText(formatJoinedDate(joinedDate));
       }
-    } catch (err: any) {
-      console.warn('Fetch user profile error:', err);
 
-      // 로그인 토큰 연동 전 테스트용 fallback
-      setUserName('...');
-      setJoinedDateText('활동 시작일 확인 중');
-    }
-  };
+      const transactions = await creditsApi.getCreditTransactions(user.id);
 
-  const fetchCreditData = async () => {
-    try {
-      setCreditLoading(true);
-
-      const transactions = await creditsApi.getCreditTransactions(MOCK_USER_ID);
-
-      // 현재 보유 크레딧: 지급/사용 내역 전체 합계
       const balance = transactions.reduce((sum, item) => {
         return sum + Number(item.amount);
       }, 0);
 
-      // 레벨 경험치: 누적 획득 크레딧만 계산
-      // 사용한 크레딧은 경험치에서 차감하지 않음
       const earnedCredits = transactions
         .filter(item => Number(item.amount) > 0)
         .reduce((sum, item) => {
           return sum + Number(item.amount);
         }, 0);
 
-      // 최근 활동: 최신 크레딧 거래 3개
       const recentActivities = transactions
         .slice()
         .sort(
@@ -95,15 +77,17 @@ export function MyPageScreen() {
       setTotalEarnedCredits(earnedCredits);
       setActivities(recentActivities);
     } catch (err: any) {
-      console.warn('Fetch mypage credit data error:', err);
+      console.warn('Fetch mypage data error:', err);
+
+      setUserName('이름 확인 중');
+      setJoinedDateText('활동 시작일 확인 중');
     } finally {
       setCreditLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchUserProfile();
-    fetchCreditData();
+    fetchMyPageData();
   }, []);
 
   return (
@@ -285,7 +269,6 @@ function getLevelInfo(totalEarnedCredits: number) {
   if (totalEarnedCredits < 5000) {
     return {
       level: 1,
-      currentLevelStart: 0,
       nextLevelCredit: 5000,
       progressPercent: (totalEarnedCredits / 5000) * 100,
     };
@@ -294,7 +277,6 @@ function getLevelInfo(totalEarnedCredits: number) {
   if (totalEarnedCredits < 10000) {
     return {
       level: 2,
-      currentLevelStart: 5000,
       nextLevelCredit: 10000,
       progressPercent: ((totalEarnedCredits - 5000) / 5000) * 100,
     };
@@ -308,7 +290,6 @@ function getLevelInfo(totalEarnedCredits: number) {
 
   return {
     level,
-    currentLevelStart,
     nextLevelCredit,
     progressPercent:
       ((totalEarnedCredits - currentLevelStart) /
@@ -321,7 +302,7 @@ function formatJoinedDate(dateString: string) {
   const date = new Date(dateString);
 
   if (Number.isNaN(date.getTime())) {
-    return '가입일 확인 중';
+    return '활동 시작일 확인 중';
   }
 
   const year = date.getFullYear();

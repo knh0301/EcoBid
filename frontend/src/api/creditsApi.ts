@@ -1,4 +1,5 @@
 import apiClient from './client';
+import {authApi} from './authApi';
 
 export type CreditReferenceType = 'ATTENDANCE' | 'MISSION' | 'PRODUCT';
 
@@ -18,26 +19,33 @@ type ApiResponse<T> = {
   message?: string;
 };
 
+const calculateBalance = (transactions: CreditTransaction[]) => {
+  return transactions.reduce((sum, item) => {
+    return sum + Number(item.amount);
+  }, 0);
+};
+
 export const creditsApi = {
   async getCreditTransactions(userId: number): Promise<CreditTransaction[]> {
     const response = await apiClient.get<ApiResponse<CreditTransaction[]>>(
       `/credits?userId=${userId}`,
     );
 
-    return response.data.data;
+    return response.data.data ?? [];
   },
 
   async getCreditBalance(userId: number): Promise<number> {
-  const transactions = await this.getCreditTransactions(userId);
+    const transactions = await creditsApi.getCreditTransactions(userId);
+    return calculateBalance(transactions);
+  },
 
-  console.log('credit transactions:', transactions);
+  async getMyCreditTransactions(): Promise<CreditTransaction[]> {
+    const user = await authApi.getMe();
+    return creditsApi.getCreditTransactions(user.id);
+  },
 
-  const balance = transactions.reduce((sum, item) => {
-    return sum + item.amount;
-  }, 0);
-
-  console.log('calculated balance:', balance);
-
-  return balance;
-},
+  async getMyCreditBalance(): Promise<number> {
+    const transactions = await creditsApi.getMyCreditTransactions();
+    return calculateBalance(transactions);
+  },
 };

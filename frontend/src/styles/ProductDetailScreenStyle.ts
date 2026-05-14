@@ -1,9 +1,10 @@
 import {StyleSheet} from 'react-native';
+import {colors} from './colors';
 
 export const productDetailStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
 
   centered: {
@@ -17,32 +18,32 @@ export const productDetailStyles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 14,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
 
   backArrow: {
     fontSize: 18,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
     flex: 1,
     marginHorizontal: 10,
     textAlign: 'center',
   },
 
   creditBadge: {
-    backgroundColor: '#EAF2E9',
+    backgroundColor: colors.lightGreenBackground,
     paddingHorizontal: 12,
     paddingVertical: 5,
     borderRadius: 20,
   },
 
   creditBadgeText: {
-    color: '#5C8B5A',
+    color: colors.primary,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -50,7 +51,7 @@ export const productDetailStyles = StyleSheet.create({
   imageBox: {
     width: 250,
     height: 250,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.grayBackground,
     marginRight: 2,
   },
 
@@ -73,7 +74,7 @@ export const productDetailStyles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#EAF2E9',
+    backgroundColor: colors.lightGreenBackground,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
@@ -86,7 +87,7 @@ export const productDetailStyles = StyleSheet.create({
   sellerName: {
     fontSize: 15,
     fontWeight: '500',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   editButton: {
@@ -95,7 +96,7 @@ export const productDetailStyles = StyleSheet.create({
 
   editLink: {
     fontSize: 13,
-    color: '#888888',
+    color: colors.textMuted,
     textDecorationLine: 'underline',
     marginLeft: 'auto',
   },
@@ -103,19 +104,19 @@ export const productDetailStyles = StyleSheet.create({
   itemName: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
     marginBottom: 4,
   },
 
   itemCategory: {
     fontSize: 13,
-    color: '#888888',
+    color: colors.textMuted,
     marginBottom: 12,
   },
 
   itemDesc: {
     fontSize: 14,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
     lineHeight: 22,
     marginBottom: 24,
   },
@@ -123,25 +124,25 @@ export const productDetailStyles = StyleSheet.create({
   itemPrice: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#5C8B5A',
+    color: colors.primary,
     textAlign: 'right',
   },
 
   bottomBar: {
     padding: 16,
     paddingBottom: 16,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
 
   chatButton: {
-    backgroundColor: '#5C8B5A',
+    backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 16,
     alignItems: 'center',
   },
 
   chatButtonText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 15,
     fontWeight: 'bold',
   },

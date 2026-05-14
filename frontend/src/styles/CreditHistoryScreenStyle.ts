@@ -1,24 +1,21 @@
 import {StyleSheet} from 'react-native';
-
-const GREEN = '#2F6F3E';
-const LIGHT_GREEN = '#79AD6F';
-const PAGE_BG = '#F7F9F6';
+import {colors} from './colors';
 
 export const creditHistoryStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: PAGE_BG,
+    backgroundColor: colors.pageBackground,
   },
 
   header: {
     height: 58,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: colors.border,
     position: 'relative',
   },
 
@@ -33,14 +30,14 @@ export const creditHistoryStyles = StyleSheet.create({
     textAlign: 'center',
     fontSize: 20,
     fontWeight: '900',
-    color: '#222222',
+    color: colors.textDark,
   },
 
   creditBadge: {
     minWidth: 92,
     height: 30,
     borderRadius: 15,
-    backgroundColor: LIGHT_GREEN,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 10,
@@ -49,14 +46,14 @@ export const creditHistoryStyles = StyleSheet.create({
   },
 
   creditBadgeText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 12,
     fontWeight: '800',
   },
 
   controlRow: {
     height: 46,
-    backgroundColor: PAGE_BG,
+    backgroundColor: colors.pageBackground,
     paddingHorizontal: 18,
     flexDirection: 'row',
     alignItems: 'center',
@@ -71,7 +68,7 @@ export const creditHistoryStyles = StyleSheet.create({
   monthText: {
     fontSize: 22,
     fontWeight: '900',
-    color: '#333333',
+    color: colors.textDark,
     marginRight: 4,
   },
 
@@ -79,8 +76,8 @@ export const creditHistoryStyles = StyleSheet.create({
     height: 30,
     borderRadius: 6,
     borderWidth: 1,
-    borderColor: '#D8D8D8',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.borderLight,
+    backgroundColor: colors.white,
     paddingHorizontal: 8,
     flexDirection: 'row',
     alignItems: 'center',
@@ -90,7 +87,7 @@ export const creditHistoryStyles = StyleSheet.create({
   filterButtonText: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#777777',
+    color: colors.textTertiary,
   },
 
   content: {
@@ -106,7 +103,7 @@ export const creditHistoryStyles = StyleSheet.create({
   dateLabel: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#9A9A9A',
+    color: colors.textDisabled,
     marginBottom: 8,
   },
 
@@ -114,8 +111,8 @@ export const creditHistoryStyles = StyleSheet.create({
     minHeight: 50,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: '#C9D8C1',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.historyBorder,
+    backgroundColor: colors.white,
     paddingHorizontal: 18,
     marginBottom: 8,
     flexDirection: 'row',
@@ -127,7 +124,7 @@ export const creditHistoryStyles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     fontWeight: '800',
-    color: '#333333',
+    color: colors.textDark,
     marginRight: 12,
   },
 
@@ -137,11 +134,11 @@ export const creditHistoryStyles = StyleSheet.create({
   },
 
   earnAmount: {
-    color: GREEN,
+    color: colors.primaryDark,
   },
 
   useAmount: {
-    color: GREEN,
+    color: colors.primaryDark,
   },
 
   emptyBox: {
@@ -152,18 +149,18 @@ export const creditHistoryStyles = StyleSheet.create({
 
   emptyText: {
     fontSize: 14,
-    color: '#888888',
+    color: colors.textMuted,
     fontWeight: '700',
   },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: colors.modalOverlay,
     justifyContent: 'flex-end',
   },
 
   dateSheet: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     paddingHorizontal: 34,
@@ -184,7 +181,7 @@ export const creditHistoryStyles = StyleSheet.create({
   dateValueBox: {
     minWidth: 78,
     borderBottomWidth: 1,
-    borderBottomColor: '#777777',
+    borderBottomColor: colors.textTertiary,
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
@@ -193,20 +190,20 @@ export const creditHistoryStyles = StyleSheet.create({
   },
 
   monthValueBox: {
-  minWidth: 42,
-},
+    minWidth: 42,
+  },
 
   dateValue: {
     fontSize: 28,
     fontWeight: '900',
-    color: '#333333',
+    color: colors.textDark,
     marginRight: 4,
   },
 
   dateUnit: {
     fontSize: 26,
     fontWeight: '900',
-    color: '#333333',
+    color: colors.textDark,
     marginHorizontal: 12,
   },
 
@@ -221,7 +218,7 @@ export const creditHistoryStyles = StyleSheet.create({
     width: 112,
     height: 42,
     borderRadius: 9,
-    backgroundColor: '#D9D9D9',
+    backgroundColor: colors.gray200,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -230,7 +227,7 @@ export const creditHistoryStyles = StyleSheet.create({
     width: 112,
     height: 42,
     borderRadius: 9,
-    backgroundColor: LIGHT_GREEN,
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -238,17 +235,17 @@ export const creditHistoryStyles = StyleSheet.create({
   cancelButtonText: {
     fontSize: 13,
     fontWeight: '800',
-    color: '#777777',
+    color: colors.textTertiary,
   },
 
   confirmButtonText: {
     fontSize: 13,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: colors.textLight,
   },
 
   filterSheet: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderTopLeftRadius: 22,
     borderTopRightRadius: 22,
     paddingHorizontal: 42,
@@ -266,6 +263,6 @@ export const creditHistoryStyles = StyleSheet.create({
   filterOptionText: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#333333',
+    color: colors.textDark,
   },
 });

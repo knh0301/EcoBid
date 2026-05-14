@@ -11,6 +11,7 @@ import {productsApi, Product} from '../api/products';
 import {creditsApi} from '../api/creditsApi';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {homeScreenStyles as styles} from '../styles/HomeScreenStyle';
+import {ItemCard} from '../components/ItemCard';
 
 interface MissionCardProps {
   title: string;
@@ -216,37 +217,20 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
         ) : (
           <View style={styles.productGrid}>
             {products.map(item => (
-              <TouchableOpacity
+              <ItemCard
                 key={item.id}
-                style={styles.productCard}
+                title={item.title}
+                price={`${item.creditPrice.toLocaleString()} 크레딧`}
+                icon="📦"
+                backgroundColor="#EAF2E9"
+                isLiked={false}
                 onPress={() =>
                   navigation.navigate('ProductDetail', {productId: item.id})
                 }
-                activeOpacity={0.8}>
-                <View
-                  style={[
-                    styles.productImage,
-                    {backgroundColor: '#EAF2E9'},
-                  ]}>
-                  {item.imageUrl ? (
-                    <Text style={styles.productImageText}>이미지 있음</Text>
-                  ) : (
-                    <Text style={styles.productImageText}>{item.title}</Text>
-                  )}
-                </View>
-
-                <View style={styles.productBottom}>
-                  <Text style={styles.productName} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-
-                  <Text style={styles.productHeart}>♡</Text>
-                </View>
-
-                <Text style={styles.productPrice}>
-                  {item.creditPrice.toLocaleString()} 크레딧
-                </Text>
-              </TouchableOpacity>
+                onHeartPress={() => {
+                  console.log('홈 나눔 물품 찜:', item.id);
+                }}
+              />
             ))}
           </View>
         )}

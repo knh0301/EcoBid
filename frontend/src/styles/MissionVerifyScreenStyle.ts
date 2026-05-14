@@ -1,4 +1,5 @@
 import {Dimensions, StyleSheet} from 'react-native';
+import {colors} from './colors';
 
 const {width} = Dimensions.get('window');
 const BOX_SIZE = (width - 55) / 2;
@@ -6,7 +7,7 @@ const BOX_SIZE = (width - 55) / 2;
 export const missionVerifyStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
 
   header: {
@@ -16,7 +17,7 @@ export const missionVerifyStyles = StyleSheet.create({
     paddingHorizontal: 15,
     height: 60,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: colors.border,
   },
 
   backBtn: {
@@ -26,7 +27,7 @@ export const missionVerifyStyles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
+    color: colors.black,
   },
 
   headerRightSpace: {
@@ -50,12 +51,12 @@ export const missionVerifyStyles = StyleSheet.create({
   grayBox: {
     width: BOX_SIZE,
     height: BOX_SIZE,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.lightGrayBackground,
     borderRadius: 16,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSoft,
     position: 'relative',
   },
 
@@ -69,7 +70,7 @@ export const missionVerifyStyles = StyleSheet.create({
     position: 'absolute',
     top: -5,
     right: -5,
-    backgroundColor: '#FFF',
+    backgroundColor: colors.white,
     borderRadius: 12,
     zIndex: 1,
   },
@@ -77,7 +78,7 @@ export const missionVerifyStyles = StyleSheet.create({
   boxText: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#333',
+    color: colors.textDark,
     marginTop: 5,
   },
 
@@ -88,22 +89,22 @@ export const missionVerifyStyles = StyleSheet.create({
   sectionLabel: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#000',
+    color: colors.black,
     marginBottom: 12,
   },
 
   inputContainer: {
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.inputBackground,
     borderRadius: 16,
     padding: 16,
     height: 180,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSoft,
   },
 
   textInput: {
     fontSize: 16,
-    color: '#333',
+    color: colors.textDark,
     flex: 1,
   },
 
@@ -111,19 +112,19 @@ export const missionVerifyStyles = StyleSheet.create({
     padding: 20,
     paddingBottom: 20,
     borderTopWidth: 1,
-    borderTopColor: '#F0F0F0',
+    borderTopColor: colors.border,
   },
 
   creditText: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#5C8B5A',
+    color: colors.primary,
     textAlign: 'right',
     marginBottom: 15,
   },
 
   submitButton: {
-    backgroundColor: '#86B27A',
+    backgroundColor: colors.chatGreen,
     borderRadius: 14,
     height: 60,
     justifyContent: 'center',
@@ -131,20 +132,20 @@ export const missionVerifyStyles = StyleSheet.create({
   },
 
   submitText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 18,
     fontWeight: 'bold',
   },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.5)',
+    backgroundColor: colors.modalOverlay,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   modalContent: {
-    backgroundColor: '#FFF',
+    backgroundColor: colors.white,
     borderRadius: 25,
     padding: 30,
     width: '80%',
@@ -155,26 +156,26 @@ export const missionVerifyStyles = StyleSheet.create({
     fontSize: 17,
     fontWeight: 'bold',
     textAlign: 'center',
-    color: '#000',
+    color: colors.black,
     marginBottom: 10,
   },
 
   modalSubtitle: {
     fontSize: 14,
-    color: '#666',
+    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: 20,
   },
 
   modalBtn: {
-    backgroundColor: '#86B27A',
+    backgroundColor: colors.chatGreen,
     borderRadius: 12,
     paddingVertical: 12,
     paddingHorizontal: 40,
   },
 
   modalBtnText: {
-    color: '#FFF',
+    color: colors.textLight,
     fontSize: 16,
     fontWeight: 'bold',
   },

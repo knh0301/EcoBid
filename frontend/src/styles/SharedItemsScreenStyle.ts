@@ -1,76 +1,59 @@
 import {StyleSheet} from 'react-native';
+import {colors} from './colors';
 
 export const sharedItemsStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.pageBackground,
   },
 
   header: {
+    height: 58,
+    backgroundColor: colors.white,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#F5F5F5',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    position: 'relative',
+  },
+
+  backButton: {
+    zIndex: 2,
   },
 
   backArrow: {
     fontSize: 18,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#1A1A1A',
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    textAlign: 'center',
+    fontSize: 20,
+    fontWeight: '900',
+    color: colors.textDark,
   },
 
   creditBadge: {
-    backgroundColor: '#EAF2E9',
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
+    minWidth: 92,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    marginLeft: 'auto',
+    zIndex: 2,
   },
 
   creditBadgeText: {
-    color: '#5C8B5A',
+    color: colors.textLight,
     fontSize: 12,
-    fontWeight: 'bold',
-  },
-
-  categoryScroll: {
-    maxHeight: 52,
-  },
-
-  categoryContent: {
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-  },
-
-  categoryChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: '#DDDDDD',
-    backgroundColor: '#FFFFFF',
-    marginRight: 8,
-  },
-
-  categoryChipSelected: {
-    backgroundColor: '#5C8B5A',
-    borderColor: '#5C8B5A',
-  },
-
-  categoryChipText: {
-    fontSize: 13,
-    color: '#1A1A1A',
-  },
-
-  categoryChipTextSelected: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
+    fontWeight: '800',
   },
 
   grid: {
@@ -80,67 +63,19 @@ export const sharedItemsStyles = StyleSheet.create({
 
   gridRow: {
     justifyContent: 'space-between',
-    marginBottom: 20,
-  },
-
-  productCard: {
-    width: '47%',
-  },
-
-  productImage: {
-    width: '100%',
-    aspectRatio: 1,
-    backgroundColor: '#EAF2E9',
-    borderRadius: 8,
     marginBottom: 8,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-
-  productImageText: {
-    color: '#5C8B5A',
-    fontWeight: 'bold',
-  },
-
-  productBottom: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  productName: {
-    flex: 1,
-    fontWeight: 'bold',
-    fontSize: 14,
-    color: '#1A1A1A',
-    marginRight: 6,
-  },
-
-  heartIcon: {
-    fontSize: 18,
-    color: '#888888',
-  },
-
-  heartIconActive: {
-    color: '#5C8B5A',
-  },
-
-  productPrice: {
-    fontSize: 12,
-    color: '#888888',
-    marginTop: 2,
   },
 
   errorText: {
     textAlign: 'center',
     marginTop: 40,
-    color: 'red',
+    color: colors.error,
   },
 
   emptyText: {
     textAlign: 'center',
     marginTop: 40,
-    color: '#888888',
+    color: colors.textMuted,
   },
 
   fab: {
@@ -150,7 +85,7 @@ export const sharedItemsStyles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#5C8B5A',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -161,7 +96,7 @@ export const sharedItemsStyles = StyleSheet.create({
   },
 
   fabText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 28,
     lineHeight: 32,
   },

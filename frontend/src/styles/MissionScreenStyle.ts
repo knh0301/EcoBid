@@ -1,22 +1,23 @@
 import {StyleSheet} from 'react-native';
+import {colors} from './colors';
 
 export const missionStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
   },
 
   header: {
     paddingHorizontal: 20,
     paddingVertical: 15,
     borderBottomWidth: 1,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.lightGrayBackground,
   },
 
   headerLogo: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#000000',
+    color: colors.black,
   },
 
   scrollContent: {
@@ -27,32 +28,32 @@ export const missionStyles = StyleSheet.create({
   pageTitle: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: '#1F2937',
+    color: colors.pageTitle,
     marginBottom: 8,
   },
 
   pageSubtitle: {
     fontSize: 16,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 24,
   },
 
   sectionTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#000000',
+    color: colors.black,
     marginTop: 32,
     marginBottom: 16,
   },
 
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 24,
     padding: 24,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
-    shadowColor: '#000',
+    borderColor: colors.borderSoft,
+    shadowColor: colors.black,
     shadowOffset: {width: 0, height: 2},
     shadowOpacity: 0.05,
     shadowRadius: 8,
@@ -69,25 +70,25 @@ export const missionStyles = StyleSheet.create({
   cardTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
+    color: colors.cardTitle,
     flex: 1,
   },
 
   cardCredit: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#5C8B5A',
+    color: colors.primary,
   },
 
   cardDesc: {
     fontSize: 14,
-    color: '#6B7280',
+    color: colors.textSecondary,
     marginBottom: 20,
     lineHeight: 20,
   },
 
   button: {
-    backgroundColor: '#86B27A',
+    backgroundColor: colors.chatGreen,
     borderRadius: 14,
     paddingVertical: 16,
     alignItems: 'center',
@@ -95,26 +96,26 @@ export const missionStyles = StyleSheet.create({
   },
 
   buttonCompleted: {
-    backgroundColor: '#E5E7EB',
+    backgroundColor: colors.borderSoft,
   },
 
   buttonText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 16,
     fontWeight: 'bold',
   },
 
   buttonTextCompleted: {
-    color: '#9CA3AF',
+    color: colors.textDisabled,
   },
 
   progressCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 24,
     padding: 24,
     marginBottom: 16,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.borderSoft,
   },
 
   progressHeader: {
@@ -127,24 +128,24 @@ export const missionStyles = StyleSheet.create({
   progressTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#111827',
+    color: colors.cardTitle,
   },
 
   progressValue: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#5C8B5A',
+    color: colors.primary,
   },
 
   progressBarTrack: {
     height: 12,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.lightGrayBackground,
     borderRadius: 6,
     overflow: 'hidden',
   },
 
   progressBarFill: {
     height: '100%',
-    backgroundColor: '#5C8B5A',
+    backgroundColor: colors.primary,
   },
 });

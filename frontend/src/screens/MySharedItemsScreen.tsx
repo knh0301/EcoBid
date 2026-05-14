@@ -5,8 +5,18 @@ import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {mySharedItemsStyles as styles} from '../styles/MySharedItemsScreenStyle';
 import {creditsApi} from '../api/creditsApi';
+import {ItemCard} from '../components/ItemCard';
+import {CategoryFilter} from '../components/CategoryFilter';
 
-const CATEGORIES = ['전체', '가구', '가전', '도서', '의류/잡화'];
+const CATEGORIES = [
+  '전체',
+  '가구',
+  '가전',
+  '도서',
+  '의류/잡화',
+  '생활용품',
+  '기타',
+];
 
 const SHARED_ITEMS = [
   {
@@ -72,61 +82,28 @@ export function MySharedItemsScreen() {
         </View>
       </View>
 
-      <View style={styles.categoryArea}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.categoryScrollContent}>
-          {CATEGORIES.map(category => {
-            const isSelected = selectedCategory === category;
-
-            return (
-              <Pressable
-                key={category}
-                style={[
-                  styles.categoryChip,
-                  isSelected && styles.categoryChipActive,
-                ]}
-                onPress={() => setSelectedCategory(category)}>
-                <Text
-                  style={[
-                    styles.categoryText,
-                    isSelected && styles.categoryTextActive,
-                  ]}>
-                  {category}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
-      </View>
+      <CategoryFilter
+        categories={CATEGORIES}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
         <View style={styles.grid}>
           {filteredItems.map(item => (
-            <Pressable
+            <ItemCard
               key={item.id}
-              style={styles.itemCard}
-              onPress={() => navigation.navigate('ProductDetail')}>
-              <View
-                style={[
-                  styles.itemImage,
-                  {backgroundColor: item.backgroundColor},
-                ]}>
-                <Text style={styles.itemIcon}>{item.icon}</Text>
-              </View>
-
-              <View style={styles.itemInfoRow}>
-                <View style={styles.itemTextBox}>
-                  <Text style={styles.itemTitle}>{item.title}</Text>
-                  <Text style={styles.itemPrice}>{item.price}</Text>
-                </View>
-
-                <Ionicons name="heart" size={27} color="#2F6F3E" />
-              </View>
-            </Pressable>
+              title={item.title}
+              price={item.price}
+              icon={item.icon}
+              backgroundColor={item.backgroundColor}
+              isLiked={true}
+              onPress={() =>
+                navigation.navigate('ProductDetail', {productId: item.id})
+              }
+            />
           ))}
         </View>
       </ScrollView>

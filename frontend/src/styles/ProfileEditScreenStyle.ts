@@ -1,31 +1,27 @@
 import {StyleSheet} from 'react-native';
-
-const GREEN = '#79AD6F';
-const DARK_GREEN = '#2F6F3E';
-const LIGHT_GREEN = '#C9D8C1';
-const PAGE_BG = '#F7F9F6';
+import {colors} from './colors';
 
 export const profileEditStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: PAGE_BG,
+    backgroundColor: colors.pageBackground,
   },
 
   header: {
     height: 52,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
+    borderBottomColor: colors.border,
   },
 
   headerTitle: {
     fontSize: 17,
     fontWeight: '900',
-    color: '#222222',
+    color: colors.textDark,
   },
 
   scrollContent: {
@@ -35,10 +31,10 @@ export const profileEditStyles = StyleSheet.create({
   },
 
   editCard: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 16,
     borderWidth: 1,
-    borderColor: LIGHT_GREEN,
+    borderColor: colors.historyBorder,
     paddingHorizontal: 20,
     paddingVertical: 24,
     marginBottom: 14,
@@ -80,7 +76,7 @@ export const profileEditStyles = StyleSheet.create({
     width: 26,
     height: 26,
     borderRadius: 13,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderWidth: 1,
     borderColor: '#CCCCCC',
     alignItems: 'center',
@@ -94,7 +90,7 @@ export const profileEditStyles = StyleSheet.create({
   label: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#333333',
+    color: colors.textDark,
     marginBottom: 6,
   },
 
@@ -102,25 +98,25 @@ export const profileEditStyles = StyleSheet.create({
     height: 42,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#D7D7D7',
+    borderColor: colors.borderLight,
     paddingHorizontal: 12,
     fontSize: 13,
-    color: '#222222',
-    backgroundColor: '#FFFFFF',
+    color: colors.textDark,
+    backgroundColor: colors.white,
   },
 
   disabledInput: {
     backgroundColor: '#EFEFEF',
-    color: '#777777',
+    color: colors.textTertiary,
   },
 
   selectBox: {
     height: 42,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#D7D7D7',
+    borderColor: colors.borderLight,
     paddingHorizontal: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -128,20 +124,20 @@ export const profileEditStyles = StyleSheet.create({
 
   selectText: {
     fontSize: 13,
-    color: '#222222',
+    color: colors.textDark,
   },
 
   submitButton: {
     height: 46,
     borderRadius: 8,
-    backgroundColor: GREEN,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 10,
   },
 
   submitButtonText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 14,
     fontWeight: '900',
   },
@@ -154,8 +150,8 @@ export const profileEditStyles = StyleSheet.create({
     height: 48,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
-    backgroundColor: '#FFFFFF',
+    borderColor: colors.borderLight,
+    backgroundColor: colors.white,
     paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
@@ -165,12 +161,12 @@ export const profileEditStyles = StyleSheet.create({
   menuText: {
     fontSize: 13,
     fontWeight: '700',
-    color: '#333333',
+    color: colors.textDark,
   },
 
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.45)',
+    backgroundColor: colors.modalOverlay,
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: 32,
@@ -179,7 +175,7 @@ export const profileEditStyles = StyleSheet.create({
   modalBox: {
     width: '100%',
     minHeight: 116,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 16,
     paddingHorizontal: 22,
     paddingVertical: 22,
@@ -189,14 +185,14 @@ export const profileEditStyles = StyleSheet.create({
   modalTitle: {
     fontSize: 15,
     fontWeight: '900',
-    color: '#222222',
+    color: colors.textDark,
     textAlign: 'center',
     marginBottom: 8,
   },
 
   modalDescription: {
     fontSize: 11,
-    color: '#777777',
+    color: colors.textTertiary,
     textAlign: 'center',
     marginBottom: 14,
   },
@@ -221,7 +217,7 @@ export const profileEditStyles = StyleSheet.create({
     width: 74,
     height: 32,
     borderRadius: 8,
-    backgroundColor: GREEN,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -230,7 +226,7 @@ export const profileEditStyles = StyleSheet.create({
     width: 120,
     height: 34,
     borderRadius: 8,
-    backgroundColor: GREEN,
+    backgroundColor: colors.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginTop: 14,
@@ -239,69 +235,69 @@ export const profileEditStyles = StyleSheet.create({
   modalCancelText: {
     fontSize: 12,
     fontWeight: '800',
-    color: '#777777',
+    color: colors.textTertiary,
   },
 
   modalConfirmText: {
     fontSize: 12,
     fontWeight: '900',
-    color: '#FFFFFF',
+    color: colors.textLight,
   },
 
   departmentSheet: {
-  width: '100%',
-  backgroundColor: '#FFFFFF',
-  borderRadius: 18,
-  paddingHorizontal: 18,
-  paddingTop: 20,
-  paddingBottom: 16,
-},
+    width: '100%',
+    backgroundColor: colors.white,
+    borderRadius: 18,
+    paddingHorizontal: 18,
+    paddingTop: 20,
+    paddingBottom: 16,
+  },
 
-departmentSheetTitle: {
-  fontSize: 17,
-  fontWeight: '900',
-  color: '#222222',
-  textAlign: 'center',
-  marginBottom: 14,
-},
+  departmentSheetTitle: {
+    fontSize: 17,
+    fontWeight: '900',
+    color: colors.textDark,
+    textAlign: 'center',
+    marginBottom: 14,
+  },
 
-departmentOption: {
-  height: 44,
-  borderRadius: 10,
-  paddingHorizontal: 12,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  marginBottom: 6,
-},
+  departmentOption: {
+    height: 44,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
 
-departmentOptionSelected: {
-  backgroundColor: '#F0F6EE',
-},
+  departmentOptionSelected: {
+    backgroundColor: '#F0F6EE',
+  },
 
-departmentOptionText: {
-  fontSize: 14,
-  fontWeight: '600',
-  color: '#333333',
-},
+  departmentOptionText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.textDark,
+  },
 
-departmentOptionTextSelected: {
-  color: '#2F6F3E',
-  fontWeight: '900',
-},
+  departmentOptionTextSelected: {
+    color: colors.primaryDark,
+    fontWeight: '900',
+  },
 
-departmentCancelButton: {
-  height: 42,
-  borderRadius: 10,
-  backgroundColor: '#E4E4E4',
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginTop: 8,
-},
+  departmentCancelButton: {
+    height: 42,
+    borderRadius: 10,
+    backgroundColor: '#E4E4E4',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 8,
+  },
 
-departmentCancelText: {
-  fontSize: 14,
-  fontWeight: '800',
-  color: '#555555',
-},
+  departmentCancelText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: colors.textSecondary,
+  },
 });

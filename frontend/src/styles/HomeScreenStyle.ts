@@ -1,23 +1,24 @@
 import {StyleSheet} from 'react-native';
+import {colors} from './colors';
 
 export const homeScreenStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.grayBackground,
   },
 
   header: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     paddingHorizontal: 16,
     paddingVertical: 14,
     borderBottomWidth: 1,
-    borderBottomColor: '#DDDDDD',
+    borderBottomColor: colors.borderLight,
   },
 
   appTitle: {
     fontSize: 20,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   content: {
@@ -26,7 +27,7 @@ export const homeScreenStyles = StyleSheet.create({
   },
 
   card: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 16,
     marginBottom: 16,
@@ -35,13 +36,13 @@ export const homeScreenStyles = StyleSheet.create({
   cardTitle: {
     fontSize: 15,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
     marginBottom: 4,
   },
 
   cardSubText: {
     fontSize: 12,
-    color: '#888888',
+    color: colors.textMuted,
     marginBottom: 12,
     lineHeight: 18,
   },
@@ -61,13 +62,13 @@ export const homeScreenStyles = StyleSheet.create({
     width: 70,
     height: 70,
     borderRadius: 35,
-    backgroundColor: '#5C8B5A',
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   stampText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -87,37 +88,37 @@ export const homeScreenStyles = StyleSheet.create({
   creditAmount: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#5C8B5A',
+    color: colors.primary,
   },
 
   creditUnit: {
     fontSize: 14,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   primaryButton: {
-    backgroundColor: '#5C8B5A',
+    backgroundColor: colors.primary,
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
   },
 
   primaryButtonText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 15,
     fontWeight: '600',
   },
 
   outlineButton: {
     borderWidth: 1,
-    borderColor: '#5C8B5A',
+    borderColor: colors.primary,
     borderRadius: 8,
     paddingVertical: 14,
     alignItems: 'center',
   },
 
   outlineButtonText: {
-    color: '#5C8B5A',
+    color: colors.primary,
     fontSize: 15,
     fontWeight: '600',
   },
@@ -129,7 +130,7 @@ export const homeScreenStyles = StyleSheet.create({
   rankItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#FDF8EC',
+    backgroundColor: colors.rankBackground,
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -137,26 +138,26 @@ export const homeScreenStyles = StyleSheet.create({
   },
 
   rankItemFirst: {
-    backgroundColor: '#EDE0C4',
+    backgroundColor: colors.rankFirstBackground,
   },
 
   rankNumber: {
     fontWeight: 'bold',
     fontSize: 14,
     marginRight: 12,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
     width: 16,
   },
 
   rankDept: {
     flex: 1,
     fontSize: 14,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
   },
 
   rankCredit: {
     fontSize: 12,
-    color: '#888888',
+    color: colors.textMuted,
   },
 
   sectionHeader: {
@@ -169,13 +170,13 @@ export const homeScreenStyles = StyleSheet.create({
   sectionTitle: {
     fontSize: 18,
     fontWeight: 'bold',
-    color: '#1A1A1A',
+    color: colors.textPrimary,
     marginBottom: 12,
   },
 
   seeAll: {
     fontSize: 13,
-    color: '#888888',
+    color: colors.textMuted,
     marginBottom: 12,
   },
 
@@ -187,92 +188,55 @@ export const homeScreenStyles = StyleSheet.create({
 
   missionCard: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 12,
     borderWidth: 1,
-    borderColor: '#DDDDDD',
+    borderColor: colors.borderLight,
   },
 
   missionTitle: {
     fontWeight: 'bold',
     fontSize: 13,
-    color: '#1A1A1A',
+    color: colors.textPrimary,
     marginBottom: 6,
   },
 
   missionDesc: {
     fontSize: 11,
-    color: '#888888',
+    color: colors.textMuted,
     marginBottom: 8,
     lineHeight: 16,
   },
 
   missionCredit: {
     fontSize: 11,
-    color: '#5C8B5A',
+    color: colors.primary,
     fontWeight: 'bold',
     marginBottom: 8,
   },
 
   missionButton: {
-    backgroundColor: '#5C8B5A',
+    backgroundColor: colors.primary,
     borderRadius: 6,
     paddingVertical: 6,
     alignItems: 'center',
   },
 
   missionButtonText: {
-    color: '#FFFFFF',
+    color: colors.textLight,
     fontSize: 11,
   },
 
   productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-  },
-
-  productCard: {
-    width: '47%',
-  },
-
-  productImage: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: 8,
-    marginBottom: 8,
-    justifyContent: 'flex-end',
-    padding: 8,
-  },
-
-  productImageText: {
-    color: '#FFFFFF',
-    fontSize: 11,
-    fontWeight: 'bold',
-  },
-
-  productBottom: {
-    flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-
-  productName: {
-    fontWeight: 'bold',
-    fontSize: 14,
-    color: '#1A1A1A',
-    flex: 1,
-  },
-
-  productPrice: {
-    fontSize: 12,
-    color: '#888888',
-    marginTop: 2,
+    rowGap: 8,
   },
 
   errorText: {
-    color: '#FF5252',
+    color: colors.error,
     textAlign: 'center',
     marginTop: 20,
     fontSize: 14,
@@ -285,13 +249,8 @@ export const homeScreenStyles = StyleSheet.create({
   },
 
   emptyText: {
-    color: '#888888',
+    color: colors.textMuted,
     fontSize: 14,
-  },
-
-  productHeart: {
-    fontSize: 18,
-    color: '#CCCCCC',
   },
 
   loadingIndicator: {

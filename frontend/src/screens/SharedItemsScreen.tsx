@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TouchableOpacity,
-  ScrollView,
   FlatList,
   ActivityIndicator,
 } from 'react-native';
@@ -12,6 +11,8 @@ import {productsApi, Product} from '../api/products';
 import {creditsApi} from '../api/creditsApi';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {sharedItemsStyles as styles} from '../styles/SharedItemsScreenStyle';
+import {ItemCard} from '../components/ItemCard';
+import {CategoryFilter} from '../components/CategoryFilter';
 
 const CATEGORIES = [
   '전체',
@@ -82,8 +83,10 @@ export function SharedItemsScreen() {
   return (
     <View style={[styles.container, {paddingTop: insets.top}]}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backArrow}>{'<'}</Text>
+        <TouchableOpacity
+            onPress={() => navigation.goBack()}
+            style={styles.backButton}>
+            <Text style={styles.backArrow}>{'<'}</Text>
         </TouchableOpacity>
 
         <Text style={styles.headerTitle}>나눔 물품</Text>
@@ -95,33 +98,11 @@ export function SharedItemsScreen() {
         </View>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.categoryScroll}
-        contentContainerStyle={styles.categoryContent}>
-        {CATEGORIES.map(cat => {
-          const isSelected = selectedCategory === cat;
-
-          return (
-            <TouchableOpacity
-              key={cat}
-              style={[
-                styles.categoryChip,
-                isSelected && styles.categoryChipSelected,
-              ]}
-              onPress={() => setSelectedCategory(cat)}>
-              <Text
-                style={[
-                  styles.categoryChipText,
-                  isSelected && styles.categoryChipTextSelected,
-                ]}>
-                {cat}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+      <CategoryFilter
+        categories={CATEGORIES}
+        selectedCategory={selectedCategory}
+        onSelectCategory={setSelectedCategory}
+      />
 
       {isLoading ? (
         <ActivityIndicator
@@ -147,35 +128,17 @@ export function SharedItemsScreen() {
             const isLiked = likedIds.includes(item.id);
 
             return (
-              <TouchableOpacity
-                style={styles.productCard}
+              <ItemCard
+                title={item.title}
+                price={`${item.creditPrice.toLocaleString()} 크레딧`}
+                icon="📦"
+                backgroundColor="#EAF2E9"
+                isLiked={isLiked}
                 onPress={() =>
                   navigation.navigate('ProductDetail', {productId: item.id})
-                }>
-                <View style={styles.productImage}>
-                  <Text style={styles.productImageText}>IMAGE</Text>
-                </View>
-
-                <View style={styles.productBottom}>
-                  <Text style={styles.productName} numberOfLines={1}>
-                    {item.title}
-                  </Text>
-
-                  <TouchableOpacity onPress={() => toggleLike(item.id)}>
-                    <Text
-                      style={[
-                        styles.heartIcon,
-                        isLiked && styles.heartIconActive,
-                      ]}>
-                      {isLiked ? '♥' : '♡'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-
-                <Text style={styles.productPrice}>
-                  {item.creditPrice.toLocaleString()} 크레딧
-                </Text>
-              </TouchableOpacity>
+                }
+                onHeartPress={() => toggleLike(item.id)}
+              />
             );
           }}
         />

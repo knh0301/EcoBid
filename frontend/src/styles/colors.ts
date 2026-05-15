@@ -15,7 +15,7 @@ export const colors = {
   lightGrayBackground: '#F3F4F6',
   inputBackground: '#F9FAFB',
   chipBackground: '#F8F8F8',
-  rankBackground: '#FDF8EC',
+  rankBackground: '#FDF8EC', 
   rankFirstBackground: '#EDE0C4',
 
   textPrimary: '#1A1A1A',
@@ -52,12 +52,4 @@ export const colors = {
   badgeBackground: '#D8EDC2',
   badgeText: '#52724D',
 
-  profileBorder: '#C9D8C1',
-profileBlue: '#95B9EE',
-profileGold: '#D0B100',
-textSoft: '#8A8A8A',
-gray100: '#EFEFEF',
-gray150: '#E4E4E4',
-gray400: '#CCCCCC',
-departmentSelected: '#F0F6EE',
 };

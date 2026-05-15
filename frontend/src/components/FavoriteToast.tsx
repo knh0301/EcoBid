@@ -55,7 +55,7 @@ export function FavoriteToast({visible, message, type}: FavoriteToastProps) {
         <Ionicons
           name={isLiked ? 'heart' : 'heart-outline'}
           size={18}
-          color={isLiked ? '#D24D4D' : colors.primary}
+          color={isLiked ? colors.heart : colors.primary}
         />
       </View>
 

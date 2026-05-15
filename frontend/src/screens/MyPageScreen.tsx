@@ -7,6 +7,7 @@ import {myPageStyles as styles} from '../styles/MyPageScreenStyle';
 import {creditsApi, CreditTransaction} from '../api/creditsApi';
 import {authApi} from '../api/authApi';
 import {favoritesApi} from '../api/favorites';
+import {colors} from '../styles/colors';
 
 const BADGES = [
   {id: 1, emoji: '🛍️', title: '나눔 천사', desc: '물품을 나눈 따뜻한 마음'},
@@ -152,7 +153,7 @@ export function MyPageScreen() {
           <Pressable
             style={styles.statCard}
             onPress={() => navigation.navigate('LikedItems')}>
-            <Ionicons name="heart" size={30} color="#D24D4D" />
+            <Ionicons name="heart" size={30} color={colors.heart} />
             <Text style={styles.statNumber}>{favoriteCount}</Text>
             <Text style={styles.statLabel}>찜</Text>
           </Pressable>

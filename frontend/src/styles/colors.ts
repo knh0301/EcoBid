@@ -39,7 +39,7 @@ export const colors = {
   modalOverlay: 'rgba(0, 0, 0, 0.45)',
 
   error: '#FF5252',
-  heart: '#2F6F3E',
+  heart: '#D24D4D',
 
   googleBlue: '#4285F4',
 

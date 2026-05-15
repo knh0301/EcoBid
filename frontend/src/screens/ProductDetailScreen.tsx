@@ -14,6 +14,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {productDetailStyles as styles} from '../styles/ProductDetailScreenStyle';
 import {FavoriteToast} from '../components/FavoriteToast';
 import {useFavoriteToast} from '../hooks/useFavoriteToast';
+import {colors} from '../styles/colors';
 
 export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
   const insets = useSafeAreaInsets();
@@ -168,7 +169,7 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
           <Ionicons
             name={isLiked ? 'heart' : 'heart-outline'}
             size={24}
-            color={isLiked ? '#D24D4D' : '#5C8B5A'}
+            color={isLiked ? colors.heart : colors.primary}
           />
         </TouchableOpacity>
 

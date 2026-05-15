@@ -2,6 +2,7 @@ import React from 'react';
 import {Pressable, Text, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {itemCardStyles as styles} from '../styles/ItemCardStyle';
+import {colors} from '../styles/colors';
 
 type ItemCardProps = {
   title: string;
@@ -46,7 +47,7 @@ export function ItemCard({
             <Ionicons
               name={isLiked ? 'heart' : 'heart-outline'}
               size={20}
-              color={isLiked ? '#2F6F3E' : '#999999'}
+              color={isLiked ? colors.heart : '#999999'}
             />
           </Pressable>
         )}

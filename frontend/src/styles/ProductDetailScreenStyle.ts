@@ -132,9 +132,21 @@ export const productDetailStyles = StyleSheet.create({
     padding: 16,
     paddingBottom: 16,
     backgroundColor: colors.white,
+    flexDirection: 'row',
+    gap: 10,
+  },
+
+  likeButton: {
+    width: 54,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   chatButton: {
+    flex: 1,
     backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 16,

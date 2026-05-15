@@ -60,7 +60,7 @@ export const AttendanceScreen: React.FC<any> = ({navigation}) => {
            }
            return null;
          })
-         .filter((day): day is number => day !== null); // null 제거
+         .filter((day: number | null): day is number => day !== null); // null 제거
 
        console.log('필터링 후 도장 찍을 날짜들:', filteredDays);
        setAttendedDays(filteredDays);

@@ -5,6 +5,7 @@ const Attendance = require('./Attendance');
 const Mission = require('./Mission');
 const MissionSubmission = require('./MissionSubmission');
 const CreditTransaction = require('./CreditTransaction');
+const Favorite = require('./Favorite');
 
 // ── 모델 간 관계 정의 ──
 
@@ -13,9 +14,31 @@ User.hasMany(Product, { foreignKey: 'sellerId', as: 'products' });
 User.hasMany(Attendance, { foreignKey: 'userId', as: 'attendances' });
 User.hasMany(MissionSubmission, { foreignKey: 'userId', as: 'submissions' });
 User.hasMany(CreditTransaction, { foreignKey: 'userId', as: 'transactions' });
+User.hasMany(Favorite, {
+  foreignKey: 'userId',
+  as: 'favorites',
+  onDelete: 'CASCADE',
+});
+User.belongsToMany(Product, {
+  through: Favorite,
+  foreignKey: 'userId',
+  otherKey: 'productId',
+  as: 'likedProducts',
+});
 
 // Product 관계
 Product.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+Product.hasMany(Favorite, {
+  foreignKey: 'productId',
+  as: 'favorites',
+  onDelete: 'CASCADE',
+});
+Product.belongsToMany(User, {
+  through: Favorite,
+  foreignKey: 'productId',
+  otherKey: 'userId',
+  as: 'likedUsers',
+});
 
 // Attendance 관계
 Attendance.belongsTo(User, { foreignKey: 'userId' });
@@ -27,6 +50,10 @@ MissionSubmission.belongsTo(User, { foreignKey: 'userId' });
 
 // CreditTransaction 관계
 CreditTransaction.belongsTo(User, { foreignKey: 'userId' });
+
+// Favorite 관계
+Favorite.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+Favorite.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
 // DB 연결 및 테이블 동기화
 const syncDatabase = async () => {
@@ -53,4 +80,5 @@ module.exports = {
   Mission,
   MissionSubmission,
   CreditTransaction,
+  Favorite,
 };

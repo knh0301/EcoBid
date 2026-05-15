@@ -7,9 +7,13 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
+import {Ionicons} from '@expo/vector-icons';
 import {productsApi, Product} from '../api/products';
+import {favoritesApi} from '../api/favorites';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {productDetailStyles as styles} from '../styles/ProductDetailScreenStyle';
+import {FavoriteToast} from '../components/FavoriteToast';
+import {useFavoriteToast} from '../hooks/useFavoriteToast';
 
 export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
   const insets = useSafeAreaInsets();
@@ -17,12 +21,22 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
 
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLiked, setIsLiked] = useState(false);
+  const {toast, showFavoriteToast} = useFavoriteToast();
 
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const data = await productsApi.getProductById(productId);
+        const [data, favoriteIds] = await Promise.all([
+          productsApi.getProductById(productId),
+          favoritesApi.getFavoriteIds().catch(err => {
+            console.warn('Fetch favorite ids error:', err);
+            return [] as number[];
+          }),
+        ]);
+
         setProduct(data);
+        setIsLiked(favoriteIds.includes(productId));
       } catch (error) {
         console.error('Fetch product detail error:', error);
         Alert.alert('오류', '상품 정보를 불러오는 중 오류가 발생했습니다.');
@@ -34,6 +48,26 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
 
     fetchProduct();
   }, [productId, navigation]);
+
+  const toggleLike = async () => {
+    const nextIsLiked = !isLiked;
+
+    setIsLiked(nextIsLiked);
+
+    try {
+      await favoritesApi.setFavorite(productId, nextIsLiked);
+      showFavoriteToast(
+        nextIsLiked
+          ? `${product?.title ?? '물품'}을(를) 찜했습니다.`
+          : `${product?.title ?? '물품'} 찜을 취소했습니다.`,
+        nextIsLiked ? 'liked' : 'unliked',
+      );
+    } catch (error) {
+      console.warn('Toggle favorite error:', error);
+      setIsLiked(!nextIsLiked);
+      Alert.alert('오류', '찜 상태를 변경하지 못했습니다. 다시 시도해주세요.');
+    }
+  };
 
   if (isLoading) {
     return (
@@ -128,11 +162,28 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
       {/* 채팅하기 버튼 */}
       <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
         <TouchableOpacity
+          style={styles.likeButton}
+          onPress={toggleLike}
+          activeOpacity={0.8}>
+          <Ionicons
+            name={isLiked ? 'heart' : 'heart-outline'}
+            size={24}
+            color={isLiked ? '#D24D4D' : '#5C8B5A'}
+          />
+        </TouchableOpacity>
+
+        <TouchableOpacity
           style={styles.chatButton}
           onPress={() => navigation.navigate('ChatDetail')}>
           <Text style={styles.chatButtonText}>채팅하기</Text>
         </TouchableOpacity>
       </View>
+
+      <FavoriteToast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+      />
     </View>
   );
 };

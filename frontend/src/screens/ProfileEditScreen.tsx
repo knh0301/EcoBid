@@ -11,6 +11,7 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {profileEditStyles as styles} from '../styles/ProfileEditScreenStyle';
+import {useAuth} from '../context/AuthContext';
 
 // 학과 정보 추가 예정
 const DEPARTMENTS = [
@@ -43,6 +44,7 @@ type ModalType =
 
 export function ProfileEditScreen() {
   const navigation = useNavigation<any>();
+  const {logout} = useAuth();
 
   const [nickname, setNickname] = useState(mockUser.nickname);
   const [selectedDepartment, setSelectedDepartment] = useState(
@@ -76,9 +78,14 @@ export function ProfileEditScreen() {
     setModalType('withdrawDone');
   };
 
-  const handleDone = () => {
+  const handleDone = async () => {
+    const currentModalType = modalType;
+
     setModalType(null);
-    navigation.replace('Login');
+
+    if (currentModalType === 'logoutDone' || currentModalType === 'withdrawDone') {
+      await logout();
+    }
   };
 
   return (

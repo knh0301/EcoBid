@@ -1,18 +1,22 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   FlatList,
   ActivityIndicator,
+  Alert,
 } from 'react-native';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {productsApi, Product} from '../api/products';
+import {favoritesApi} from '../api/favorites';
 import {creditsApi} from '../api/creditsApi';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {sharedItemsStyles as styles} from '../styles/SharedItemsScreenStyle';
 import {ItemCard} from '../components/ItemCard';
 import {CategoryFilter} from '../components/CategoryFilter';
+import {FavoriteToast} from '../components/FavoriteToast';
+import {useFavoriteToast} from '../hooks/useFavoriteToast';
 
 const CATEGORIES = [
   '전체',
@@ -38,14 +42,23 @@ export function SharedItemsScreen() {
   const [creditLoading, setCreditLoading] = useState(true);
 
   const [likedIds, setLikedIds] = useState<number[]>([]);
+  const {toast, showFavoriteToast} = useFavoriteToast();
 
   const fetchProducts = async () => {
     setIsLoading(true);
     setError(null);
 
     try {
-      const data = await productsApi.getProducts();
+      const [data, favoriteIds] = await Promise.all([
+        productsApi.getProducts(),
+        favoritesApi.getFavoriteIds().catch(err => {
+          console.warn('Fetch favorite ids error:', err);
+          return [] as number[];
+        }),
+      ]);
+
       setProducts(data);
+      setLikedIds(favoriteIds);
     } catch (err: any) {
       console.warn('Fetch shared items error:', err);
       setError('상품을 불러오는 중 오류가 발생했습니다.');
@@ -69,15 +82,36 @@ export function SharedItemsScreen() {
     }
   };
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     fetchProducts();
     fetchCreditBalance();
-  }, []);
+  }, []));
 
-  const toggleLike = (id: number) => {
+  const toggleLike = async (product: Product) => {
+    const id = product.id;
+    const shouldLike = !likedIds.includes(id);
+
     setLikedIds(prev =>
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id],
+      shouldLike ? [...prev, id] : prev.filter(i => i !== id),
     );
+
+    try {
+      await favoritesApi.setFavorite(id, shouldLike);
+      showFavoriteToast(
+        shouldLike
+          ? `${product.title}을(를) 찜했습니다.`
+          : `${product.title} 찜을 취소했습니다.`,
+        shouldLike ? 'liked' : 'unliked',
+      );
+    } catch (err: any) {
+      console.warn('Toggle favorite error:', err);
+
+      setLikedIds(prev =>
+        shouldLike ? prev.filter(i => i !== id) : [...prev, id],
+      );
+
+      Alert.alert('오류', '찜 상태를 변경하지 못했습니다. 다시 시도해주세요.');
+    }
   };
 
   return (
@@ -137,7 +171,7 @@ export function SharedItemsScreen() {
                 onPress={() =>
                   navigation.navigate('ProductDetail', {productId: item.id})
                 }
-                onHeartPress={() => toggleLike(item.id)}
+                onHeartPress={() => toggleLike(item)}
               />
             );
           }}
@@ -149,6 +183,12 @@ export function SharedItemsScreen() {
         onPress={() => navigation.navigate('ProductRegister')}>
         <Text style={styles.fabText}>+</Text>
       </TouchableOpacity>
+
+      <FavoriteToast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+      />
     </View>
   );
 }

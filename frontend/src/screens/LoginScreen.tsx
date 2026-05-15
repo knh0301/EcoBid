@@ -14,11 +14,14 @@ import {useNavigation} from '@react-navigation/native';
 import {Ionicons} from '@expo/vector-icons';
 import {loginStyles as styles} from '../styles/LoginScreenStyle';
 import {useAuth} from '../context/AuthContext';
-import {authApi} from '../api/authApi';
 
 export function LoginScreen() {
   const navigation = useNavigation<any>();
-  const {signInWithGoogle, isLoading: googleLoading} = useAuth();
+  const {
+    loginWithEmail,
+    signInWithGoogle,
+    isLoading: authLoading,
+  } = useAuth();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -38,12 +41,7 @@ export function LoginScreen() {
     try {
       setLoginLoading(true);
 
-      await authApi.login({
-        email: email.trim(),
-        password,
-      });
-
-      navigation.replace('MainTabs');
+      await loginWithEmail(email.trim(), password);
     } catch (error: any) {
       console.warn('Login error:', error);
 
@@ -66,7 +64,7 @@ export function LoginScreen() {
     }
   };
 
-  const isButtonLoading = loginLoading || googleLoading;
+  const isButtonLoading = loginLoading || authLoading;
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -126,10 +124,10 @@ export function LoginScreen() {
           <Text style={styles.dividerText}>또는</Text>
 
           <Pressable
-            style={[styles.googleButton, googleLoading && {opacity: 0.7}]}
+            style={[styles.googleButton, authLoading && {opacity: 0.7}]}
             onPress={handleGoogleLogin}
             disabled={isButtonLoading}>
-            {googleLoading ? (
+            {authLoading ? (
               <ActivityIndicator size="small" color="#4285F4" />
             ) : (
               <>

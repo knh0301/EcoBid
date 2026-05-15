@@ -1,11 +1,12 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {myPageStyles as styles} from '../styles/MyPageScreenStyle';
 import {creditsApi, CreditTransaction} from '../api/creditsApi';
 import {authApi} from '../api/authApi';
+import {favoritesApi} from '../api/favorites';
 
 const BADGES = [
   {id: 1, emoji: '🛍️', title: '나눔 천사', desc: '물품을 나눈 따뜻한 마음'},
@@ -35,6 +36,7 @@ export function MyPageScreen() {
   const [creditLoading, setCreditLoading] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [totalEarnedCredits, setTotalEarnedCredits] = useState(0);
+  const [favoriteCount, setFavoriteCount] = useState(0);
 
   const levelInfo = getLevelInfo(totalEarnedCredits);
 
@@ -52,7 +54,13 @@ export function MyPageScreen() {
         setJoinedDateText(formatJoinedDate(joinedDate));
       }
 
-      const transactions = await creditsApi.getCreditTransactions(user.id);
+      const [transactions, favoriteIds] = await Promise.all([
+        creditsApi.getCreditTransactions(user.id),
+        favoritesApi.getFavoriteIds().catch(err => {
+          console.warn('Fetch favorite count error:', err);
+          return [] as number[];
+        }),
+      ]);
 
       const balance = transactions.reduce((sum, item) => {
         return sum + Number(item.amount);
@@ -76,6 +84,7 @@ export function MyPageScreen() {
       setCreditBalance(balance);
       setTotalEarnedCredits(earnedCredits);
       setActivities(recentActivities);
+      setFavoriteCount(favoriteIds.length);
     } catch (err: any) {
       console.warn('Fetch mypage data error:', err);
 
@@ -86,9 +95,9 @@ export function MyPageScreen() {
     }
   };
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     fetchMyPageData();
-  }, []);
+  }, []));
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -144,7 +153,7 @@ export function MyPageScreen() {
             style={styles.statCard}
             onPress={() => navigation.navigate('LikedItems')}>
             <Ionicons name="heart" size={30} color="#D24D4D" />
-            <Text style={styles.statNumber}>3</Text>
+            <Text style={styles.statNumber}>{favoriteCount}</Text>
             <Text style={styles.statLabel}>찜</Text>
           </Pressable>
 

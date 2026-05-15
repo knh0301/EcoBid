@@ -1,6 +1,7 @@
 import axios from 'axios';
-import * as SecureStore from 'expo-secure-store';
 import {API_CONFIG} from '../config/apiConfig';
+import {tokenStorage} from '../storage/tokenStorage';
+import {refreshAuthTokens} from './authTokenManager';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Axios 인스턴스 생성
@@ -17,7 +18,7 @@ const api = axios.create({
 // 요청 인터셉터: 토큰 자동 첨부
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 api.interceptors.request.use(async config => {
-  const accessToken = await SecureStore.getItemAsync('accessToken');
+  const accessToken = await tokenStorage.getAccessToken();
 
   if (accessToken) {
     config.headers.Authorization = `Bearer ${accessToken}`;
@@ -38,28 +39,13 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        const refreshToken = await SecureStore.getItemAsync('refreshToken');
-
-        if (!refreshToken) {
-          throw new Error('No refresh token');
-        }
-
-        const {data} = await axios.post(`${API_CONFIG.BASE_URL}/auth/refresh`, {
-          refreshToken,
-        });
-
-        const newAccessToken = data.data.accessToken;
-        const newRefreshToken = data.data.refreshToken;
-
-        await SecureStore.setItemAsync('accessToken', newAccessToken);
-        await SecureStore.setItemAsync('refreshToken', newRefreshToken);
+        const newAccessToken = await refreshAuthTokens();
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
 
         return api(originalRequest);
       } catch (refreshError) {
-        await SecureStore.deleteItemAsync('accessToken');
-        await SecureStore.deleteItemAsync('refreshToken');
+        await tokenStorage.clearTokens();
 
         return Promise.reject(refreshError);
       }
@@ -107,8 +93,8 @@ export const authApi = {
     const {data} = await api.post('/auth/login', payload);
     const result: AuthResponse = data.data;
 
-    await SecureStore.setItemAsync('accessToken', result.accessToken);
-    await SecureStore.setItemAsync('refreshToken', result.refreshToken);
+    await tokenStorage.setAccessToken(result.accessToken);
+    await tokenStorage.setRefreshToken(result.refreshToken);
 
     return result;
   },
@@ -124,8 +110,8 @@ export const authApi = {
     const {data} = await api.post('/auth/social', payload);
     const result: AuthResponse = data.data;
 
-    await SecureStore.setItemAsync('accessToken', result.accessToken);
-    await SecureStore.setItemAsync('refreshToken', result.refreshToken);
+    await tokenStorage.setAccessToken(result.accessToken);
+    await tokenStorage.setRefreshToken(result.refreshToken);
 
     return result;
   },
@@ -140,8 +126,7 @@ export const authApi = {
   logout: async () => {
     await api.post('/auth/logout');
 
-    await SecureStore.deleteItemAsync('accessToken');
-    await SecureStore.deleteItemAsync('refreshToken');
+    await tokenStorage.clearTokens();
   },
 
   // 토큰 갱신

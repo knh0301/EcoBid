@@ -1,6 +1,7 @@
 const sequelize = require('../config/database');
 const User = require('./User');
 const Product = require('./Product');
+const ProductImage = require('./ProductImage');
 const Attendance = require('./Attendance');
 const Mission = require('./Mission');
 const MissionSubmission = require('./MissionSubmission');
@@ -28,6 +29,11 @@ User.belongsToMany(Product, {
 
 // Product 관계
 Product.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+Product.hasMany(ProductImage, {
+  foreignKey: 'productId',
+  as: 'images',
+  onDelete: 'CASCADE',
+});
 Product.hasMany(Favorite, {
   foreignKey: 'productId',
   as: 'favorites',
@@ -39,6 +45,9 @@ Product.belongsToMany(User, {
   otherKey: 'userId',
   as: 'likedUsers',
 });
+
+// ProductImage 관계
+ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
 
 // Attendance 관계
 Attendance.belongsTo(User, { foreignKey: 'userId' });
@@ -76,6 +85,7 @@ module.exports = {
   syncDatabase,
   User,
   Product,
+  ProductImage,
   Attendance,
   Mission,
   MissionSubmission,

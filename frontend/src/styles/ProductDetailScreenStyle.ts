@@ -13,12 +13,19 @@ export const productDetailStyles = StyleSheet.create({
   },
 
   header: {
+    height: 58,
+    backgroundColor: colors.white,
+    paddingHorizontal: 16,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    position: 'relative',
+  },
+
+  backButton: {
+    zIndex: 2,
   },
 
   backArrow: {
@@ -27,37 +34,31 @@ export const productDetailStyles = StyleSheet.create({
   },
 
   headerTitle: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: colors.textPrimary,
-    flex: 1,
-    marginHorizontal: 10,
+    position: 'absolute',
+    left: 0,
+    right: 0,
     textAlign: 'center',
+    fontSize: 20,
+    fontWeight: '900',
+    color: colors.textDark,
   },
 
   creditBadge: {
-    backgroundColor: colors.lightGreenBackground,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-    borderRadius: 20,
+    minWidth: 92,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.primaryLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+    marginLeft: 'auto',
+    zIndex: 2,
   },
 
   creditBadgeText: {
-    color: colors.primary,
+    color: colors.textLight,
     fontSize: 12,
-    fontWeight: 'bold',
-  },
-
-  imageBox: {
-    width: 250,
-    height: 250,
-    backgroundColor: colors.grayBackground,
-    marginRight: 2,
-  },
-
-  imageText: {
-    textAlign: 'center',
-    marginTop: 100,
+    fontWeight: '800',
   },
 
   bodyPadding: {
@@ -132,21 +133,9 @@ export const productDetailStyles = StyleSheet.create({
     padding: 16,
     paddingBottom: 16,
     backgroundColor: colors.white,
-    flexDirection: 'row',
-    gap: 10,
-  },
-
-  likeButton: {
-    width: 54,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
 
   chatButton: {
-    flex: 1,
     backgroundColor: colors.primary,
     borderRadius: 10,
     paddingVertical: 16,
@@ -158,4 +147,32 @@ export const productDetailStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
   },
+
+  imageScrollContent: {
+  paddingHorizontal: 16,
+  paddingTop: 16,
+  gap: 10,
+},
+
+productImage: {
+  width: 250,
+  height: 250,
+  borderRadius: 12,
+  backgroundColor: colors.grayBackground,
+},
+
+imageBox: {
+  width: 250,
+  height: 250,
+  borderRadius: 12,
+  backgroundColor: colors.grayBackground,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+imageText: {
+  color: colors.textMuted,
+  fontSize: 14,
+  fontWeight: '700',
+},
 });

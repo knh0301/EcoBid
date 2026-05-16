@@ -1,5 +1,5 @@
 import React from 'react';
-import {Pressable, Text, View} from 'react-native';
+import {Image, Pressable, Text, View} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {itemCardStyles as styles} from '../styles/ItemCardStyle';
 import {colors} from '../styles/colors';
@@ -9,6 +9,7 @@ type ItemCardProps = {
   price: string;
   icon: string;
   backgroundColor: string;
+  imageUrl?: string;
   isLiked?: boolean;
   showHeart?: boolean;
   onPress?: () => void;
@@ -20,6 +21,7 @@ export function ItemCard({
   price,
   icon,
   backgroundColor,
+  imageUrl,
   isLiked = true,
   showHeart = true,
   onPress,
@@ -28,7 +30,15 @@ export function ItemCard({
   return (
     <Pressable style={styles.itemCard} onPress={onPress}>
       <View style={[styles.itemImage, {backgroundColor}]}>
-        <Text style={styles.itemIcon}>{icon}</Text>
+        {imageUrl ? (
+          <Image
+            source={{uri: imageUrl}}
+            style={styles.itemPhoto}
+            resizeMode="cover"
+          />
+        ) : (
+          <Text style={styles.itemIcon}>{icon}</Text>
+        )}
       </View>
 
       <View style={styles.itemInfoRow}>

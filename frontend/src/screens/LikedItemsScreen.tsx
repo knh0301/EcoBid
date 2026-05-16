@@ -6,7 +6,7 @@ import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {likedItemsStyles as styles} from '../styles/LikedItemsScreenStyle';
 import {creditsApi} from '../api/creditsApi';
 import {favoritesApi} from '../api/favorites';
-import {Product} from '../api/products';
+import {getProductImageUrls, Product} from '../api/products';
 import {ItemCard} from '../components/ItemCard';
 import {CategoryFilter} from '../components/CategoryFilter';
 import {FavoriteToast} from '../components/FavoriteToast';
@@ -143,6 +143,7 @@ export function LikedItemsScreen() {
                 price={`${item.creditPrice.toLocaleString()} 크레딧`}
                 icon="📦"
                 backgroundColor="#EAF2E9"
+                imageUrl={getProductImageUrls(item)[0]}
                 isLiked={true}
                 onPress={() =>
                   navigation.navigate('ProductDetail', {productId: item.id})

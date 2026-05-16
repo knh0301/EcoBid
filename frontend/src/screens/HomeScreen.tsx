@@ -9,7 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
-import {productsApi, Product} from '../api/products';
+import {getProductImageUrls, productsApi, Product} from '../api/products';
 import {favoritesApi} from '../api/favorites';
 import {creditsApi} from '../api/creditsApi';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -265,6 +265,7 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
                 price={`${item.creditPrice.toLocaleString()} 크레딧`}
                 icon="📦"
                 backgroundColor="#EAF2E9"
+                imageUrl={getProductImageUrls(item)[0]}
                 isLiked={likedIds.includes(item.id)}
                 onPress={() =>
                   navigation.navigate('ProductDetail', {productId: item.id})

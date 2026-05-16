@@ -1,10 +1,15 @@
-const { Favorite, Product, User } = require('../models');
+const { Favorite, Product, ProductImage, User } = require('../models');
 
 const productInclude = [
   {
     model: User,
     as: 'seller',
     attributes: ['id', 'name', 'profileImage'],
+  },
+  {
+    model: ProductImage,
+    as: 'images',
+    attributes: ['id', 'imageUrl', 'sortOrder'],
   },
 ];
 

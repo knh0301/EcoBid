@@ -29,6 +29,12 @@ export const itemCardStyles = StyleSheet.create({
     fontSize: 46,
   },
 
+  itemPhoto: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 6,
+  },
+
   itemInfoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',

@@ -8,7 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
-import {productsApi, Product} from '../api/products';
+import {getProductImageUrls, productsApi, Product} from '../api/products';
 import {favoritesApi} from '../api/favorites';
 import {creditsApi} from '../api/creditsApi';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
@@ -167,6 +167,7 @@ export function SharedItemsScreen() {
                 price={`${item.creditPrice.toLocaleString()} 크레딧`}
                 icon="📦"
                 backgroundColor="#EAF2E9"
+                imageUrl={getProductImageUrls(item)[0]}
                 isLiked={isLiked}
                 onPress={() =>
                   navigation.navigate('ProductDetail', {productId: item.id})

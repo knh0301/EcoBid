@@ -32,7 +32,13 @@
     },
     "plugins": [
       "@react-native-google-signin/google-signin",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "EcoBid가 주변 나눔 물품과 제휴 매장을 보여주기 위해 위치를 사용합니다."
+        }
+      ]
     ]
   }
 }

@@ -10,12 +10,12 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
+import {SafeAreaView} from 'react-native-safe-area-context';
+import {authApi} from '../api/authApi';
 import {signupStyles as styles} from '../styles/SignupScreenStyle';
 
-// 학과 정보 추가 예정
 const DEPARTMENTS = [
   '컴퓨터공학과',
   '인공지능공학과',
@@ -39,7 +39,7 @@ export function SignupScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [passwordCheck, setPasswordCheck] = useState('');
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
 
   const showAlert = (message: string) => {
@@ -84,10 +84,10 @@ export function SignupScreen() {
       return false;
     }
 
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{8,}$/;
+    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d).{8,}$/;
 
     if (!passwordRegex.test(password)) {
-      showAlert('비밀번호는 영문과 숫자를 포함해 8자리 이상이어야 합니다.');
+      showAlert('비밀번호는 영문과 숫자를 포함해 8자 이상이어야 합니다.');
       return false;
     }
 
@@ -104,21 +104,35 @@ export function SignupScreen() {
     return true;
   };
 
-  const handleSignup = () => {
-    const isValid = validateSignup();
-
-    if (!isValid) {
+  const handleSignup = async () => {
+    if (!validateSignup() || isSubmitting) {
       return;
     }
 
-    // 지금은 백엔드 연동 전이라 여기서 성공 처리만 함.
-    // 나중에는 이 위치에서 회원가입 API를 호출하면 됨.
-    Alert.alert('회원가입 완료', '회원가입이 완료되었습니다.', [
-      {
-        text: '확인',
-        onPress: () => navigation.navigate('Login'),
-      },
-    ]);
+    setIsSubmitting(true);
+
+    try {
+      await authApi.register({
+        email: email.trim(),
+        password,
+        name: name.trim(),
+      });
+
+      Alert.alert('회원가입 완료', '회원가입이 완료되었습니다. 로그인해주세요.', [
+        {
+          text: '확인',
+          onPress: () => navigation.navigate('Login'),
+        },
+      ]);
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        '회원가입 중 오류가 발생했습니다. 다시 시도해주세요.';
+
+      showAlert(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -146,7 +160,7 @@ export function SignupScreen() {
               <Text style={styles.label}>이름</Text>
               <TextInput
                 style={styles.input}
-                placeholder="이름을 입력하세요."
+                placeholder="이름을 입력하세요"
                 placeholderTextColor="#999999"
                 value={name}
                 onChangeText={setName}
@@ -157,7 +171,7 @@ export function SignupScreen() {
               <Text style={styles.label}>닉네임</Text>
               <TextInput
                 style={styles.input}
-                placeholder="닉네임을 입력하세요."
+                placeholder="닉네임을 입력하세요"
                 placeholderTextColor="#999999"
                 value={nickname}
                 onChangeText={setNickname}
@@ -168,7 +182,7 @@ export function SignupScreen() {
               <Text style={styles.label}>학번</Text>
               <TextInput
                 style={styles.input}
-                placeholder="학번을 입력하세요."
+                placeholder="학번을 입력하세요"
                 placeholderTextColor="#999999"
                 value={studentId}
                 onChangeText={setStudentId}
@@ -211,7 +225,7 @@ export function SignupScreen() {
               <Text style={styles.label}>비밀번호</Text>
               <TextInput
                 style={styles.input}
-                placeholder="영문 + 숫자 조합 8자 이상"
+                placeholder="영문 + 숫자 포함 8자 이상"
                 placeholderTextColor="#999999"
                 value={password}
                 onChangeText={setPassword}
@@ -223,7 +237,7 @@ export function SignupScreen() {
               <Text style={styles.label}>비밀번호 확인</Text>
               <TextInput
                 style={styles.input}
-                placeholder="비밀번호를 다시 입력하세요."
+                placeholder="비밀번호를 다시 입력하세요"
                 placeholderTextColor="#999999"
                 value={passwordCheck}
                 onChangeText={setPasswordCheck}
@@ -231,15 +245,20 @@ export function SignupScreen() {
               />
             </View>
 
-            <Pressable style={styles.signupButton} onPress={handleSignup}>
-              <Text style={styles.signupButtonText}>가입하기</Text>
+            <Pressable
+              style={styles.signupButton}
+              onPress={handleSignup}
+              disabled={isSubmitting}>
+              <Text style={styles.signupButtonText}>
+                {isSubmitting ? '가입 중...' : '가입하기'}
+              </Text>
             </Pressable>
 
             <View style={styles.loginRow}>
               <Text style={styles.loginText}>이미 계정이 있으신가요?</Text>
 
               <Pressable onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.loginLink}> 로그인 하기</Text>
+                <Text style={styles.loginLink}> 로그인하기</Text>
               </Pressable>
             </View>
           </View>

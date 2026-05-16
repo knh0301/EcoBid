@@ -1,5 +1,6 @@
 import React, {useState} from 'react';
 import {
+  Image,
   View,
   Text,
   TextInput,
@@ -7,12 +8,25 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import {AlertDialog, ConfirmDialog} from '../components/EcoDialog';
-import {productsApi, Product} from '../api/products';
+import {
+  productsApi,
+  Product,
+  resolveProductImageUrl,
+} from '../api/products';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {productRegisterStyles as styles} from '../styles/ProductRegisterScreenStyle';
 
 const CATEGORIES = ['가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
+
+type SelectedImage = {
+  uri: string;
+  imageUrl?: string;
+  base64?: string;
+  mimeType?: string;
+};
 
 export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
   const insets = useSafeAreaInsets();
@@ -32,6 +46,24 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     isEditMode ? '기타' : null,
   );
+
+  const [selectedImages, setSelectedImages] = useState<SelectedImage[]>(() => {
+    const initialImageUrls = initialProduct?.images?.length
+      ? [...initialProduct.images]
+          .sort((a, b) => a.sortOrder - b.sortOrder)
+          .map(image => image.imageUrl)
+      : initialProduct?.imageUrl
+        ? [initialProduct.imageUrl]
+        : [];
+
+    return initialImageUrls
+      .map(imageUrl => ({
+        uri: resolveProductImageUrl(imageUrl) || imageUrl,
+        imageUrl,
+      }))
+      .slice(0, 5);
+  });
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
@@ -53,6 +85,110 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
     }
   };
 
+  const getFallbackMimeType = (uri: string) => {
+    const lowerUri = uri.toLowerCase();
+
+    if (lowerUri.endsWith('.png')) {
+      return 'image/png';
+    }
+
+    if (lowerUri.endsWith('.webp')) {
+      return 'image/webp';
+    }
+
+    return 'image/jpeg';
+  };
+
+  const handlePickImages = async () => {
+    if (selectedImages.length >= 5) {
+      showAlert('사진은 최대 5장까지 등록할 수 있습니다.');
+      return;
+    }
+
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      showAlert('사진을 선택하려면 앨범 접근 권한이 필요합니다.');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      selectionLimit: 5 - selectedImages.length,
+      quality: 0.8,
+    });
+
+    if (result.canceled) {
+      return;
+    }
+
+    try {
+      const convertedImages: SelectedImage[] = [];
+
+      for (const asset of result.assets) {
+        if (!asset.uri) {
+          continue;
+        }
+
+        const manipulatedImage = await ImageManipulator.manipulateAsync(
+          asset.uri,
+          [],
+          {
+            compress: 0.8,
+            format: ImageManipulator.SaveFormat.JPEG,
+            base64: true,
+          },
+        );
+
+        if (!manipulatedImage.uri || !manipulatedImage.base64) {
+          continue;
+        }
+
+        convertedImages.push({
+          uri: manipulatedImage.uri,
+          base64: manipulatedImage.base64,
+          mimeType: 'image/jpeg',
+        });
+      }
+
+      if (convertedImages.length === 0) {
+        showAlert('사진 정보를 불러오지 못했습니다. 다시 선택해주세요.');
+        return;
+      }
+
+      setSelectedImages(prev => [...prev, ...convertedImages].slice(0, 5));
+    } catch (error) {
+      console.error('Image convert error:', error);
+      showAlert('사진을 처리하는 중 오류가 발생했습니다.');
+    }
+  };
+
+  const handleRemoveImage = (index: number) => {
+    setSelectedImages(prev =>
+      prev.filter((_, imageIndex) => imageIndex !== index),
+    );
+  };
+
+  const uploadSelectedImages = async () => {
+    const imageUrls = await Promise.all(
+      selectedImages.map(async image => {
+        if (!image.base64) {
+          return image.imageUrl || image.uri;
+        }
+
+        const uploadedImage = await productsApi.uploadProductImage({
+          base64: image.base64,
+          mimeType: image.mimeType || getFallbackMimeType(image.uri),
+        });
+
+        return uploadedImage.imageUrl;
+      }),
+    );
+
+    return imageUrls;
+  };
+
   const handleSubmit = async () => {
     if (!title.trim()) {
       showAlert('물품 이름을 적어주세요.');
@@ -64,14 +200,25 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
       return;
     }
 
+    const parsedPrice = Number(price.replace(/,/g, ''));
+
+    if (!Number.isInteger(parsedPrice) || parsedPrice <= 0) {
+      showAlert('가격은 1 이상의 숫자로 입력해주세요.');
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
+      const imageUrls = await uploadSelectedImages();
+
       if (isEditMode && initialProduct) {
         await productsApi.updateProduct(initialProduct.id, {
           title,
           description: desc,
-          creditPrice: parseInt(price, 10),
+          creditPrice: parsedPrice,
+          imageUrl: imageUrls[0],
+          imageUrls,
         });
 
         showAlert('나눔 물품글 수정이 완료되었어요!', true);
@@ -79,15 +226,22 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         await productsApi.createProduct({
           title,
           description: desc,
-          creditPrice: parseInt(price, 10),
+          creditPrice: parsedPrice,
+          imageUrl: imageUrls[0],
+          imageUrls,
           sellerId: 1,
         });
 
         showAlert('나눔 물품 등록이 완료되었어요!', true);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error('Submit product error:', error);
-      showAlert('저장 중 오류가 발생했습니다.');
+      console.log('status:', error.response?.status);
+      console.log('data:', error.response?.data);
+
+      showAlert(
+        error.response?.data?.message || '저장 중 오류가 발생했습니다.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -104,9 +258,14 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
     try {
       await productsApi.deleteProduct(initialProduct.id);
       showAlert('나눔 물품글이 삭제되었습니다.', true);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Delete product error:', error);
-      showAlert('삭제 중 오류가 발생했습니다.');
+      console.log('status:', error.response?.status);
+      console.log('data:', error.response?.data);
+
+      showAlert(
+        error.response?.data?.message || '삭제 중 오류가 발생했습니다.',
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -128,10 +287,43 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.imagePicker}>
-          <TouchableOpacity style={styles.addImageBox}>
-            <Text style={styles.addImagePlus}>+</Text>
-            <Text style={styles.addImageCount}>0/5</Text>
-          </TouchableOpacity>
+          {selectedImages.map((image, index) => (
+            <TouchableOpacity
+              key={`${image.uri}-${index}`}
+              style={styles.imagePreviewBox}
+              onPress={handlePickImages}
+              activeOpacity={0.85}>
+              <Image
+                source={{uri: image.uri}}
+                style={styles.imagePreview}
+                resizeMode="cover"
+              />
+
+              <View style={styles.imageChangeBadge}>
+                <Text style={styles.imageChangeText}>
+                  {index + 1}/{selectedImages.length}
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.imageRemoveButton}
+                onPress={() => handleRemoveImage(index)}
+                hitSlop={8}>
+                <Text style={styles.imageRemoveText}>×</Text>
+              </TouchableOpacity>
+            </TouchableOpacity>
+          ))}
+
+          {selectedImages.length < 5 && (
+            <TouchableOpacity
+              style={styles.addImageBox}
+              onPress={handlePickImages}>
+              <Text style={styles.addImagePlus}>+</Text>
+              <Text style={styles.addImageCount}>
+                {selectedImages.length}/5
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <Text style={styles.label}>물품 이름</Text>

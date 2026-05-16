@@ -63,6 +63,55 @@ export const productRegisterStyles = StyleSheet.create({
     color: colors.textMuted,
   },
 
+  imagePreviewBox: {
+    width: 90,
+    height: 90,
+    borderRadius: 8,
+    overflow: 'hidden',
+    backgroundColor: colors.lightGrayBackground,
+  },
+
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+  },
+
+  imageChangeBadge: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: 0,
+    height: 24,
+    backgroundColor: 'rgba(0, 0, 0, 0.55)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  imageChangeText: {
+    color: colors.white,
+    fontSize: 11,
+    fontWeight: '700',
+  },
+
+  imageRemoveButton: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: 'rgba(0, 0, 0, 0.62)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  imageRemoveText: {
+    color: colors.white,
+    fontSize: 16,
+    lineHeight: 18,
+    fontWeight: '800',
+  },
+
   label: {
     fontSize: 15,
     fontWeight: 'bold',
@@ -200,4 +249,5 @@ export const productRegisterStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: 'bold',
   },
+  
 });

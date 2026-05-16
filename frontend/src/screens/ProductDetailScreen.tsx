@@ -6,9 +6,10 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
-import {productsApi, Product} from '../api/products';
+import {getProductImageUrls, productsApi, Product} from '../api/products';
 import {favoritesApi} from '../api/favorites';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {productDetailStyles as styles} from '../styles/ProductDetailScreenStyle';
@@ -87,6 +88,8 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
     return null;
   }
 
+  const productImageUrls = getProductImageUrls(product);
+
   return (
     <View style={[styles.container, {paddingTop: insets.top}]}>
       {/* 헤더 */}
@@ -108,15 +111,23 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
 
       <ScrollView>
         {/* 이미지 */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+        {productImageUrls.length > 0 ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {productImageUrls.map((imageUrl, index) => (
+              <View key={`${imageUrl}-${index}`} style={styles.imageBox}>
+                <Image
+                  source={{uri: imageUrl}}
+                  style={styles.productImage}
+                  resizeMode="cover"
+                />
+              </View>
+            ))}
+          </ScrollView>
+        ) : (
           <View style={styles.imageBox}>
-            {product.imageUrl ? (
-              <Text style={styles.imageText}>이미지 영역</Text>
-            ) : (
-              <Text style={styles.imageText}>이미지 없음</Text>
-            )}
+            <Text style={styles.imageText}>이미지 없음</Text>
           </View>
-        </ScrollView>
+        )}
 
         <View style={styles.bodyPadding}>
           {/* 판매자 정보 */}

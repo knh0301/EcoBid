@@ -53,11 +53,18 @@ export const productDetailStyles = StyleSheet.create({
     height: 250,
     backgroundColor: colors.grayBackground,
     marginRight: 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   imageText: {
     textAlign: 'center',
-    marginTop: 100,
+    color: colors.textMuted,
+  },
+
+  productImage: {
+    width: '100%',
+    height: '100%',
   },
 
   bodyPadding: {

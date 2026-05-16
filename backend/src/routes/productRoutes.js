@@ -5,6 +5,9 @@ const productController = require('../controllers/productController');
 // GET /api/products - 상품 목록 조회
 router.get('/', productController.getProducts);
 
+// POST /api/products/images - 상품 이미지 업로드
+router.post('/images', productController.uploadProductImage);
+
 // GET /api/products/:id - 상품 상세 조회
 router.get('/:id', productController.getProductById);
 

@@ -1,15 +1,115 @@
-const { Product, User } = require('../models');
+const fs = require('fs/promises');
+const path = require('path');
+const crypto = require('crypto');
+const { sequelize, Product, ProductImage, User } = require('../models');
+
+const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads', 'products');
+const MIME_EXTENSIONS = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
+
+const productIncludes = [
+  {
+    model: User,
+    as: 'seller',
+    attributes: ['id', 'name', 'profileImage'],
+  },
+  {
+    model: ProductImage,
+    as: 'images',
+    attributes: ['id', 'imageUrl', 'sortOrder'],
+  },
+];
+
+const normalizeImageUrls = ({ imageUrl, imageUrls }) => {
+  const urls = Array.isArray(imageUrls) ? imageUrls : [];
+  const normalizedUrls = urls
+    .concat(imageUrl ? [imageUrl] : [])
+    .filter(Boolean)
+    .filter((url, index, arr) => arr.indexOf(url) === index)
+    .slice(0, 5);
+
+  return normalizedUrls;
+};
+
+const replaceProductImages = async (productId, imageUrls, transaction) => {
+  await ProductImage.destroy({
+    where: { productId },
+    transaction,
+  });
+
+  if (imageUrls.length === 0) {
+    return;
+  }
+
+  await ProductImage.bulkCreate(
+    imageUrls.map((url, index) => ({
+      productId,
+      imageUrl: url,
+      sortOrder: index,
+    })),
+    { transaction },
+  );
+};
+
+/**
+ * 상품 이미지 업로드
+ * POST /api/products/images
+ */
+exports.uploadProductImage = async (req, res, next) => {
+  try {
+    const { base64, mimeType } = req.body;
+
+    if (!base64 || !mimeType) {
+      return res.status(400).json({
+        success: false,
+        message: 'base64, mimeType은 필수 항목입니다.',
+      });
+    }
+
+    const extension = MIME_EXTENSIONS[mimeType];
+    if (!extension) {
+      return res.status(400).json({
+        success: false,
+        message: 'jpg, png, webp 이미지만 업로드할 수 있습니다.',
+      });
+    }
+
+    await fs.mkdir(UPLOAD_DIR, { recursive: true });
+
+    const fileName = `${crypto.randomUUID()}.${extension}`;
+    const filePath = path.join(UPLOAD_DIR, fileName);
+    const imageBuffer = Buffer.from(base64, 'base64');
+
+    await fs.writeFile(filePath, imageBuffer);
+
+    res.status(201).json({
+      success: true,
+      data: {
+        imageUrl: `/uploads/products/${fileName}`,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
 /**
  * 상품 등록
  * POST /api/products
  */
 exports.createProduct = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+
   try {
-    const { title, description, creditPrice, imageUrl, sellerId } = req.body;
+    const { title, description, creditPrice, imageUrl, imageUrls, sellerId } = req.body;
 
     // 필수값 검증
     if (!title || creditPrice === undefined || !sellerId) {
+      await transaction.rollback();
+
       return res.status(400).json({
         success: false,
         message: 'title, creditPrice, sellerId는 필수 항목입니다.',
@@ -17,28 +117,41 @@ exports.createProduct = async (req, res, next) => {
     }
 
     // 판매자 존재 확인
-    const user = await User.findByPk(sellerId);
+    const user = await User.findByPk(sellerId, { transaction });
     if (!user) {
+      await transaction.rollback();
+
       return res.status(404).json({
         success: false,
         message: '존재하지 않는 판매자입니다.',
       });
     }
 
+    const normalizedImageUrls = normalizeImageUrls({ imageUrl, imageUrls });
+
     const product = await Product.create({
       title,
       description,
       creditPrice,
-      imageUrl,
+      imageUrl: normalizedImageUrls[0] || null,
       sellerId,
       status: 'AVAILABLE',
+    }, { transaction });
+
+    await replaceProductImages(product.id, normalizedImageUrls, transaction);
+    await transaction.commit();
+
+    const createdProduct = await Product.findByPk(product.id, {
+      include: productIncludes,
+      order: [[{ model: ProductImage, as: 'images' }, 'sortOrder', 'ASC']],
     });
 
     res.status(201).json({
       success: true,
-      data: product,
+      data: createdProduct,
     });
   } catch (err) {
+    await transaction.rollback();
     next(err);
   }
 };
@@ -52,13 +165,7 @@ exports.getProducts = async (req, res, next) => {
     const products = await Product.findAll({
       where: { status: 'AVAILABLE' },
       order: [['createdAt', 'DESC']],
-      include: [
-        {
-          model: User,
-          as: 'seller',
-          attributes: ['id', 'name', 'profileImage'],
-        },
-      ],
+      include: productIncludes,
     });
 
     res.json({
@@ -77,13 +184,8 @@ exports.getProducts = async (req, res, next) => {
 exports.getProductById = async (req, res, next) => {
   try {
     const product = await Product.findByPk(req.params.id, {
-      include: [
-        {
-          model: User,
-          as: 'seller',
-          attributes: ['id', 'name', 'profileImage'],
-        },
-      ],
+      include: productIncludes,
+      order: [[{ model: ProductImage, as: 'images' }, 'sortOrder', 'ASC']],
     });
 
     if (!product) {
@@ -107,11 +209,15 @@ exports.getProductById = async (req, res, next) => {
  * PUT /api/products/:id
  */
 exports.updateProduct = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+
   try {
-    const { title, description, creditPrice, imageUrl, status } = req.body;
-    const product = await Product.findByPk(req.params.id);
+    const { title, description, creditPrice, imageUrl, imageUrls, status } = req.body;
+    const product = await Product.findByPk(req.params.id, { transaction });
 
     if (!product) {
+      await transaction.rollback();
+
       return res.status(404).json({
         success: false,
         message: '상품을 찾을 수 없습니다.',
@@ -120,25 +226,46 @@ exports.updateProduct = async (req, res, next) => {
 
     // status 값 검증
     if (status && !['AVAILABLE', 'SOLD', 'RESERVED'].includes(status)) {
+      await transaction.rollback();
+
       return res.status(400).json({
         success: false,
         message: 'status는 AVAILABLE, SOLD, RESERVED 중 하나여야 합니다.',
       });
     }
 
+    const shouldReplaceImages = imageUrl !== undefined || imageUrls !== undefined;
+    const normalizedImageUrls = shouldReplaceImages
+      ? normalizeImageUrls({ imageUrl, imageUrls })
+      : undefined;
+
     await product.update({
       title: title || product.title,
       description: description !== undefined ? description : product.description,
       creditPrice: creditPrice !== undefined ? creditPrice : product.creditPrice,
-      imageUrl: imageUrl !== undefined ? imageUrl : product.imageUrl,
+      imageUrl: normalizedImageUrls !== undefined
+        ? normalizedImageUrls[0] || null
+        : product.imageUrl,
       status: status || product.status,
+    }, { transaction });
+
+    if (normalizedImageUrls) {
+      await replaceProductImages(product.id, normalizedImageUrls, transaction);
+    }
+
+    await transaction.commit();
+
+    const updatedProduct = await Product.findByPk(product.id, {
+      include: productIncludes,
+      order: [[{ model: ProductImage, as: 'images' }, 'sortOrder', 'ASC']],
     });
 
     res.json({
       success: true,
-      data: product,
+      data: updatedProduct,
     });
   } catch (err) {
+    await transaction.rollback();
     next(err);
   }
 };

@@ -1,6 +1,8 @@
 import React, {useState} from 'react';
 import {
   Modal,
+  KeyboardAvoidingView,
+  Platform,
   Pressable,
   ScrollView,
   Text,
@@ -100,8 +102,12 @@ export function ProfileEditScreen() {
         <View style={{width: 26}} />
       </View>
 
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
         <View style={styles.editCard}>
           <View style={styles.profileImageArea}>
@@ -168,6 +174,7 @@ export function ProfileEditScreen() {
           </Pressable>
         </View>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <DepartmentSelectModal
         visible={departmentModalVisible}

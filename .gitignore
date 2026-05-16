@@ -24,7 +24,6 @@ DerivedData
 
 # Android/IntelliJ
 #
-build/
 .idea
 .gradle
 local.properties
@@ -65,6 +64,9 @@ yarn-error.log
 
 # testing
 /coverage
+
+# Logs
+*.log
 
 # Yarn
 .yarn/*

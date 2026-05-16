@@ -1,35 +1,54 @@
-import React from 'react';
-import {ScrollView, Text, View, TouchableOpacity} from 'react-native';
+import React, {useEffect, useState} from 'react';
+import {
+  ActivityIndicator,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {ChatRoom, getChatSocket} from '../api/chatSocket';
 import {chatListStyles as styles} from '../styles/ChatListScreenStyle';
-
-const CHAT_DATA = [
-  {
-    id: '1',
-    name: '김나현',
-    lastMessage: '빈티지 조명 나눔 받고싶어요!',
-    color: '#FFD15B',
-    icon: 'happy-outline',
-  },
-  {
-    id: '2',
-    name: '김애리',
-    lastMessage: '각티슈 언제 구매하신건가요?',
-    color: '#A5C9A1',
-    icon: 'leaf-outline',
-  },
-  {
-    id: '3',
-    name: '이지오',
-    lastMessage: '인하대 정문에서 봬요.',
-    color: '#ADCFFF',
-    icon: 'cloud-outline',
-  },
-];
 
 export function ChatListScreen({navigation}: any) {
   const insets = useSafeAreaInsets();
+  const [rooms, setRooms] = useState<ChatRoom[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+    let activeSocket: Awaited<ReturnType<typeof getChatSocket>> | null = null;
+
+    const handleRoomsUpdate = (nextRooms: ChatRoom[]) => {
+      if (isMounted) {
+        setRooms(nextRooms);
+        setIsLoading(false);
+      }
+    };
+
+    getChatSocket()
+      .then(socket => {
+        if (!isMounted) {
+          return;
+        }
+
+        activeSocket = socket;
+        socket.on('chat:rooms:update', handleRoomsUpdate);
+        socket.emit('chat:rooms', handleRoomsUpdate);
+      })
+      .catch(error => {
+        console.warn('Chat rooms connection error:', error);
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      });
+
+    return () => {
+      isMounted = false;
+      activeSocket?.off('chat:rooms:update', handleRoomsUpdate);
+    };
+  }, []);
 
   return (
     <View
@@ -37,41 +56,50 @@ export function ChatListScreen({navigation}: any) {
         styles.container,
         {paddingTop: insets.top, paddingBottom: insets.bottom},
       ]}>
-      {/* 1단계 헤더: EcoBid 로고 */}
       <View style={styles.topHeader}>
         <Text style={styles.headerLogo}>EcoBid</Text>
       </View>
 
-      {/* 2단계 헤더: 채팅 타이틀 */}
       <View style={styles.titleHeader}>
         <Text style={styles.pageTitle}>채팅</Text>
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {CHAT_DATA.map(item => (
-          <TouchableOpacity
-            key={item.id}
-            style={styles.chatItem}
-            onPress={() => navigation.navigate('ChatDetail', {name: item.name})}
-            activeOpacity={0.7}>
-            <View style={[styles.avatar, {backgroundColor: item.color}]}>
-              <Ionicons
-                name={item.icon as any}
-                size={36}
-                color="rgba(0,0,0,0.5)"
-              />
-            </View>
+      {isLoading ? (
+        <ActivityIndicator color="#5C8B5A" style={{marginTop: 32}} />
+      ) : (
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {rooms.map(item => (
+            <TouchableOpacity
+              key={item.id}
+              style={styles.chatItem}
+              onPress={() =>
+                navigation.navigate('ChatDetail', {
+                  roomId: item.id,
+                  name: item.name,
+                  productTitle: item.productTitle,
+                  productPrice: item.productPrice,
+                })
+              }
+              activeOpacity={0.7}>
+              <View style={[styles.avatar, {backgroundColor: item.color}]}>
+                <Ionicons
+                  name={item.icon as any}
+                  size={36}
+                  color="rgba(0,0,0,0.5)"
+                />
+              </View>
 
-            <View style={styles.chatInfo}>
-              <Text style={styles.userName}>{item.name}</Text>
+              <View style={styles.chatInfo}>
+                <Text style={styles.userName}>{item.name}</Text>
 
-              <Text style={styles.lastMessage} numberOfLines={1}>
-                {item.lastMessage}
-              </Text>
-            </View>
-          </TouchableOpacity>
-        ))}
-      </ScrollView>
+                <Text style={styles.lastMessage} numberOfLines={1}>
+                  {item.lastMessage || '새 대화를 시작해보세요.'}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
     </View>
   );
 }

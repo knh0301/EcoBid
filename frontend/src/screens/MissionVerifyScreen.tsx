@@ -7,6 +7,8 @@ import {
   ScrollView,
   Modal,
   Image,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
@@ -117,7 +119,12 @@ export function MissionVerifyScreen({navigation, route}: any) {
         <View style={styles.headerRightSpace} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled">
         <View style={styles.gridContainer}>
           <View style={styles.row}>
             {renderGridItem(0)}
@@ -154,6 +161,7 @@ export function MissionVerifyScreen({navigation, route}: any) {
           <Text style={styles.submitText}>크레딧 신청 하기</Text>
         </TouchableOpacity>
       </View>
+      </KeyboardAvoidingView>
 
       <Modal transparent visible={modalVisible} animationType="fade">
         <View style={styles.modalOverlay}>

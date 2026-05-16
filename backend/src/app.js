@@ -1,7 +1,8 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-const path = require('path');
+const http = require('http');
+const { Server } = require('socket.io');
 require('dotenv').config();
 
 const { syncDatabase } = require('./models');
@@ -10,15 +11,24 @@ const productRoutes = require('./routes/productRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const creditRoutes = require('./routes/creditRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
+const { initializeChatSocket } = require('./socket/chatSocket');
 
 const app = express();
+const server = http.createServer(app);
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+  },
+});
+
+initializeChatSocket(io);
 
 // ── 미들웨어 ──
 app.use(cors());
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 // ── 헬스 체크 ──
 app.get('/health', (req, res) => {
@@ -56,10 +66,10 @@ app.use((err, req, res, next) => {
 // ── DB 연결 후 서버 시작 ──
 const PORT = process.env.PORT || 3000;
 syncDatabase().then(() => {
-  app.listen(PORT, () => {
+  server.listen(PORT, () => {
     console.log(`✅ 서버 실행 중: http://localhost:${PORT}`);
     console.log(`📌 환경: ${process.env.NODE_ENV}`);
   });
 });
 
-module.exports = app;
+module.exports = { app, server, io };

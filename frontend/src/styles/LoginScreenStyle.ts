@@ -9,8 +9,13 @@ export const loginStyles = StyleSheet.create({
 
   keyboardView: {
     flex: 1,
+  },
+
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: 'center',
     paddingHorizontal: 24,
+    paddingVertical: 28,
   },
 
   card: {

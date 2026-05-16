@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -285,7 +287,12 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         <View style={styles.headerRightSpace} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+      <ScrollView
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled">
         <View style={styles.imagePicker}>
           {selectedImages.map((image, index) => (
             <TouchableOpacity
@@ -418,6 +425,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
           </TouchableOpacity>
         </View>
       )}
+      </KeyboardAvoidingView>
 
       <AlertDialog
         visible={alertVisible}

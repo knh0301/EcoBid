@@ -63,4 +63,20 @@ export const likedItemsStyles = StyleSheet.create({
     justifyContent: 'space-between',
     rowGap: 8,
   },
+
+  loadingIndicator: {
+    marginTop: 40,
+  },
+
+  errorText: {
+    textAlign: 'center',
+    marginTop: 40,
+    color: colors.error,
+  },
+
+  emptyText: {
+    textAlign: 'center',
+    marginTop: 40,
+    color: colors.textMuted,
+  },
 });

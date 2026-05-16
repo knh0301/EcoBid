@@ -1,12 +1,16 @@
-import React, {useEffect, useMemo, useState} from 'react';
-import {Pressable, ScrollView, Text, View} from 'react-native';
+import React, {useCallback, useMemo, useState} from 'react';
+import {ActivityIndicator, Alert, Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {likedItemsStyles as styles} from '../styles/LikedItemsScreenStyle';
 import {creditsApi} from '../api/creditsApi';
+import {favoritesApi} from '../api/favorites';
+import {Product} from '../api/products';
 import {ItemCard} from '../components/ItemCard';
 import {CategoryFilter} from '../components/CategoryFilter';
+import {FavoriteToast} from '../components/FavoriteToast';
+import {useFavoriteToast} from '../hooks/useFavoriteToast';
 
 const CATEGORIES = [
   '전체',
@@ -18,39 +22,32 @@ const CATEGORIES = [
   '기타',
 ];
 
-const LIKED_ITEMS = [
-  {
-    id: 1,
-    title: '곰돌이 인형',
-    price: '500 크레딧',
-    category: '가구',
-    icon: '🧸',
-    backgroundColor: '#D9902F',
-  },
-  {
-    id: 2,
-    title: '각티슈 3묶음',
-    price: '500 크레딧',
-    category: '생활용품',
-    icon: '🧻',
-    backgroundColor: '#E8D7BF',
-  },
-  {
-    id: 3,
-    title: '아이폰 6',
-    price: '200,000 크레딧',
-    category: '가전',
-    icon: '📱',
-    backgroundColor: '#D9D9D9',
-  },
-];
-
 export function LikedItemsScreen() {
   const navigation = useNavigation<any>();
 
   const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [likedItems, setLikedItems] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
+  const {toast, showFavoriteToast} = useFavoriteToast();
+
+  const fetchLikedItems = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const data = await favoritesApi.getFavorites();
+
+      setLikedItems(data);
+    } catch (err: any) {
+      console.warn('Fetch liked items error:', err);
+      setError('찜한 물품을 불러오는 중 오류가 발생했습니다.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const fetchCreditBalance = async () => {
     try {
@@ -67,17 +64,37 @@ export function LikedItemsScreen() {
     }
   };
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
+    fetchLikedItems();
     fetchCreditBalance();
-  }, []);
+  }, []));
 
   const filteredItems = useMemo(() => {
     if (selectedCategory === '전체') {
-      return LIKED_ITEMS;
+      return likedItems;
     }
 
-    return LIKED_ITEMS.filter(item => item.category === selectedCategory);
-  }, [selectedCategory]);
+    return likedItems.filter(item => {
+      const category = (item as Product & {category?: string}).category;
+      return category === selectedCategory;
+    });
+  }, [likedItems, selectedCategory]);
+
+  const removeLike = async (product: Product) => {
+    const productId = product.id;
+    const previousItems = likedItems;
+
+    setLikedItems(prev => prev.filter(item => item.id !== productId));
+
+    try {
+      await favoritesApi.removeFavorite(productId);
+      showFavoriteToast(`${product.title} 찜을 취소했습니다.`, 'unliked');
+    } catch (err: any) {
+      console.warn('Remove favorite error:', err);
+      setLikedItems(previousItems);
+      Alert.alert('오류', '찜을 해제하지 못했습니다. 다시 시도해주세요.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -107,25 +124,41 @@ export function LikedItemsScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
-        <View style={styles.grid}>
-          {filteredItems.map(item => (
-            <ItemCard
-              key={item.id}
-              title={item.title}
-              price={item.price}
-              icon={item.icon}
-              backgroundColor={item.backgroundColor}
-              isLiked={true}
-              onPress={() =>
-                navigation.navigate('ProductDetail', {productId: item.id})
-              }
-              onHeartPress={() => {
-                console.log('찜 해제:', item.id);
-              }}
-            />
-          ))}
-        </View>
+        {isLoading ? (
+          <ActivityIndicator
+            size="large"
+            color="#5C8B5A"
+            style={styles.loadingIndicator}
+          />
+        ) : error ? (
+          <Text style={styles.errorText}>{error}</Text>
+        ) : filteredItems.length === 0 ? (
+          <Text style={styles.emptyText}>찜한 물품이 없습니다.</Text>
+        ) : (
+          <View style={styles.grid}>
+            {filteredItems.map(item => (
+              <ItemCard
+                key={item.id}
+                title={item.title}
+                price={`${item.creditPrice.toLocaleString()} 크레딧`}
+                icon="📦"
+                backgroundColor="#EAF2E9"
+                isLiked={true}
+                onPress={() =>
+                  navigation.navigate('ProductDetail', {productId: item.id})
+                }
+                onHeartPress={() => removeLike(item)}
+              />
+            ))}
+          </View>
+        )}
       </ScrollView>
+
+      <FavoriteToast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+      />
     </SafeAreaView>
   );
 }

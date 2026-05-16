@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   View,
   Text,
@@ -6,12 +6,17 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   RefreshControl,
+  Alert,
 } from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import {productsApi, Product} from '../api/products';
+import {favoritesApi} from '../api/favorites';
 import {creditsApi} from '../api/creditsApi';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {homeScreenStyles as styles} from '../styles/HomeScreenStyle';
 import {ItemCard} from '../components/ItemCard';
+import {FavoriteToast} from '../components/FavoriteToast';
+import {useFavoriteToast} from '../hooks/useFavoriteToast';
 
 interface MissionCardProps {
   title: string;
@@ -43,9 +48,11 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [likedIds, setLikedIds] = useState<number[]>([]);
 
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
+  const {toast, showFavoriteToast} = useFavoriteToast();
 
   const fetchProducts = async (showLoading = true) => {
     if (showLoading) {
@@ -55,8 +62,16 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
     setError(null);
 
     try {
-      const data = await productsApi.getProducts();
+      const [data, favoriteIds] = await Promise.all([
+        productsApi.getProducts(),
+        favoritesApi.getFavoriteIds().catch(err => {
+          console.warn('Fetch favorite ids error:', err);
+          return [] as number[];
+        }),
+      ]);
+
       setProducts(data);
+      setLikedIds(favoriteIds);
     } catch (err: any) {
       console.warn('Fetch products error:', err);
       setError('상품을 불러오는 중 오류가 발생했습니다.');
@@ -80,10 +95,10 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
     }
   };
 
-  useEffect(() => {
+  useFocusEffect(useCallback(() => {
     fetchProducts();
     fetchCreditBalance();
-  }, []);
+  }, []));
 
   const onRefresh = async () => {
     setIsRefreshing(true);
@@ -91,6 +106,33 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
     await Promise.all([fetchProducts(false), fetchCreditBalance()]);
 
     setIsRefreshing(false);
+  };
+
+  const toggleLike = async (product: Product) => {
+    const productId = product.id;
+    const shouldLike = !likedIds.includes(productId);
+
+    setLikedIds(prev =>
+      shouldLike ? [...prev, productId] : prev.filter(id => id !== productId),
+    );
+
+    try {
+      await favoritesApi.setFavorite(productId, shouldLike);
+      showFavoriteToast(
+        shouldLike
+          ? `${product.title}을(를) 찜했습니다.`
+          : `${product.title} 찜을 취소했습니다.`,
+        shouldLike ? 'liked' : 'unliked',
+      );
+    } catch (err: any) {
+      console.warn('Toggle favorite error:', err);
+
+      setLikedIds(prev =>
+        shouldLike ? prev.filter(id => id !== productId) : [...prev, productId],
+      );
+
+      Alert.alert('오류', '찜 상태를 변경하지 못했습니다. 다시 시도해주세요.');
+    }
   };
 
   return (
@@ -223,18 +265,22 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
                 price={`${item.creditPrice.toLocaleString()} 크레딧`}
                 icon="📦"
                 backgroundColor="#EAF2E9"
-                isLiked={false}
+                isLiked={likedIds.includes(item.id)}
                 onPress={() =>
                   navigation.navigate('ProductDetail', {productId: item.id})
                 }
-                onHeartPress={() => {
-                  console.log('홈 나눔 물품 찜:', item.id);
-                }}
+                onHeartPress={() => toggleLike(item)}
               />
             ))}
           </View>
         )}
       </ScrollView>
+
+      <FavoriteToast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+      />
     </View>
   );
 };

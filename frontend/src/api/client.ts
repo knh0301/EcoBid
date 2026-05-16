@@ -1,6 +1,7 @@
-import axios, { AxiosInstance, InternalAxiosRequestConfig, AxiosResponse } from 'axios';
+import axios, {AxiosInstance, AxiosResponse, InternalAxiosRequestConfig} from 'axios';
 import { API_CONFIG } from '../config/apiConfig';
 import { tokenStorage } from '../storage/tokenStorage';
+import {refreshAuthTokens} from './authTokenManager';
 
 /**
  * API 공통 인스턴스 생성
@@ -39,12 +40,22 @@ apiClient.interceptors.response.use(
     return response;
   },
   async (error) => {
-    if (error.response && error.response.status === 401) {
-      // 401 에러 발생 시 토큰을 삭제하고 필요 시 로그인 페이지로 이동하는 등의 로직을 처리할 수 있습니다.
-      console.warn('Unauthorized request. Clearing tokens...');
-      await tokenStorage.clearTokens();
-      // TODO: 네비게이션을 이용해 로그인 화면으로 이동하는 로직 추가 가능
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && originalRequest && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        const newAccessToken = await refreshAuthTokens();
+
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+
+        return apiClient(originalRequest);
+      } catch (refreshError) {
+        return Promise.reject(refreshError);
+      }
     }
+
     return Promise.reject(error);
   }
 );

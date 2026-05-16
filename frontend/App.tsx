@@ -3,6 +3,7 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
 import {Ionicons} from '@expo/vector-icons';
+import {ActivityIndicator, View} from 'react-native';
 
 import {HomeScreen} from './src/screens/HomeScreen';
 import {MapScreen} from './src/screens/MapScreen';
@@ -22,6 +23,7 @@ import {MissionVerifyScreen} from './src/screens/MissionVerifyScreen';
 import {ProfileEditScreen} from './src/screens/ProfileEditScreen';
 import {MySharedItemsScreen} from './src/screens/MySharedItemsScreen';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
+import {useAuth} from './src/context/AuthContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -66,23 +68,48 @@ function TabNavigator() {
 }
 
 export default function App(): React.JSX.Element {
+  const {isLoggedIn, isLoading} = useAuth();
+
+  if (isLoading) {
+    return (
+      <SafeAreaProvider>
+        <View
+          style={{
+            flex: 1,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#FFFFFF',
+          }}>
+          <ActivityIndicator size="large" color="#5C8B5A" />
+        </View>
+      </SafeAreaProvider>
+    );
+  }
+
   return (
    <SafeAreaProvider>
     <NavigationContainer>
       <Stack.Navigator screenOptions={{headerShown: false}}>
-        <Stack.Screen name="MainTabs" component={TabNavigator} />
-        <Stack.Screen name="Login" component={LoginScreen} />
-        <Stack.Screen name="Signup" component={SignupScreen} />
-        <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
-        <Stack.Screen name="Attendance" component={AttendanceScreen} />
-        <Stack.Screen name="ProductRegister" component={ProductRegisterScreen} />
-        <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
-        <Stack.Screen name="SharedItems" component={SharedItemsScreen} />
-        <Stack.Screen name="LikedItems" component={LikedItemsScreen} />
-        <Stack.Screen name="CreditHistory" component={CreditHistoryScreen} />
-        <Stack.Screen name="MissionVerify" component={MissionVerifyScreen} />
-        <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
-        <Stack.Screen name="MySharedItems" component={MySharedItemsScreen} />
+        {isLoggedIn ? (
+          <>
+            <Stack.Screen name="MainTabs" component={TabNavigator} />
+            <Stack.Screen name="ChatDetail" component={ChatDetailScreen} />
+            <Stack.Screen name="Attendance" component={AttendanceScreen} />
+            <Stack.Screen name="ProductRegister" component={ProductRegisterScreen} />
+            <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+            <Stack.Screen name="SharedItems" component={SharedItemsScreen} />
+            <Stack.Screen name="LikedItems" component={LikedItemsScreen} />
+            <Stack.Screen name="CreditHistory" component={CreditHistoryScreen} />
+            <Stack.Screen name="MissionVerify" component={MissionVerifyScreen} />
+            <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
+            <Stack.Screen name="MySharedItems" component={MySharedItemsScreen} />
+          </>
+        ) : (
+          <>
+            <Stack.Screen name="Login" component={LoginScreen} />
+            <Stack.Screen name="Signup" component={SignupScreen} />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
    </SafeAreaProvider>

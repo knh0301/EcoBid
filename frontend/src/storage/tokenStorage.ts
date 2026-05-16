@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as SecureStore from 'expo-secure-store';
 
 const ACCESS_TOKEN_KEY = 'accessToken';
 const REFRESH_TOKEN_KEY = 'refreshToken';
@@ -9,7 +10,10 @@ export const tokenStorage = {
    */
   async setAccessToken(token: string): Promise<void> {
     try {
-      await AsyncStorage.setItem(ACCESS_TOKEN_KEY, token);
+      await Promise.all([
+        AsyncStorage.setItem(ACCESS_TOKEN_KEY, token),
+        SecureStore.setItemAsync(ACCESS_TOKEN_KEY, token),
+      ]);
     } catch (e) {
       console.error('Error saving access token', e);
     }
@@ -20,6 +24,11 @@ export const tokenStorage = {
    */
   async getAccessToken(): Promise<string | null> {
     try {
+      const secureToken = await SecureStore.getItemAsync(ACCESS_TOKEN_KEY);
+      if (secureToken) {
+        return secureToken;
+      }
+
       return await AsyncStorage.getItem(ACCESS_TOKEN_KEY);
     } catch (e) {
       console.error('Error getting access token', e);
@@ -32,7 +41,10 @@ export const tokenStorage = {
    */
   async setRefreshToken(token: string): Promise<void> {
     try {
-      await AsyncStorage.setItem(REFRESH_TOKEN_KEY, token);
+      await Promise.all([
+        AsyncStorage.setItem(REFRESH_TOKEN_KEY, token),
+        SecureStore.setItemAsync(REFRESH_TOKEN_KEY, token),
+      ]);
     } catch (e) {
       console.error('Error saving refresh token', e);
     }
@@ -43,6 +55,11 @@ export const tokenStorage = {
    */
   async getRefreshToken(): Promise<string | null> {
     try {
+      const secureToken = await SecureStore.getItemAsync(REFRESH_TOKEN_KEY);
+      if (secureToken) {
+        return secureToken;
+      }
+
       return await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
     } catch (e) {
       console.error('Error getting refresh token', e);
@@ -55,7 +72,11 @@ export const tokenStorage = {
    */
   async clearTokens(): Promise<void> {
     try {
-      await AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY]);
+      await Promise.all([
+        AsyncStorage.multiRemove([ACCESS_TOKEN_KEY, REFRESH_TOKEN_KEY]),
+        SecureStore.deleteItemAsync(ACCESS_TOKEN_KEY),
+        SecureStore.deleteItemAsync(REFRESH_TOKEN_KEY),
+      ]);
     } catch (e) {
       console.error('Error clearing tokens', e);
     }

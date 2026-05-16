@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import {authApi, UserProfile} from '../api/authApi';
+import {tokenStorage} from '../storage/tokenStorage';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -12,7 +14,8 @@ const IOS_CLIENT_ID = 'YOUR_IOS_CLIENT_ID.apps.googleusercontent.com';
 interface AuthContextType {
   isLoggedIn: boolean;
   isLoading: boolean;
-  userInfo: any;
+  userInfo: UserProfile | null;
+  loginWithEmail: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -22,7 +25,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [userInfo, setUserInfo] = useState<any>(null);
+  const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
     webClientId: WEB_CLIENT_ID,
@@ -43,14 +46,36 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkLoginStatus = async () => {
     try {
-      const token = await AsyncStorage.getItem('accessToken');
-      const user = await AsyncStorage.getItem('userInfo');
-      if (token && user) {
-        setUserInfo(JSON.parse(user));
-        setIsLoggedIn(true);
+      const accessToken = await tokenStorage.getAccessToken();
+      const refreshToken = await tokenStorage.getRefreshToken();
+
+      if (!accessToken || !refreshToken) {
+        await clearLocalAuthState();
+        return;
       }
+
+      const user = await authApi.getMe();
+
+      await AsyncStorage.setItem('userInfo', JSON.stringify(user));
+      setUserInfo(user);
+      setIsLoggedIn(true);
     } catch (e) {
       console.error(e);
+      await clearLocalAuthState();
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithEmail = async (email: string, password: string) => {
+    setIsLoading(true);
+
+    try {
+      const result = await authApi.login({email, password});
+
+      await AsyncStorage.setItem('userInfo', JSON.stringify(result.user));
+      setUserInfo(result.user);
+      setIsLoggedIn(true);
     } finally {
       setIsLoading(false);
     }
@@ -59,17 +84,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleGoogleToken = async (accessToken?: string) => {
     if (!accessToken) return;
     setIsLoading(true);
+
     try {
       const userInfoRes = await fetch(
         'https://www.googleapis.com/userinfo/v2/me',
         { headers: { Authorization: `Bearer ${accessToken}` } }
       );
-      const data = await userInfoRes.json();
+      const googleUser = await userInfoRes.json();
 
-      await AsyncStorage.setItem('accessToken', accessToken);
-      await AsyncStorage.setItem('userInfo', JSON.stringify(data));
+      const result = await authApi.socialLogin({
+        email: googleUser.email,
+        name: googleUser.name,
+        profileImage: googleUser.picture,
+        provider: 'GOOGLE',
+        providerId: googleUser.id,
+      });
+
+      await AsyncStorage.setItem('userInfo', JSON.stringify(result.user));
       
-      setUserInfo(data);
+      setUserInfo(result.user);
       setIsLoggedIn(true);
     } catch (e) {
       console.error(e);
@@ -83,13 +116,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await AsyncStorage.multiRemove(['accessToken', 'userInfo']);
+    try {
+      await authApi.logout();
+    } catch (e) {
+      console.warn('Logout request error:', e);
+    } finally {
+      await clearLocalAuthState();
+    }
+  };
+
+  const clearLocalAuthState = async () => {
+    await tokenStorage.clearTokens();
+    await AsyncStorage.removeItem('userInfo');
     setUserInfo(null);
     setIsLoggedIn(false);
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, isLoading, userInfo, signInWithGoogle, logout }}>
+    <AuthContext.Provider
+      value={{
+        isLoggedIn,
+        isLoading,
+        userInfo,
+        loginWithEmail,
+        signInWithGoogle,
+        logout,
+      }}>
       {children}
     </AuthContext.Provider>
   );

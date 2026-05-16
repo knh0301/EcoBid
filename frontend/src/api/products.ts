@@ -16,6 +16,7 @@ export interface Product {
     name: string;
     profileImage?: string;
   };
+  isLiked?: boolean;
   createdAt: string;
   updatedAt: string;
 }

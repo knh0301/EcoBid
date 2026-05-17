@@ -124,6 +124,13 @@ exports.checkAttendance = async (req, res, next) => {
       },
     });
   } catch (err) {
+    if (err.name === 'SequelizeUniqueConstraintError') {
+      return res.status(409).json({
+        success: false,
+        message: '이미 오늘 출석했습니다.',
+      });
+    }
+
     console.error('출석 체크 에러:', err);
     next(err);
   }

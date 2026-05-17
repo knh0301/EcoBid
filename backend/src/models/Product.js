@@ -22,6 +22,9 @@ const Product = sequelize.define('Product', {
   description: {
     type: DataTypes.TEXT,
   },
+  category: {
+    type: DataTypes.STRING,
+  },
   creditPrice: {
     type: DataTypes.INTEGER,
     allowNull: false,

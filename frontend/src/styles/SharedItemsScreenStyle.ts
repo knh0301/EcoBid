@@ -56,6 +56,44 @@ export const sharedItemsStyles = StyleSheet.create({
     fontWeight: '800',
   },
 
+  searchArea: {
+    backgroundColor: colors.white,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+
+  searchInput: {
+    flex: 1,
+    height: 42,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    backgroundColor: colors.inputBackground,
+    paddingHorizontal: 14,
+    fontSize: 14,
+    color: colors.textPrimary,
+  },
+
+  searchClearButton: {
+    height: 42,
+    paddingHorizontal: 12,
+    borderRadius: 10,
+    backgroundColor: colors.lightGreenBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  searchClearText: {
+    color: colors.primaryDark,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+
   grid: {
     padding: 16,
     paddingBottom: 80,

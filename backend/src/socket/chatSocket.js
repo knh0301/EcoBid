@@ -1,92 +1,60 @@
 const jwt = require('jsonwebtoken');
-const {User} = require('../models');
+const { User, ChatRoom, ChatMessage, Product } = require('../models');
+const { Op } = require('sequelize');
 
-const DEFAULT_ROOMS = [
-  {
-    id: 'product-vintage-light',
-    name: '김나현',
-    productTitle: '빈티지 조명',
-    productPrice: '2,500 크레딧',
-    lastMessage: '빈티지 조명 나눔 받을 수 있을까요?',
-    color: '#FFD15B',
-    icon: 'happy-outline',
-  },
-  {
-    id: 'product-cardigan',
-    name: '김애리',
-    productTitle: '가디건',
-    productPrice: '3,000 크레딧',
-    lastMessage: '가디건 언제 구매하신 건가요?',
-    color: '#A5C9A1',
-    icon: 'leaf-outline',
-  },
-  {
-    id: 'product-book',
-    name: '이지오',
-    productTitle: '전공 서적',
-    productPrice: '1,200 크레딧',
-    lastMessage: '인하대 정문에서 봐요.',
-    color: '#ADCFFF',
-    icon: 'cloud-outline',
-  },
-];
-
-const rooms = new Map(
-  DEFAULT_ROOMS.map(room => [
-    room.id,
-    {
-      ...room,
-      messages: [
-        {
-          id: `${room.id}-welcome`,
-          roomId: room.id,
-          text: room.lastMessage,
-          senderId: `seller-${room.id}`,
-          senderName: room.name,
-          createdAt: new Date().toISOString(),
-        },
-      ],
-    },
-  ]),
-);
-
-const publicRoom = room => {
-  const messages = room.messages || [];
-  const lastMessage = messages[messages.length - 1]?.text || room.lastMessage;
-
-  return {
-    id: room.id,
-    name: room.name,
-    productTitle: room.productTitle,
-    productPrice: room.productPrice,
-    lastMessage,
-    color: room.color,
-    icon: room.icon,
-  };
-};
-
-const getRooms = () => Array.from(rooms.values()).map(publicRoom);
-
-const getOrCreateRoom = roomId => {
-  if (rooms.has(roomId)) {
-    return rooms.get(roomId);
+/**
+ * 특정 사용자의 DB 채팅방 목록을 조회하고 프론트엔드가 요구하는 구조로 가공합니다.
+ */
+const getUserRooms = async (userId) => {
+  if (!userId || String(userId).startsWith('guest-')) {
+    return [];
   }
 
-  const room = {
-    id: roomId,
-    name: 'EcoBid 사용자',
-    productTitle: '나눔 물품',
-    productPrice: '크레딧 상담',
-    lastMessage: '',
-    color: '#A5C9A1',
-    icon: 'chatbubble-outline',
-    messages: [],
-  };
+  const chatRooms = await ChatRoom.findAll({
+    where: {
+      [Op.or]: [
+        { buyerId: userId },
+        { sellerId: userId }
+      ]
+    },
+    include: [
+      {
+        model: Product,
+        as: 'product'
+      },
+      {
+        model: User,
+        as: 'buyer',
+        attributes: ['id', 'name', 'profileImage']
+      },
+      {
+        model: User,
+        as: 'seller',
+        attributes: ['id', 'name', 'profileImage']
+      }
+    ],
+    order: [['lastMessageAt', 'DESC']]
+  });
 
-  rooms.set(roomId, room);
-  return room;
+  return chatRooms.map(room => {
+    const isBuyer = String(room.buyerId) === String(userId);
+    const otherUser = isBuyer ? room.seller : room.buyer;
+
+    return {
+      id: room.id,
+      name: otherUser ? otherUser.name : '알 수 없음',
+      productTitle: room.product ? room.product.title : '삭제된 상품',
+      productPrice: room.product ? `${room.product.creditPrice.toLocaleString()} 크레딧` : '0 크레딧',
+      lastMessage: room.lastMessage || '',
+      color: isBuyer ? '#A5C9A1' : '#FFD15B', // 구매자는 녹색 계열, 판매자는 황색 계열 아바타 배경
+      icon: 'chatbubble-outline',
+    };
+  });
 };
 
+/**
+ * Socket 핸드쉐이크 토큰을 통해 사용자를 인증합니다.
+ */
 const authenticateSocket = async socket => {
   const token = socket.handshake.auth?.token;
 
@@ -119,61 +87,192 @@ const authenticateSocket = async socket => {
   }
 };
 
+/**
+ * Socket.io 서버를 초기화하고 DB 영구 CRUD 로직을 바인딩합니다.
+ */
 const initializeChatSocket = io => {
   io.use(async (socket, next) => {
     await authenticateSocket(socket);
     next();
   });
 
-  io.on('connection', socket => {
-    socket.emit('chat:rooms:update', getRooms());
+  // 특정 유저에게만 해당 유저의 채팅방 목록 업데이트 이벤트를 전송하는 헬퍼
+  const emitUserRoomsUpdate = async (userId) => {
+    try {
+      const userRooms = await getUserRooms(userId);
+      io.to(`user-${userId}`).emit('chat:rooms:update', userRooms);
+    } catch (err) {
+      console.error('Error emitting user rooms update:', err);
+    }
+  };
 
-    socket.on('chat:rooms', callback => {
-      callback?.(getRooms());
+  io.on('connection', socket => {
+    const userId = socket.user.id;
+
+    // 1. 개인 전용 룸 참가 (다른 유저와 겹치지 않게 목록 갱신 이벤트를 개별 전달하기 위함)
+    if (userId && !String(userId).startsWith('guest-')) {
+      socket.join(`user-${userId}`);
+    }
+
+    // 2. 최초 연결 시 해당 사용자의 채팅방 목록 업데이트 발송
+    getUserRooms(userId)
+      .then(userRooms => {
+        socket.emit('chat:rooms:update', userRooms);
+      })
+      .catch(err => console.error('Error getting initial rooms:', err));
+
+    // 3. chat:rooms 이벤트 리스너 (요청 시 목록 반환)
+    socket.on('chat:rooms', async callback => {
+      try {
+        const userRooms = await getUserRooms(userId);
+        callback?.(userRooms);
+      } catch (err) {
+        console.error('Error in chat:rooms handler:', err);
+        callback?.([]);
+      }
     });
 
-    socket.on('chat:join', ({roomId}, callback) => {
+    // 4. chat:join 이벤트 리스너 (대화방 입장 및 과거 메시지 목록 로드)
+    socket.on('chat:join', async ({roomId}, callback) => {
       if (!roomId) {
-        callback?.({success: false, message: 'roomId is required.'});
+        callback?.({success: false, message: 'roomId가 필요합니다.'});
         return;
       }
 
-      const room = getOrCreateRoom(roomId);
-      socket.join(roomId);
+      if (String(userId).startsWith('guest-')) {
+        callback?.({success: false, message: '로그인이 필요합니다.'});
+        return;
+      }
 
-      callback?.({
-        success: true,
-        room: publicRoom(room),
-        messages: room.messages,
-      });
+      try {
+        // 대화방 조회
+        const room = await ChatRoom.findByPk(roomId, {
+          include: [
+            { model: Product, as: 'product' },
+            { model: User, as: 'buyer', attributes: ['id', 'name', 'profileImage'] },
+            { model: User, as: 'seller', attributes: ['id', 'name', 'profileImage'] },
+          ]
+        });
+
+        if (!room) {
+          callback?.({success: false, message: '존재하지 않는 채팅방입니다.'});
+          return;
+        }
+
+        // 권한 검증: 현재 유저가 구매자 혹은 판매자인지 확인
+        if (String(room.buyerId) !== String(userId) && String(room.sellerId) !== String(userId)) {
+          callback?.({success: false, message: '이 채팅방에 접근할 권한이 없습니다.'});
+          return;
+        }
+
+        // 소켓 방 참여
+        socket.join(String(roomId));
+
+        // 과거 대화 목록 조회 (오름차순)
+        const chatMessages = await ChatMessage.findAll({
+          where: { roomId },
+          include: [{ model: User, as: 'sender', attributes: ['id', 'name'] }],
+          order: [['createdAt', 'ASC']]
+        });
+
+        const formattedMessages = chatMessages.map(msg => ({
+          id: msg.id,
+          roomId: msg.roomId,
+          text: msg.text,
+          senderId: String(msg.senderId),
+          senderName: msg.sender ? msg.sender.name : '알 수 없음',
+          createdAt: msg.createdAt.toISOString ? msg.createdAt.toISOString() : msg.createdAt,
+        }));
+
+        const isBuyer = String(room.buyerId) === String(userId);
+        const otherUser = isBuyer ? room.seller : room.buyer;
+
+        const formattedRoom = {
+          id: room.id,
+          name: otherUser ? otherUser.name : '알 수 없음',
+          productTitle: room.product ? room.product.title : '삭제된 상품',
+          productPrice: room.product ? `${room.product.creditPrice.toLocaleString()} 크레딧` : '0 크레딧',
+          lastMessage: room.lastMessage || '',
+          color: isBuyer ? '#A5C9A1' : '#FFD15B',
+          icon: 'chatbubble-outline',
+        };
+
+        callback?.({
+          success: true,
+          room: formattedRoom,
+          messages: formattedMessages,
+        });
+
+      } catch (err) {
+        console.error('Error on chat:join:', err);
+        callback?.({success: false, message: '서버 내부 오류가 발생했습니다.'});
+      }
     });
 
-    socket.on('chat:send', ({roomId, text}, callback) => {
+    // 5. chat:send 이벤트 리스너 (실시간 메시지 전송 및 저장)
+    socket.on('chat:send', async ({roomId, text}, callback) => {
       const trimmedText = String(text || '').trim().normalize('NFC');
 
       if (!roomId || !trimmedText) {
-        callback?.({success: false, message: 'roomId and text are required.'});
+        callback?.({success: false, message: 'roomId와 text가 필요합니다.'});
         return;
       }
 
-      const room = getOrCreateRoom(roomId);
-      const message = {
-        id: `${Date.now()}-${socket.id}`,
-        roomId,
-        text: trimmedText,
-        senderId: socket.user.id,
-        senderName: socket.user.name,
-        createdAt: new Date().toISOString(),
-      };
+      if (String(userId).startsWith('guest-')) {
+        callback?.({success: false, message: '로그인이 필요합니다.'});
+        return;
+      }
 
-      room.messages.push(message);
-      room.messages = room.messages.slice(-100);
-      room.lastMessage = trimmedText;
+      try {
+        const room = await ChatRoom.findByPk(roomId);
+        if (!room) {
+          callback?.({success: false, message: '존재하지 않는 채팅방입니다.'});
+          return;
+        }
 
-      io.to(roomId).emit('chat:message', message);
-      io.emit('chat:rooms:update', getRooms());
+        // 권한 검증: 현재 유저가 참여자인지 확인
+        if (String(room.buyerId) !== String(userId) && String(room.sellerId) !== String(userId)) {
+          callback?.({success: false, message: '이 채팅방에 메시지를 보낼 권한이 없습니다.'});
+          return;
+        }
 
-      callback?.({success: true, message});
+        // A. DB에 메시지 영구 저장
+        const newMessage = await ChatMessage.create({
+          roomId,
+          senderId: userId,
+          text: trimmedText
+        });
+
+        // B. 대화방 마지막 메시지 요약 정보 갱신
+        await room.update({
+          lastMessage: trimmedText,
+          lastMessageAt: newMessage.createdAt
+        });
+
+        // C. 프론트엔드가 기대하는 양식에 맞추어 메시지 가공
+        const sender = await User.findByPk(userId);
+        const messagePayload = {
+          id: newMessage.id,
+          roomId,
+          text: trimmedText,
+          senderId: String(userId),
+          senderName: sender ? sender.name : '알 수 없음',
+          createdAt: newMessage.createdAt.toISOString ? newMessage.createdAt.toISOString() : newMessage.createdAt,
+        };
+
+        // D. 해당 소켓 룸 전체 접속자들에게 메시지 브로드캐스트
+        io.to(String(roomId)).emit('chat:message', messagePayload);
+
+        // E. 양쪽 대화 참가자 전용 목록 비동기 새로고침 트리거
+        await emitUserRoomsUpdate(room.buyerId);
+        await emitUserRoomsUpdate(room.sellerId);
+
+        callback?.({success: true, message: messagePayload});
+
+      } catch (err) {
+        console.error('Error on chat:send:', err);
+        callback?.({success: false, message: '서버 내부 오류가 발생했습니다.'});
+      }
     });
   });
 };

@@ -8,6 +8,8 @@ const Mission = require('./Mission');
 const MissionSubmission = require('./MissionSubmission');
 const CreditTransaction = require('./CreditTransaction');
 const Favorite = require('./Favorite');
+const ChatRoom = require('./ChatRoom');
+const ChatMessage = require('./ChatMessage');
 
 const ensureProductSchema = async () => {
   const queryInterface = sequelize.getQueryInterface();
@@ -39,6 +41,9 @@ User.belongsToMany(Product, {
   otherKey: 'productId',
   as: 'likedProducts',
 });
+User.hasMany(ChatRoom, { foreignKey: 'buyerId', as: 'buyerChatRooms' });
+User.hasMany(ChatRoom, { foreignKey: 'sellerId', as: 'sellerChatRooms' });
+User.hasMany(ChatMessage, { foreignKey: 'senderId', as: 'sentMessages' });
 
 // Product 관계
 Product.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
@@ -58,6 +63,7 @@ Product.belongsToMany(User, {
   otherKey: 'userId',
   as: 'likedUsers',
 });
+Product.hasMany(ChatRoom, { foreignKey: 'productId', as: 'chatRooms' });
 
 // ProductImage 관계
 ProductImage.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
@@ -76,6 +82,16 @@ CreditTransaction.belongsTo(User, { foreignKey: 'userId' });
 // Favorite 관계
 Favorite.belongsTo(User, { foreignKey: 'userId', as: 'user' });
 Favorite.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+
+// ChatRoom 관계
+ChatRoom.belongsTo(User, { foreignKey: 'buyerId', as: 'buyer' });
+ChatRoom.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
+ChatRoom.belongsTo(Product, { foreignKey: 'productId', as: 'product' });
+ChatRoom.hasMany(ChatMessage, { foreignKey: 'roomId', as: 'messages' });
+
+// ChatMessage 관계
+ChatMessage.belongsTo(ChatRoom, { foreignKey: 'roomId', as: 'room' });
+ChatMessage.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 
 // DB 연결 및 테이블 동기화
 const syncDatabase = async () => {
@@ -105,4 +121,6 @@ module.exports = {
   MissionSubmission,
   CreditTransaction,
   Favorite,
+  ChatRoom,
+  ChatMessage,
 };

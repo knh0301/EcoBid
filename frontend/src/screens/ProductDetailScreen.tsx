@@ -14,6 +14,7 @@ import {
   getProductImageUrls,
 } from '../api/products';
 import {creditsApi} from '../api/creditsApi';
+import {authApi} from '../api/authApi';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {productDetailStyles as styles} from '../styles/ProductDetailScreenStyle';
 import {colors} from '../styles/colors';
@@ -27,11 +28,17 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
 
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   const fetchProduct = async () => {
     try {
-      const data = await productsApi.getProductById(productId);
+      const [data, user] = await Promise.all([
+        productsApi.getProductById(productId),
+        authApi.getMe(),
+      ]);
+
       setProduct(data);
+      setCurrentUserId(user.id);
     } catch (error) {
       console.error('Fetch product detail error:', error);
       Alert.alert('오류', '상품 정보를 불러오는 중 오류가 발생했습니다.');
@@ -62,6 +69,18 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
   }, [productId]);
 
   const imageUrls = useMemo(() => getProductImageUrls(product), [product]);
+  const isMyProduct = currentUserId !== null && product?.sellerId === currentUserId;
+
+  const navigateToEdit = () => {
+    if (!product) {
+      return;
+    }
+
+    navigation.navigate('ProductRegister', {
+      isEditMode: true,
+      product,
+    });
+  };
 
   if (isLoading) {
     return (
@@ -130,23 +149,13 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
             <Text style={styles.sellerName}>
               {product.seller?.name || '익명 사용자'}
             </Text>
-
-            <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('ProductRegister', {
-                  isEditMode: true,
-                  product,
-                })
-              }
-              style={styles.editButton}>
-              <Text style={styles.editLink}>수정하기</Text>
-            </TouchableOpacity>
           </View>
 
           <Text style={styles.itemName}>{product.title}</Text>
 
           <Text style={styles.itemCategory}>
-            {product.status === 'AVAILABLE' ? '나눔 중' : product.status}
+            {product.category ||
+              (product.status === 'AVAILABLE' ? '나눔 중' : product.status)}
           </Text>
 
           <Text style={styles.itemDesc}>
@@ -162,8 +171,14 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
       <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
         <TouchableOpacity
           style={styles.chatButton}
-          onPress={() => navigation.navigate('ChatDetail')}>
-          <Text style={styles.chatButtonText}>채팅하기</Text>
+          onPress={
+            isMyProduct
+              ? navigateToEdit
+              : () => navigation.navigate('ChatDetail')
+          }>
+          <Text style={styles.chatButtonText}>
+            {isMyProduct ? '수정하기' : '채팅하기'}
+          </Text>
         </TouchableOpacity>
       </View>
     </View>

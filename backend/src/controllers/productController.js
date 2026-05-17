@@ -1,6 +1,7 @@
 const fs = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
+const { Op } = require('sequelize');
 const { sequelize, Product, ProductImage, User } = require('../models');
 
 const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads', 'products');
@@ -104,7 +105,7 @@ exports.createProduct = async (req, res, next) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { title, description, creditPrice, imageUrl, imageUrls, sellerId } = req.body;
+    const { title, description, category, creditPrice, imageUrl, imageUrls, sellerId } = req.body;
 
     // 필수값 검증
     if (!title || creditPrice === undefined || !sellerId) {
@@ -132,6 +133,7 @@ exports.createProduct = async (req, res, next) => {
     const product = await Product.create({
       title,
       description,
+      category: category || null,
       creditPrice,
       imageUrl: normalizedImageUrls[0] || null,
       sellerId,
@@ -162,8 +164,24 @@ exports.createProduct = async (req, res, next) => {
  */
 exports.getProducts = async (req, res, next) => {
   try {
+    const { search, category } = req.query;
+    const trimmedSearch = String(search || '').trim();
+    const trimmedCategory = String(category || '').trim();
+    const where = { status: 'AVAILABLE' };
+
+    if (trimmedCategory && trimmedCategory !== '전체') {
+      where.category = trimmedCategory;
+    }
+
+    if (trimmedSearch) {
+      where[Op.or] = [
+        { title: { [Op.like]: `%${trimmedSearch}%` } },
+        { description: { [Op.like]: `%${trimmedSearch}%` } },
+      ];
+    }
+
     const products = await Product.findAll({
-      where: { status: 'AVAILABLE' },
+      where,
       order: [['createdAt', 'DESC']],
       include: productIncludes,
     });
@@ -212,7 +230,7 @@ exports.updateProduct = async (req, res, next) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { title, description, creditPrice, imageUrl, imageUrls, status } = req.body;
+    const { title, description, category, creditPrice, imageUrl, imageUrls, status } = req.body;
     const product = await Product.findByPk(req.params.id, { transaction });
 
     if (!product) {
@@ -242,6 +260,7 @@ exports.updateProduct = async (req, res, next) => {
     await product.update({
       title: title || product.title,
       description: description !== undefined ? description : product.description,
+      category: category !== undefined ? category || null : product.category,
       creditPrice: creditPrice !== undefined ? creditPrice : product.creditPrice,
       imageUrl: normalizedImageUrls !== undefined
         ? normalizedImageUrls[0] || null

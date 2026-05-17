@@ -46,7 +46,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
     isEditMode ? initialProduct?.description || '' : '',
   );
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    isEditMode ? '기타' : null,
+    isEditMode ? initialProduct?.category || '기타' : null,
   );
 
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>(() => {
@@ -202,6 +202,11 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
       return;
     }
 
+    if (!selectedCategory) {
+      showAlert('카테고리를 선택해주세요.');
+      return;
+    }
+
     const parsedPrice = Number(price.replace(/,/g, ''));
 
     if (!Number.isInteger(parsedPrice) || parsedPrice <= 0) {
@@ -218,6 +223,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         await productsApi.updateProduct(initialProduct.id, {
           title,
           description: desc,
+          category: selectedCategory,
           creditPrice: parsedPrice,
           imageUrl: imageUrls[0],
           imageUrls,
@@ -228,6 +234,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         await productsApi.createProduct({
           title,
           description: desc,
+          category: selectedCategory,
           creditPrice: parsedPrice,
           imageUrl: imageUrls[0],
           imageUrls,

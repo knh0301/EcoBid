@@ -8,6 +8,7 @@ export interface Product {
   id: number;
   title: string;
   description: string;
+  category?: string | null;
   creditPrice: number;
   imageUrl?: string;
   imageUrls?: string[];
@@ -85,6 +86,16 @@ export const productsApi = {
     return response.data.data;
   },
 
+  async searchProducts(params: {
+    search?: string;
+    category?: string;
+  } = {}): Promise<Product[]> {
+    const response = await apiClient.get<ApiResponse<Product[]>>('/products', {
+      params,
+    });
+    return response.data.data;
+  },
+
   /**
    * 특정 상품 상세 조회
    * @param productId 상품 ID
@@ -100,6 +111,7 @@ export const productsApi = {
   async createProduct(data: {
     title: string;
     description?: string;
+    category?: string | null;
     creditPrice: number;
     imageUrl?: string;
     imageUrls?: string[];

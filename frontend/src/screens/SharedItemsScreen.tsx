@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   FlatList,
   ActivityIndicator,
   Alert,
+  TextInput,
 } from 'react-native';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {getProductImageUrls, productsApi, Product} from '../api/products';
@@ -33,6 +34,7 @@ export function SharedItemsScreen() {
   const navigation = useNavigation<any>();
 
   const [selectedCategory, setSelectedCategory] = useState('전체');
+  const [searchQuery, setSearchQuery] = useState('');
 
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,6 +89,32 @@ export function SharedItemsScreen() {
     fetchCreditBalance();
   }, []));
 
+  const filteredProducts = useMemo(() => {
+    const normalizedQuery = searchQuery.trim().toLowerCase();
+
+    return products.filter(product => {
+      const matchesCategory =
+        selectedCategory === '전체' || product.category === selectedCategory;
+
+      if (!matchesCategory) {
+        return false;
+      }
+
+      if (!normalizedQuery) {
+        return true;
+      }
+
+      return [
+        product.title,
+        product.description,
+        product.category,
+        product.seller?.name,
+      ]
+        .filter(Boolean)
+        .some(value => String(value).toLowerCase().includes(normalizedQuery));
+    });
+  }, [products, searchQuery, selectedCategory]);
+
   const toggleLike = async (product: Product) => {
     const id = product.id;
     const shouldLike = !likedIds.includes(id);
@@ -138,6 +166,27 @@ export function SharedItemsScreen() {
         onSelectCategory={setSelectedCategory}
       />
 
+      <View style={styles.searchArea}>
+        <TextInput
+          style={styles.searchInput}
+          placeholder="물품명, 설명, 판매자 검색"
+          placeholderTextColor="#999999"
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          autoCapitalize="none"
+          returnKeyType="search"
+        />
+
+        {searchQuery.length > 0 && (
+          <TouchableOpacity
+            style={styles.searchClearButton}
+            onPress={() => setSearchQuery('')}
+            activeOpacity={0.8}>
+            <Text style={styles.searchClearText}>지우기</Text>
+          </TouchableOpacity>
+        )}
+      </View>
+
       {isLoading ? (
         <ActivityIndicator
           size="large"
@@ -146,11 +195,11 @@ export function SharedItemsScreen() {
         />
       ) : error ? (
         <Text style={styles.errorText}>{error}</Text>
-      ) : products.length === 0 ? (
-        <Text style={styles.emptyText}>등록된 나눔 물품이 없습니다.</Text>
+      ) : filteredProducts.length === 0 ? (
+        <Text style={styles.emptyText}>조건에 맞는 나눔 물품이 없습니다.</Text>
       ) : (
         <FlatList
-          data={products}
+          data={filteredProducts}
           numColumns={2}
           keyExtractor={item => String(item.id)}
           contentContainerStyle={[

@@ -1,4 +1,5 @@
 const sequelize = require('../config/database');
+const { DataTypes } = require('sequelize');
 const User = require('./User');
 const Product = require('./Product');
 const ProductImage = require('./ProductImage');
@@ -7,6 +8,18 @@ const Mission = require('./Mission');
 const MissionSubmission = require('./MissionSubmission');
 const CreditTransaction = require('./CreditTransaction');
 const Favorite = require('./Favorite');
+
+const ensureProductSchema = async () => {
+  const queryInterface = sequelize.getQueryInterface();
+  const productColumns = await queryInterface.describeTable('products');
+
+  if (!productColumns.category) {
+    await queryInterface.addColumn('products', 'category', {
+      type: DataTypes.STRING,
+      allowNull: true,
+    });
+  }
+};
 
 // ── 모델 간 관계 정의 ──
 
@@ -73,6 +86,7 @@ const syncDatabase = async () => {
     // force: false → 기존 테이블 유지
     // alter: true  → 스키마 변경 사항 자동 반영
     await sequelize.sync({ alter: false });
+    await ensureProductSchema();
     console.log('✅ DB 동기화 완료');
   } catch (error) {
     console.error('❌ DB 연결 실패:', error);

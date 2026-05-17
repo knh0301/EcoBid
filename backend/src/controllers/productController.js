@@ -9,6 +9,8 @@ const MIME_EXTENSIONS = {
   'image/jpeg': 'jpg',
   'image/png': 'png',
   'image/webp': 'webp',
+  'image/heic': 'heic',
+  'image/heif': 'heif',
 };
 
 const productIncludes = [
@@ -105,7 +107,8 @@ exports.createProduct = async (req, res, next) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { title, description, category, creditPrice, imageUrl, imageUrls, sellerId } = req.body;
+    const { title, description, category, creditPrice, imageUrl, imageUrls } = req.body;
+    const sellerId = req.user?.id || req.body.sellerId;
 
     // 필수값 검증
     if (!title || creditPrice === undefined || !sellerId) {
@@ -182,6 +185,27 @@ exports.getProducts = async (req, res, next) => {
 
     const products = await Product.findAll({
       where,
+      order: [['createdAt', 'DESC']],
+      include: productIncludes,
+    });
+
+    res.json({
+      success: true,
+      data: products,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * 내가 등록한 상품 목록 조회
+ * GET /api/products/mine
+ */
+exports.getMyProducts = async (req, res, next) => {
+  try {
+    const products = await Product.findAll({
+      where: { sellerId: req.user.id },
       order: [['createdAt', 'DESC']],
       include: productIncludes,
     });

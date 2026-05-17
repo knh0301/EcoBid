@@ -7,6 +7,8 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -18,7 +20,6 @@ import {
 } from '../api/products';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {productRegisterStyles as styles} from '../styles/ProductRegisterScreenStyle';
-import {colors} from '../styles/colors';
 
 const CATEGORIES = ['가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
 
@@ -48,7 +49,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
   );
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    isEditMode ? '기타' : null,
+    isEditMode ? initialProduct?.category || '기타' : null,
   );
 
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>(() => {
@@ -204,6 +205,11 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
       return;
     }
 
+    if (!selectedCategory) {
+      showAlert('카테고리를 선택해주세요.');
+      return;
+    }
+
     const parsedPrice = Number(price.replace(/,/g, ''));
 
     if (!Number.isInteger(parsedPrice) || parsedPrice <= 0) {
@@ -220,6 +226,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         await productsApi.updateProduct(initialProduct.id, {
           title,
           description: desc,
+          category: selectedCategory,
           creditPrice: parsedPrice,
           imageUrl: imageUrls[0],
           imageUrls,
@@ -230,10 +237,10 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         await productsApi.createProduct({
           title,
           description: desc,
+          category: selectedCategory,
           creditPrice: parsedPrice,
           imageUrl: imageUrls[0],
           imageUrls,
-          sellerId: 1,
         });
 
         showAlert('나눔 물품 등록이 완료되었어요!', true);
@@ -289,139 +296,147 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         <View style={styles.headerRightSpace} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
-        <View style={styles.imagePicker}>
-          {selectedImages.map((image, index) => (
-            <TouchableOpacity
-              key={`${image.uri}-${index}`}
-              style={styles.imagePreviewBox}
-              onPress={handlePickImages}
-              activeOpacity={0.85}>
-              <Image
-                source={{uri: image.uri}}
-                style={styles.imagePreview}
-                resizeMode="cover"
-              />
-
-              <View style={styles.imageChangeBadge}>
-                <Text style={styles.imageChangeText}>
-                  {index + 1}/{selectedImages.length}
-                </Text>
-              </View>
-
+      <KeyboardAvoidingView
+        style={{flex: 1}}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled">
+          <View style={styles.imagePicker}>
+            {selectedImages.map((image, index) => (
               <TouchableOpacity
-                style={styles.imageRemoveButton}
-                onPress={() => handleRemoveImage(index)}
-                hitSlop={8}>
-                <Text style={styles.imageRemoveText}>×</Text>
+                key={`${image.uri}-${index}`}
+                style={styles.imagePreviewBox}
+                onPress={handlePickImages}
+                activeOpacity={0.85}>
+                <Image
+                  source={{uri: image.uri}}
+                  style={styles.imagePreview}
+                  resizeMode="cover"
+                />
+
+                <View style={styles.imageChangeBadge}>
+                  <Text style={styles.imageChangeText}>
+                    {index + 1}/{selectedImages.length}
+                  </Text>
+                </View>
+
+                <TouchableOpacity
+                  style={styles.imageRemoveButton}
+                  onPress={() => handleRemoveImage(index)}
+                  hitSlop={8}>
+                  <Text style={styles.imageRemoveText}>×</Text>
+                </TouchableOpacity>
               </TouchableOpacity>
-            </TouchableOpacity>
-          ))}
+            ))}
 
-          {selectedImages.length < 5 && (
-            <TouchableOpacity
-              style={styles.addImageBox}
-              onPress={handlePickImages}>
-              <Text style={styles.addImagePlus}>+</Text>
-              <Text style={styles.addImageCount}>
-                {selectedImages.length}/5
-              </Text>
-            </TouchableOpacity>
-          )}
-        </View>
-
-        <Text style={styles.label}>물품 이름</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="물품 이름을 입력하세요."
-          placeholderTextColor={colors.textMuted}
-          value={title}
-          onChangeText={setTitle}
-        />
-
-        <Text style={styles.label}>물품 카테고리</Text>
-        <View style={styles.categoryWrap}>
-          {CATEGORIES.map(cat => {
-            const isSelected = selectedCategory === cat;
-
-            return (
+            {selectedImages.length < 5 && (
               <TouchableOpacity
-                key={cat}
-                style={[
-                  styles.categoryChip,
-                  isSelected && styles.categoryChipSelected,
-                ]}
-                onPress={() => setSelectedCategory(cat)}>
-                <Text
-                  style={[
-                    styles.categoryChipText,
-                    isSelected && styles.categoryChipTextSelected,
-                  ]}>
-                  {cat}
+                style={styles.addImageBox}
+                onPress={handlePickImages}>
+                <Text style={styles.addImagePlus}>+</Text>
+                <Text style={styles.addImageCount}>
+                  {selectedImages.length}/5
                 </Text>
               </TouchableOpacity>
-            );
-          })}
-        </View>
+            )}
+          </View>
 
-        <Text style={styles.label}>물품 가격</Text>
-        <View style={styles.priceRow}>
+          <Text style={styles.label}>물품 이름</Text>
           <TextInput
-            style={[styles.input, styles.priceInput]}
-            placeholder="물품 가격을 입력하세요."
-            placeholderTextColor={colors.textMuted}
-            keyboardType="numeric"
-            value={price}
-            onChangeText={setPrice}
+            style={styles.input}
+            placeholder="물품 이름을 입력하세요."
+            placeholderTextColor="#888888"
+            value={title}
+            onChangeText={setTitle}
           />
 
-          <Text style={styles.creditUnit}>크레딧</Text>
-        </View>
+          <Text style={styles.label}>물품 카테고리</Text>
+          <View style={styles.categoryWrap}>
+            {CATEGORIES.map(cat => {
+              const isSelected = selectedCategory === cat;
 
-        <Text style={[styles.label, styles.descriptionLabel]}>물품 설명</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="물품의 상태, 구입 시기, 사용감 등 상세한 정보를 공유해주세요."
-          placeholderTextColor={colors.textMuted}
-          multiline
-          numberOfLines={6}
-          value={desc}
-          onChangeText={setDesc}
-          textAlignVertical="top"
-        />
+              return (
+                <TouchableOpacity
+                  key={cat}
+                  style={[
+                    styles.categoryChip,
+                    isSelected && styles.categoryChipSelected,
+                  ]}
+                  onPress={() => setSelectedCategory(cat)}>
+                  <Text
+                    style={[
+                      styles.categoryChipText,
+                      isSelected && styles.categoryChipTextSelected,
+                    ]}>
+                    {cat}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
 
-        <View style={styles.spacer} />
-      </ScrollView>
+          <Text style={styles.label}>물품 가격</Text>
+          <View style={styles.priceRow}>
+            <TextInput
+              style={[styles.input, styles.priceInput]}
+              placeholder="물품 가격을 입력하세요."
+              placeholderTextColor="#888888"
+              keyboardType="numeric"
+              value={price}
+              onChangeText={setPrice}
+            />
 
-      {isSubmitting ? (
-        <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
-          <ActivityIndicator size="small" color={colors.primary} />
-        </View>
-      ) : isEditMode ? (
-        <View
-          style={[
-            styles.editButtonRow,
-            {paddingBottom: insets.bottom + 16},
-          ]}>
-          <TouchableOpacity
-            style={styles.deleteButton}
-            onPress={() => setConfirmVisible(true)}>
-            <Text style={styles.deleteButtonText}>삭제</Text>
-          </TouchableOpacity>
+            <Text style={styles.creditUnit}>크레딧</Text>
+          </View>
 
-          <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>수정하기</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
-          <TouchableOpacity
-            style={styles.submitButtonFull}
-            onPress={handleSubmit}>
-            <Text style={styles.submitButtonText}>등록하기</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+          <Text style={[styles.label, styles.descriptionLabel]}>물품 설명</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="물품의 상태, 구입 시기, 사용감 등 상세한 정보를 공유해주세요."
+            placeholderTextColor="#888888"
+            multiline
+            numberOfLines={6}
+            value={desc}
+            onChangeText={setDesc}
+            textAlignVertical="top"
+          />
+
+          <View style={styles.spacer} />
+        </ScrollView>
+
+        {isSubmitting ? (
+          <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
+            <ActivityIndicator size="small" color="#5C8B5A" />
+          </View>
+        ) : isEditMode ? (
+          <View
+            style={[
+              styles.editButtonRow,
+              {paddingBottom: insets.bottom + 16},
+            ]}>
+            <TouchableOpacity
+              style={styles.deleteButton}
+              onPress={() => setConfirmVisible(true)}>
+              <Text style={styles.deleteButtonText}>삭제</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.submitButton}
+              onPress={handleSubmit}>
+              <Text style={styles.submitButtonText}>수정하기</Text>
+            </TouchableOpacity>
+          </View>
+        ) : (
+          <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
+            <TouchableOpacity
+              style={styles.submitButtonFull}
+              onPress={handleSubmit}>
+              <Text style={styles.submitButtonText}>등록하기</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+      </KeyboardAvoidingView>
 
       <AlertDialog
         visible={alertVisible}

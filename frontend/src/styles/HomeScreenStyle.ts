@@ -33,6 +33,12 @@ export const homeScreenStyles = StyleSheet.create({
     marginBottom: 16,
   },
 
+  attendanceDoneCard: {
+    backgroundColor: colors.lightGreenBackground,
+    borderWidth: 1,
+    borderColor: colors.historyBorder,
+  },
+
   cardTitle: {
     fontSize: 15,
     fontWeight: 'bold',
@@ -67,10 +73,27 @@ export const homeScreenStyles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  stampButtonDone: {
+    backgroundColor: colors.primaryDark,
+  },
+
   stampText: {
     color: colors.textLight,
     fontSize: 12,
     fontWeight: 'bold',
+  },
+
+  stampRewardText: {
+    fontSize: 20,
+    lineHeight: 22,
+    fontWeight: '900',
+  },
+
+  stampSubText: {
+    color: colors.textLight,
+    fontSize: 10,
+    fontWeight: '700',
+    marginTop: 2,
   },
 
   creditTopRow: {

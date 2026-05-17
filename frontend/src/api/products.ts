@@ -65,9 +65,10 @@ export const getProductImageUrls = (product?: Product | null) => {
     .sort((a, b) => a.sortOrder - b.sortOrder)
     .map(image => image.imageUrl);
 
-  const urls = urlsFromImages.length > 0
-    ? urlsFromImages
-    : product.imageUrls ?? (product.imageUrl ? [product.imageUrl] : []);
+  const urls =
+    urlsFromImages.length > 0
+      ? urlsFromImages
+      : product.imageUrls ?? (product.imageUrl ? [product.imageUrl] : []);
 
   return urls
     .map(resolveProductImageUrl)
@@ -79,20 +80,34 @@ export const getProductImageUrls = (product?: Product | null) => {
  */
 export const productsApi = {
   /**
-   * 전체 상품 목록 조회 (AVAILABLE 상태만)
+   * 전체 상품 목록 조회
    */
   async getProducts(): Promise<Product[]> {
     const response = await apiClient.get<ApiResponse<Product[]>>('/products');
     return response.data.data;
   },
 
-  async searchProducts(params: {
-    search?: string;
-    category?: string;
-  } = {}): Promise<Product[]> {
+  async getMyProducts(): Promise<Product[]> {
+    const response = await apiClient.get<ApiResponse<Product[]>>(
+      '/products/mine',
+    );
+
+    return response.data.data;
+  },
+
+  /**
+   * 상품 검색 / 카테고리 필터 조회
+   */
+  async searchProducts(
+    params: {
+      search?: string;
+      category?: string;
+    } = {},
+  ): Promise<Product[]> {
     const response = await apiClient.get<ApiResponse<Product[]>>('/products', {
       params,
     });
+
     return response.data.data;
   },
 
@@ -101,7 +116,10 @@ export const productsApi = {
    * @param productId 상품 ID
    */
   async getProductById(productId: number): Promise<Product> {
-    const response = await apiClient.get<ApiResponse<Product>>(`/products/${productId}`);
+    const response = await apiClient.get<ApiResponse<Product>>(
+      `/products/${productId}`,
+    );
+
     return response.data.data;
   },
 
@@ -115,17 +133,28 @@ export const productsApi = {
     creditPrice: number;
     imageUrl?: string;
     imageUrls?: string[];
-    sellerId: number;
+    sellerId?: number;
   }): Promise<Product> {
-    const response = await apiClient.post<ApiResponse<Product>>('/products', data);
+    const response = await apiClient.post<ApiResponse<Product>>(
+      '/products',
+      data,
+    );
+
     return response.data.data;
   },
 
   /**
    * 상품 수정
    */
-  async updateProduct(productId: number, data: Partial<Product>): Promise<Product> {
-    const response = await apiClient.put<ApiResponse<Product>>(`/products/${productId}`, data);
+  async updateProduct(
+    productId: number,
+    data: Partial<Product>,
+  ): Promise<Product> {
+    const response = await apiClient.put<ApiResponse<Product>>(
+      `/products/${productId}`,
+      data,
+    );
+
     return response.data.data;
   },
 
@@ -136,6 +165,9 @@ export const productsApi = {
     await apiClient.delete(`/products/${productId}`);
   },
 
+  /**
+   * 상품 이미지 업로드
+   */
   async uploadProductImage(data: {
     base64: string;
     mimeType: string;

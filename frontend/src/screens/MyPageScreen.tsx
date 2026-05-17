@@ -7,6 +7,7 @@ import {myPageStyles as styles} from '../styles/MyPageScreenStyle';
 import {creditsApi, CreditTransaction} from '../api/creditsApi';
 import {authApi} from '../api/authApi';
 import {favoritesApi} from '../api/favorites';
+import {productsApi, Product} from '../api/products';
 import {colors} from '../styles/colors';
 
 const BADGES = [
@@ -37,7 +38,9 @@ export function MyPageScreen() {
   const [creditLoading, setCreditLoading] = useState(true);
   const [activities, setActivities] = useState<ActivityItem[]>([]);
   const [totalEarnedCredits, setTotalEarnedCredits] = useState(0);
+
   const [favoriteCount, setFavoriteCount] = useState(0);
+  const [myProductCount, setMyProductCount] = useState(0);
 
   const levelInfo = getLevelInfo(totalEarnedCredits);
 
@@ -55,11 +58,17 @@ export function MyPageScreen() {
         setJoinedDateText(formatJoinedDate(joinedDate));
       }
 
-      const [transactions, favoriteIds] = await Promise.all([
+      const [transactions, favoriteIds, myProducts] = await Promise.all([
         creditsApi.getCreditTransactions(user.id),
+
         favoritesApi.getFavoriteIds().catch(err => {
           console.warn('Fetch favorite count error:', err);
           return [] as number[];
+        }),
+
+        productsApi.getMyProducts().catch(err => {
+          console.warn('Fetch my product count error:', err);
+          return [] as Product[];
         }),
       ]);
 
@@ -86,19 +95,27 @@ export function MyPageScreen() {
       setTotalEarnedCredits(earnedCredits);
       setActivities(recentActivities);
       setFavoriteCount(favoriteIds.length);
+      setMyProductCount(myProducts.length);
     } catch (err: any) {
       console.warn('Fetch mypage data error:', err);
 
       setUserName('이름 확인 중');
       setJoinedDateText('활동 시작일 확인 중');
+      setCreditBalance(0);
+      setTotalEarnedCredits(0);
+      setActivities([]);
+      setFavoriteCount(0);
+      setMyProductCount(0);
     } finally {
       setCreditLoading(false);
     }
   };
 
-  useFocusEffect(useCallback(() => {
-    fetchMyPageData();
-  }, []));
+  useFocusEffect(
+    useCallback(() => {
+      fetchMyPageData();
+    }, []),
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -174,7 +191,11 @@ export function MyPageScreen() {
             style={styles.statCard}
             onPress={() => navigation.navigate('MySharedItems')}>
             <Ionicons name="bag-handle-outline" size={32} color="#30406D" />
-            <Text style={styles.statNumber}>1</Text>
+
+            <Text style={styles.statNumber}>
+              {creditLoading ? '...' : myProductCount}
+            </Text>
+
             <Text style={styles.statLabel}>나눔한 물품</Text>
           </Pressable>
         </View>

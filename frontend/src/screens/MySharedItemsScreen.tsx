@@ -1,10 +1,15 @@
-import React, {useEffect, useMemo, useState} from 'react';
+import React, {useCallback, useMemo, useState} from 'react';
 import {Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
-import {useNavigation} from '@react-navigation/native';
+import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {mySharedItemsStyles as styles} from '../styles/MySharedItemsScreenStyle';
 import {creditsApi} from '../api/creditsApi';
+import {
+  productsApi,
+  Product,
+  getProductImageUrls,
+} from '../api/products';
 import {ItemCard} from '../components/ItemCard';
 import {CategoryFilter} from '../components/CategoryFilter';
 
@@ -18,23 +23,16 @@ const CATEGORIES = [
   '기타',
 ];
 
-const SHARED_ITEMS = [
-  {
-    id: 1,
-    title: '컴공 전공책',
-    price: '1,500 크레딧',
-    category: '도서',
-    icon: '📖',
-    backgroundColor: '#D8E7DD',
-  },
-];
-
 export function MySharedItemsScreen() {
   const navigation = useNavigation<any>();
 
   const [selectedCategory, setSelectedCategory] = useState('전체');
+
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
+
+  const [myProducts, setMyProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
 
   const fetchCreditBalance = async () => {
     try {
@@ -51,17 +49,35 @@ export function MySharedItemsScreen() {
     }
   };
 
-  useEffect(() => {
-    fetchCreditBalance();
-  }, []);
+  const fetchMyProducts = async () => {
+    try {
+      setProductsLoading(true);
+
+      const products = await productsApi.getMyProducts();
+
+      setMyProducts(products);
+    } catch (err: any) {
+      console.warn('Fetch my shared products error:', err);
+      setMyProducts([]);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchCreditBalance();
+      fetchMyProducts();
+    }, []),
+  );
 
   const filteredItems = useMemo(() => {
     if (selectedCategory === '전체') {
-      return SHARED_ITEMS;
+      return myProducts;
     }
 
-    return SHARED_ITEMS.filter(item => item.category === selectedCategory);
-  }, [selectedCategory]);
+    return myProducts.filter(item => item.category === selectedCategory);
+  }, [selectedCategory, myProducts]);
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -91,21 +107,39 @@ export function MySharedItemsScreen() {
       <ScrollView
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}>
-        <View style={styles.grid}>
-          {filteredItems.map(item => (
-            <ItemCard
-              key={item.id}
-              title={item.title}
-              price={item.price}
-              icon={item.icon}
-              backgroundColor={item.backgroundColor}
-              isLiked={true}
-              onPress={() =>
-                navigation.navigate('ProductDetail', {productId: item.id})
-              }
-            />
-          ))}
-        </View>
+        {productsLoading ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>내가 나눔한 물품을 불러오는 중...</Text>
+          </View>
+        ) : filteredItems.length === 0 ? (
+          <View style={styles.emptyBox}>
+            <Text style={styles.emptyText}>아직 나눔한 물품이 없습니다.</Text>
+          </View>
+        ) : (
+          <View style={styles.grid}>
+            {filteredItems.map(item => {
+              const imageUrl = getProductImageUrls(item)[0];
+
+              return (
+                <ItemCard
+                  key={item.id}
+                  title={item.title}
+                  price={`${item.creditPrice.toLocaleString()} 크레딧`}
+                  icon="📦"
+                  backgroundColor="#EAF2E9"
+                  imageUrl={imageUrl}
+                  isLiked={false}
+                  showHeart={false}
+                  onPress={() =>
+                    navigation.navigate('ProductDetail', {
+                      productId: item.id,
+                    })
+                  }
+                />
+              );
+            })}
+          </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );

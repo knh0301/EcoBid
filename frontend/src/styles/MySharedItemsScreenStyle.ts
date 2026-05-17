@@ -63,4 +63,16 @@ export const mySharedItemsStyles = StyleSheet.create({
     justifyContent: 'space-between',
     rowGap: 8,
   },
+
+  emptyBox: {
+  minHeight: 180,
+  justifyContent: 'center',
+  alignItems: 'center',
+},
+
+emptyText: {
+  fontSize: 14,
+  fontWeight: '700',
+  color: '#888888',
+},
 });

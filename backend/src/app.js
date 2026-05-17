@@ -11,6 +11,7 @@ const productRoutes = require('./routes/productRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const creditRoutes = require('./routes/creditRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
+const chatRoutes = require('./routes/chatRoutes');
 const { initializeChatSocket } = require('./socket/chatSocket');
 
 const app = express();
@@ -45,6 +46,7 @@ app.use('/api/products', productRoutes);
 app.use('/api/attendance', attendanceRoutes);
 app.use('/api/credits', creditRoutes);
 app.use('/api/favorites', favoriteRoutes);
+app.use('/api/chats', chatRoutes);
 
 // ── 404 처리 ──
 app.use((req, res) => {

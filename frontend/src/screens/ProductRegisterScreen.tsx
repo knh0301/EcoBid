@@ -7,8 +7,6 @@ import {
   TouchableOpacity,
   ScrollView,
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
@@ -20,6 +18,7 @@ import {
 } from '../api/products';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {productRegisterStyles as styles} from '../styles/ProductRegisterScreenStyle';
+import {colors} from '../styles/colors';
 
 const CATEGORIES = ['가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
 
@@ -39,14 +38,17 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
   const [title, setTitle] = useState(
     isEditMode ? initialProduct?.title || '' : '',
   );
+
   const [price, setPrice] = useState(
     isEditMode ? String(initialProduct?.creditPrice || '') : '',
   );
+
   const [desc, setDesc] = useState(
     isEditMode ? initialProduct?.description || '' : '',
   );
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
-    isEditMode ? initialProduct?.category || '기타' : null,
+    isEditMode ? '기타' : null,
   );
 
   const [selectedImages, setSelectedImages] = useState<SelectedImage[]>(() => {
@@ -135,9 +137,9 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
 
         const manipulatedImage = await ImageManipulator.manipulateAsync(
           asset.uri,
-          [],
+          [{resize: {width: 1080}}],
           {
-            compress: 0.8,
+            compress: 0.7,
             format: ImageManipulator.SaveFormat.JPEG,
             base64: true,
           },
@@ -202,11 +204,6 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
       return;
     }
 
-    if (!selectedCategory) {
-      showAlert('카테고리를 선택해주세요.');
-      return;
-    }
-
     const parsedPrice = Number(price.replace(/,/g, ''));
 
     if (!Number.isInteger(parsedPrice) || parsedPrice <= 0) {
@@ -223,7 +220,6 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         await productsApi.updateProduct(initialProduct.id, {
           title,
           description: desc,
-          category: selectedCategory,
           creditPrice: parsedPrice,
           imageUrl: imageUrls[0],
           imageUrls,
@@ -234,7 +230,6 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         await productsApi.createProduct({
           title,
           description: desc,
-          category: selectedCategory,
           creditPrice: parsedPrice,
           imageUrl: imageUrls[0],
           imageUrls,
@@ -294,12 +289,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         <View style={styles.headerRightSpace} />
       </View>
 
-      <KeyboardAvoidingView
-        style={{flex: 1}}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-      <ScrollView
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.imagePicker}>
           {selectedImages.map((image, index) => (
             <TouchableOpacity
@@ -344,7 +334,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         <TextInput
           style={styles.input}
           placeholder="물품 이름을 입력하세요."
-          placeholderTextColor="#888888"
+          placeholderTextColor={colors.textMuted}
           value={title}
           onChangeText={setTitle}
         />
@@ -379,7 +369,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
           <TextInput
             style={[styles.input, styles.priceInput]}
             placeholder="물품 가격을 입력하세요."
-            placeholderTextColor="#888888"
+            placeholderTextColor={colors.textMuted}
             keyboardType="numeric"
             value={price}
             onChangeText={setPrice}
@@ -392,7 +382,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
         <TextInput
           style={styles.textArea}
           placeholder="물품의 상태, 구입 시기, 사용감 등 상세한 정보를 공유해주세요."
-          placeholderTextColor="#888888"
+          placeholderTextColor={colors.textMuted}
           multiline
           numberOfLines={6}
           value={desc}
@@ -405,7 +395,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
 
       {isSubmitting ? (
         <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
-          <ActivityIndicator size="small" color="#5C8B5A" />
+          <ActivityIndicator size="small" color={colors.primary} />
         </View>
       ) : isEditMode ? (
         <View
@@ -432,7 +422,6 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
           </TouchableOpacity>
         </View>
       )}
-      </KeyboardAvoidingView>
 
       <AlertDialog
         visible={alertVisible}

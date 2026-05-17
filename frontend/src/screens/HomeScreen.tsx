@@ -12,6 +12,7 @@ import {useFocusEffect} from '@react-navigation/native';
 import {getProductImageUrls, productsApi, Product} from '../api/products';
 import {favoritesApi} from '../api/favorites';
 import {creditsApi} from '../api/creditsApi';
+import {attendanceAPI} from '../api/attendanceService';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {homeScreenStyles as styles} from '../styles/HomeScreenStyle';
 import {ItemCard} from '../components/ItemCard';
@@ -52,6 +53,11 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
 
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
+  const [isAttendedToday, setIsAttendedToday] = useState(false);
+  const [todayAttendanceReward, setTodayAttendanceReward] = useState<
+    number | null
+  >(null);
+  const [attendanceLoading, setAttendanceLoading] = useState(true);
   const {toast, showFavoriteToast} = useFavoriteToast();
 
   const fetchProducts = async (showLoading = true) => {
@@ -95,15 +101,37 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
     }
   };
 
+  const fetchAttendanceStatus = async () => {
+    try {
+      setAttendanceLoading(true);
+
+      const status = await attendanceAPI.getTodayStatus();
+
+      setIsAttendedToday(status.isAttended);
+      setTodayAttendanceReward(status.attendance?.pointsEarned ?? null);
+    } catch (err: any) {
+      console.warn('Fetch attendance status error:', err);
+      setIsAttendedToday(false);
+      setTodayAttendanceReward(null);
+    } finally {
+      setAttendanceLoading(false);
+    }
+  };
+
   useFocusEffect(useCallback(() => {
     fetchProducts();
     fetchCreditBalance();
+    fetchAttendanceStatus();
   }, []));
 
   const onRefresh = async () => {
     setIsRefreshing(true);
 
-    await Promise.all([fetchProducts(false), fetchCreditBalance()]);
+    await Promise.all([
+      fetchProducts(false),
+      fetchCreditBalance(),
+      fetchAttendanceStatus(),
+    ]);
 
     setIsRefreshing(false);
   };
@@ -151,19 +179,43 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           />
         }>
         <TouchableOpacity
-          style={styles.card}
+          style={[
+            styles.card,
+            isAttendedToday && styles.attendanceDoneCard,
+          ]}
           onPress={() => navigation.navigate('Attendance')}
           activeOpacity={0.8}>
           <View style={styles.attendanceRow}>
             <View style={styles.attendanceLeft}>
-              <Text style={styles.cardTitle}>오늘의 출석 도장</Text>
+              <Text style={styles.cardTitle}>
+                {isAttendedToday ? '오늘 출석 완료' : '오늘의 출석 도장'}
+              </Text>
               <Text style={styles.cardSubText}>
-                매일 출석하고 랜덤 크레딧을 받으세요!
+                {isAttendedToday
+                  ? '내일도 출석하고 새로운 크레딧 보상을 받아보세요!'
+                  : '매일 출석하고 1~10 크레딧을 랜덤으로 받으세요!'}
               </Text>
             </View>
 
-            <View style={styles.stampButton}>
-              <Text style={styles.stampText}>STAMP</Text>
+            <View
+              style={[
+                styles.stampButton,
+                isAttendedToday && styles.stampButtonDone,
+              ]}>
+              <Text
+                style={[
+                  styles.stampText,
+                  isAttendedToday && styles.stampRewardText,
+                ]}>
+                {attendanceLoading
+                  ? '...'
+                  : isAttendedToday
+                    ? `+${todayAttendanceReward ?? 0}`
+                    : 'STAMP'}
+              </Text>
+              {isAttendedToday && (
+                <Text style={styles.stampSubText}>크레딧</Text>
+              )}
             </View>
           </View>
         </TouchableOpacity>

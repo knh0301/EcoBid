@@ -1,70 +1,112 @@
 const { Attendance, User, CreditTransaction, sequelize } = require('../models');
 const { Op } = require('sequelize');
 
+const MIN_ATTENDANCE_REWARD = 1;
+const MAX_ATTENDANCE_REWARD = 10;
+
+const getRandomAttendanceReward = () => {
+  return Math.floor(
+    Math.random() * (MAX_ATTENDANCE_REWARD - MIN_ATTENDANCE_REWARD + 1),
+  ) + MIN_ATTENDANCE_REWARD;
+};
+
+const getTodayDate = () => {
+  return new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Seoul',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(new Date());
+};
+
+const parseDate = (dateString) => {
+  const [year, month, day] = dateString.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+};
+
+const calculateStreak = (attendances) => {
+  if (attendances.length === 0) {
+    return 0;
+  }
+
+  const attendanceDates = new Set(
+    attendances.map(item => item.attendanceDate),
+  );
+  const today = getTodayDate();
+  const yesterday = new Date(parseDate(today));
+  yesterday.setUTCDate(yesterday.getUTCDate() - 1);
+  const yesterdayText = yesterday.toISOString().split('T')[0];
+
+  let cursor = attendanceDates.has(today)
+    ? parseDate(today)
+    : parseDate(yesterdayText);
+  let streak = 0;
+
+  while (attendanceDates.has(cursor.toISOString().split('T')[0])) {
+    streak += 1;
+    cursor.setUTCDate(cursor.getUTCDate() - 1);
+  }
+
+  return streak;
+};
+
 /**
  * 오늘 출석하기
  * POST /api/attendance/check
  */
 exports.checkAttendance = async (req, res, next) => {
-  const { userId } = req.body;
-
-  if (!userId) {
-    return res.status(400).json({ success: false, message: 'userId는 필수입니다.' });
-  }
+  const userId = req.user.id;
 
   try {
-    const today = new Date().toISOString().split('T')[0];
-
-    // 1. 유저 존재 확인 및 테스트용 자동 생성
-    let user = await User.findByPk(userId);
+    const today = getTodayDate();
+    const user = await User.findByPk(userId);
     if (!user) {
-      console.log(`[System] ID ${userId} 유저가 없어 테스트용으로 생성합니다.`);
-      user = await User.create({
-        id: userId,
-        name: '테스트',
-        email: `test${userId}@test.com`,
-        password: '1234',
-        credits: 0
+      return res.status(404).json({
+        success: false,
+        message: '사용자를 찾을 수 없습니다.',
       });
     }
 
-    // 2. 이미 오늘 출석했는지 확인 (필드명 주의: userId 인지 user_id 인지 확인 필요)
-    // 로그상 SQL에서 `user_id`라고 나오면 아래를 { user_id: userId } 로 바꿔야 할 수도 있습니다.
     const existing = await Attendance.findOne({
-      where: { userId: userId, attendanceDate: today },
+      where: { userId, attendanceDate: today },
     });
 
     if (existing) {
-      return res.status(409).json({ success: false, message: '이미 오늘 출석했습니다.' });
+      return res.status(409).json({
+        success: false,
+        message: '이미 오늘 출석했습니다.',
+        data: {
+          isAttended: true,
+          attendance: existing,
+        },
+      });
     }
 
-    // 3. 출석 프로세스 (트랜잭션)
+    const reward = getRandomAttendanceReward();
+
     const result = await sequelize.transaction(async (t) => {
-      // Attendance 기록 생성
       const attendance = await Attendance.create(
         {
-          userId: userId,
+          userId,
           attendanceDate: today,
-          pointsEarned: 10,
+          pointsEarned: reward,
         },
         { transaction: t }
       );
 
-      // User 크레딧 증가
       await User.increment('credits', {
-        by: 10,
+        by: reward,
         where: { id: userId },
         transaction: t,
       });
 
-      // CreditTransaction 기록 생성
       await CreditTransaction.create(
         {
-          userId: userId,
-          amount: 10,
+          userId,
+          amount: reward,
           referenceType: 'ATTENDANCE',
           referenceId: attendance.id,
-          description: '일일 출석 보상',
+          description: `일일 출석 보상 ${reward} 크레딧`,
         },
         { transaction: t }
       );
@@ -75,7 +117,11 @@ exports.checkAttendance = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: '출석체크가 완료되었습니다.',
-      data: result,
+      data: {
+        isAttended: true,
+        reward,
+        attendance: result,
+      },
     });
   } catch (err) {
     console.error('출석 체크 에러:', err);
@@ -85,50 +131,79 @@ exports.checkAttendance = async (req, res, next) => {
 
 /**
  * 오늘 출석 여부 확인
- * GET /api/attendance/today/:userId
+ * GET /api/attendance/today
  */
 exports.checkTodayStatus = async (req, res, next) => {
-  const { userId } = req.params;
-  const today = new Date().toISOString().split('T')[0];
+  const userId = req.user.id;
+  const today = getTodayDate();
+
   try {
     const attendance = await Attendance.findOne({
       where: { userId, attendanceDate: today },
     });
-    res.json({ success: true, data: { isAttended: !!attendance } });
-  } catch (err) { next(err); }
+
+    res.json({
+      success: true,
+      data: {
+        isAttended: !!attendance,
+        attendance,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
 };
 
 /**
  * 내 출석 기록 조회
- * GET /api/attendance/history/:userId
+ * GET /api/attendance/history
  */
 exports.getHistory = async (req, res, next) => {
-  const { userId } = req.params;
+  const userId = req.user.id;
+  const { year, month } = req.query;
+
   try {
+    const where = { userId };
+
+    if (year && month) {
+      const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      const end = new Date(Date.UTC(Number(year), Number(month), 1));
+      const endDate = end.toISOString().split('T')[0];
+
+      where.attendanceDate = {
+        [Op.gte]: startDate,
+        [Op.lt]: endDate,
+      };
+    }
+
     const history = await Attendance.findAll({
-      where: { userId },
+      where,
       order: [['attendanceDate', 'DESC']],
     });
+
     res.json({ success: true, data: history });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 };
 
 /**
  * 연속 출석일 계산
- * GET /api/attendance/streak/:userId
+ * GET /api/attendance/streak
  */
 exports.getStreak = async (req, res, next) => {
-  const { userId } = req.params;
+  const userId = req.user.id;
+
   try {
     const attendances = await Attendance.findAll({
       where: { userId },
       order: [['attendanceDate', 'DESC']],
     });
-    if (attendances.length === 0) return res.json({ success: true, data: { streak: 0 } });
 
-    // 스트릭 계산 로직 (기존 코드와 동일)
-    let streak = 1;
-    // ... (중략) ...
+    const streak = calculateStreak(attendances);
+
     res.json({ success: true, data: { streak } });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 };

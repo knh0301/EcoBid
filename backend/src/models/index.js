@@ -23,6 +23,72 @@ const ensureProductSchema = async () => {
   }
 };
 
+const ensureAttendanceSchema = async () => {
+  const [tables] = await sequelize.query(`
+    SELECT sql
+    FROM sqlite_master
+    WHERE type = 'table'
+      AND name = 'attendances'
+  `);
+
+  const tableSql = tables[0]?.sql || '';
+  const hasLegacySingleColumnUnique =
+    /user_id[^,]+UNIQUE/i.test(tableSql) ||
+    /attendance_date[^,]+UNIQUE/i.test(tableSql);
+
+  if (!hasLegacySingleColumnUnique) {
+    return;
+  }
+
+  console.log('🔧 attendances 테이블 unique 제약 보정 중...');
+
+  await sequelize.query('PRAGMA foreign_keys = OFF');
+
+  try {
+    await sequelize.query(`
+      CREATE TABLE IF NOT EXISTS attendances_new (
+        id INTEGER PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users (id),
+        attendance_date DATE NOT NULL,
+        points_earned INTEGER DEFAULT 10,
+        created_at DATETIME NOT NULL,
+        updated_at DATETIME NOT NULL
+      )
+    `);
+
+    await sequelize.query(`
+      INSERT OR IGNORE INTO attendances_new (
+        id,
+        user_id,
+        attendance_date,
+        points_earned,
+        created_at,
+        updated_at
+      )
+      SELECT
+        id,
+        user_id,
+        attendance_date,
+        points_earned,
+        created_at,
+        updated_at
+      FROM attendances
+      ORDER BY id ASC
+    `);
+
+    await sequelize.query('DROP TABLE attendances');
+    await sequelize.query('ALTER TABLE attendances_new RENAME TO attendances');
+    await sequelize.query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS attendances_user_id_attendance_date
+      ON attendances (user_id, attendance_date)
+    `);
+  } finally {
+    await sequelize.query('PRAGMA foreign_keys = ON');
+  }
+
+  console.log('✅ attendances 테이블 unique 제약 보정 완료');
+};
+
 // ── 모델 간 관계 정의 ──
 
 // User 관계
@@ -103,6 +169,7 @@ const syncDatabase = async () => {
     // alter: true  → 스키마 변경 사항 자동 반영
     await sequelize.sync({ alter: false });
     await ensureProductSchema();
+    await ensureAttendanceSchema();
     console.log('✅ DB 동기화 완료');
   } catch (error) {
     console.error('❌ DB 연결 실패:', error);

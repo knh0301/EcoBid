@@ -16,7 +16,7 @@ import {chatDetailStyles as styles} from '../styles/ChatDetailScreenStyle';
 
 export function ChatDetailScreen({navigation, route}: any) {
   const {
-    roomId = 'product-vintage-light',
+    roomId,
     name = '채팅',
     productTitle = '나눔 물품',
     productPrice = '크레딧 상담',
@@ -32,6 +32,12 @@ export function ChatDetailScreen({navigation, route}: any) {
   const [isSending, setIsSending] = useState(false);
 
   useEffect(() => {
+    if (!roomId) {
+    console.warn('ChatDetailScreen: roomId가 없습니다.');
+    navigation.goBack();
+    return;
+    }
+  
     let isMounted = true;
     let activeSocket: Awaited<ReturnType<typeof getChatSocket>> | null = null;
 

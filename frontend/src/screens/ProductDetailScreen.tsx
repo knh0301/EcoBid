@@ -15,6 +15,7 @@ import {
 } from '../api/products';
 import {creditsApi} from '../api/creditsApi';
 import {authApi} from '../api/authApi';
+import {chatsApi} from '../api/chats';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {productDetailStyles as styles} from '../styles/ProductDetailScreenStyle';
 import {colors} from '../styles/colors';
@@ -29,6 +30,7 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
+  const [isChatStarting, setIsChatStarting] = useState(false);
 
   const fetchProduct = async () => {
     try {
@@ -69,7 +71,8 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
   }, [productId]);
 
   const imageUrls = useMemo(() => getProductImageUrls(product), [product]);
-  const isMyProduct = currentUserId !== null && product?.sellerId === currentUserId;
+  const isMyProduct =
+    currentUserId !== null && product?.sellerId === currentUserId;
 
   const navigateToEdit = () => {
     if (!product) {
@@ -80,6 +83,36 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
       isEditMode: true,
       product,
     });
+  };
+
+  const navigateToChat = async () => {
+    if (!product || isChatStarting) {
+      return;
+    }
+
+    try {
+      setIsChatStarting(true);
+
+      const room = await chatsApi.createOrGetRoom(product.id);
+
+      navigation.navigate('ChatDetail', {
+        roomId: String(room.id),
+        name: room.seller?.name || product.seller?.name || '판매자',
+        productTitle: room.product?.title || product.title,
+        productPrice: `${
+          room.product?.creditPrice?.toLocaleString() ||
+          product.creditPrice.toLocaleString()
+        } 크레딧`,
+      });
+    } catch (error: any) {
+      console.warn('Create chat room error:', error);
+      Alert.alert(
+        '채팅 오류',
+        error.response?.data?.message || '채팅방을 여는 중 오류가 발생했습니다.',
+      );
+    } finally {
+      setIsChatStarting(false);
+    }
   };
 
   if (isLoading) {
@@ -171,13 +204,14 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
       <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
         <TouchableOpacity
           style={styles.chatButton}
-          onPress={
-            isMyProduct
-              ? navigateToEdit
-              : () => navigation.navigate('ChatDetail')
-          }>
+          disabled={isChatStarting}
+          onPress={isMyProduct ? navigateToEdit : navigateToChat}>
           <Text style={styles.chatButtonText}>
-            {isMyProduct ? '수정하기' : '채팅하기'}
+            {isMyProduct
+              ? '수정하기'
+              : isChatStarting
+                ? '채팅방 여는 중...'
+                : '채팅하기'}
           </Text>
         </TouchableOpacity>
       </View>

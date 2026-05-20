@@ -79,7 +79,7 @@ const BADGES: BadgeItem[] = [
   {
     code: 'PUBLIC_TRANSPORT',
     icon: 'bus-outline',
-    title: '대중교통',
+    title: '홍길동',
     desc: '이번 달 대중교통 10회',
     color: '#D9822B',
     bgColor: '#FFF3E4',

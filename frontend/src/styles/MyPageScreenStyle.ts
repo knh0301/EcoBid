@@ -50,23 +50,29 @@ export const myPageStyles = StyleSheet.create({
     width: 82,
     height: 82,
     borderRadius: 41,
-    backgroundColor: colors.profileBlue,
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 10,
   },
 
   profileImageInner: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 82,
+    height: 82,
+    borderRadius: 41,
     backgroundColor: colors.profileGold,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
 
   profileEmoji: {
     fontSize: 42,
+  },
+
+  profilePhoto: {
+    width: '100%',
+    height: '100%',
   },
 
   userName: {

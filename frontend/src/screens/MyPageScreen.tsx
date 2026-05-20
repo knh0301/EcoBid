@@ -1,11 +1,11 @@
 import React, {useCallback, useState} from 'react';
-import {Modal, Pressable, ScrollView, Text, View} from 'react-native';
+import {Image, Modal, Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
 import {myPageStyles as styles} from '../styles/MyPageScreenStyle';
 import {creditsApi, CreditTransaction} from '../api/creditsApi';
-import {authApi} from '../api/authApi';
+import {authApi, resolveProfileImageUrl} from '../api/authApi';
 import {favoritesApi} from '../api/favorites';
 import {productsApi, Product} from '../api/products';
 import {badgesApi, Badge} from '../api/badges';
@@ -108,6 +108,7 @@ export function MyPageScreen() {
 
   const [userName, setUserName] = useState('이름 확인 중');
   const [joinedDateText, setJoinedDateText] = useState('활동 시작일 확인 중');
+  const [profileImageUri, setProfileImageUri] = useState<string | undefined>();
 
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
@@ -129,6 +130,7 @@ export function MyPageScreen() {
       const user = await authApi.getMe();
 
       setUserName(user.name);
+      setProfileImageUri(resolveProfileImageUrl(user.profileImage));
 
       const joinedDate = user.createdAt || user.created_at;
 
@@ -186,6 +188,7 @@ export function MyPageScreen() {
 
       setUserName('이름 확인 중');
       setJoinedDateText('활동 시작일 확인 중');
+      setProfileImageUri(undefined);
       setCreditBalance(0);
       setTotalEarnedCredits(0);
       setActivities([]);
@@ -219,7 +222,15 @@ export function MyPageScreen() {
           onPress={() => navigation.navigate('ProfileEdit')}>
           <View style={styles.profileImageOuter}>
             <View style={styles.profileImageInner}>
-              <Text style={styles.profileEmoji}>🙂</Text>
+              {profileImageUri ? (
+                <Image
+                  source={{uri: profileImageUri}}
+                  style={styles.profilePhoto}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Text style={styles.profileEmoji}>🙂</Text>
+              )}
             </View>
           </View>
 

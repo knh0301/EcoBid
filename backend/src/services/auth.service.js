@@ -192,6 +192,48 @@ const getMe = async (userId) => {
   return user;
 };
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 내 정보 수정
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const updateMe = async (userId, { name, profileImage }) => {
+  const user = await User.findByPk(userId);
+  if (!user) {
+    const error = new Error('유저를 찾을 수 없습니다.');
+    error.status = 404;
+    throw error;
+  }
+
+  const updatePayload = {};
+
+  if (name !== undefined) {
+    const trimmedName = String(name).trim();
+
+    if (!trimmedName) {
+      const error = new Error('이름을 입력해주세요.');
+      error.status = 400;
+      throw error;
+    }
+
+    updatePayload.name = trimmedName;
+  }
+
+  if (profileImage !== undefined) {
+    updatePayload.profileImage = profileImage || null;
+  }
+
+  await user.update(updatePayload);
+
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    profileImage: user.profileImage,
+    provider: user.provider,
+    credits: user.credits,
+    createdAt: user.createdAt,
+  };
+};
+
 module.exports = {
   register,
   login,
@@ -199,4 +241,5 @@ module.exports = {
   refreshAccessToken,
   logout,
   getMe,
+  updateMe,
 };

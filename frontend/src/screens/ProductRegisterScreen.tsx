@@ -118,7 +118,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
     }
 
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsMultipleSelection: true,
       selectionLimit: 5 - selectedImages.length,
       quality: 0.8,

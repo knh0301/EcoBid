@@ -74,6 +74,34 @@ type AuthResponse = {
   refreshToken: string;
 };
 
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+  message?: string;
+};
+
+const getApiOrigin = () => API_CONFIG.BASE_URL.replace(/\/api\/?$/, '');
+
+export const resolveProfileImageUrl = (profileImage?: string | null) => {
+  if (!profileImage) {
+    return undefined;
+  }
+
+  if (
+    profileImage.startsWith('http://') ||
+    profileImage.startsWith('https://') ||
+    profileImage.startsWith('file://')
+  ) {
+    return profileImage;
+  }
+
+  if (profileImage.startsWith('/')) {
+    return `${getApiOrigin()}${profileImage}`;
+  }
+
+  return profileImage;
+};
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Auth API 함수들
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -120,6 +148,30 @@ export const authApi = {
   getMe: async (): Promise<UserProfile> => {
     const {data} = await api.get('/auth/me');
     return data.data.user;
+  },
+
+  updateMe: async (payload: {
+    name?: string;
+    profileImage?: string | null;
+  }): Promise<UserProfile> => {
+    const {data} = await api.patch<ApiResponse<{user: UserProfile}>>(
+      '/auth/me',
+      payload,
+    );
+
+    return data.data.user;
+  },
+
+  uploadProfileImage: async (payload: {
+    base64: string;
+    mimeType: string;
+  }): Promise<{imageUrl: string}> => {
+    const {data} = await api.post<ApiResponse<{imageUrl: string}>>(
+      '/auth/me/profile-image',
+      payload,
+    );
+
+    return data.data;
   },
 
   // 로그아웃

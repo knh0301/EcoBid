@@ -190,6 +190,10 @@ export const authApi = {
     await tokenStorage.clearTokens();
   },
 
+  deleteMe: async () => {
+    await api.delete('/auth/me');
+  },
+
   // 토큰 갱신
   refresh: async (refreshToken: string) => {
     const {data} = await api.post('/auth/refresh', {refreshToken});

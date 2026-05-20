@@ -1,6 +1,23 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const fs = require('fs/promises');
+const path = require('path');
+const { Op } = require('sequelize');
+const {
+  sequelize,
+  Attendance,
+  ChatMessage,
+  ChatRoom,
+  CreditTransaction,
+  Favorite,
+  MissionSubmission,
+  Product,
+  ProductImage,
+  User,
+  UserBadge,
+} = require('../models');
+
+const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // JWT 토큰 생성
@@ -38,6 +55,35 @@ const toSafeUser = (user) => ({
 });
 
 const getDisplayName = user => user?.nickname || user?.name || user?.email;
+
+const resolveUploadPath = (imageUrl) => {
+  if (!imageUrl || !String(imageUrl).startsWith('/uploads/')) {
+    return null;
+  }
+
+  const relativePath = String(imageUrl).replace(/^\/uploads\//, '');
+  const filePath = path.normalize(path.join(UPLOAD_ROOT, relativePath));
+
+  if (!filePath.startsWith(UPLOAD_ROOT)) {
+    return null;
+  }
+
+  return filePath;
+};
+
+const deleteUploadFiles = async (filePaths) => {
+  await Promise.all(
+    [...filePaths].map(async filePath => {
+      try {
+        await fs.unlink(filePath);
+      } catch (err) {
+        if (err.code !== 'ENOENT') {
+          console.warn('업로드 파일 삭제 실패:', filePath, err.message);
+        }
+      }
+    }),
+  );
+};
 
 const register = async ({
   email,
@@ -293,6 +339,169 @@ const updateMe = async (userId, {
   return toSafeUser(user);
 };
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 회원 탈퇴
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const deleteAccount = async (userId) => {
+  const uploadFilesToDelete = new Set();
+
+  await sequelize.transaction(async (transaction) => {
+    const user = await User.scope('withSensitive').findByPk(userId, {
+      transaction,
+    });
+
+    if (!user) {
+      const error = new Error('유저를 찾을 수 없습니다.');
+      error.status = 404;
+      throw error;
+    }
+
+    const profileImagePath = resolveUploadPath(user.profileImage);
+
+    if (profileImagePath) {
+      uploadFilesToDelete.add(profileImagePath);
+    }
+
+    const products = await Product.findAll({
+      where: { sellerId: userId },
+      attributes: ['id', 'imageUrl'],
+      transaction,
+    });
+    const productIds = products.map(product => product.id);
+
+    products.forEach(product => {
+      const productImagePath = resolveUploadPath(product.imageUrl);
+
+      if (productImagePath) {
+        uploadFilesToDelete.add(productImagePath);
+      }
+    });
+
+    if (productIds.length > 0) {
+      const productImages = await ProductImage.findAll({
+        where: {
+          productId: {
+            [Op.in]: productIds,
+          },
+        },
+        attributes: ['imageUrl'],
+        transaction,
+      });
+
+      productImages.forEach(image => {
+        const imagePath = resolveUploadPath(image.imageUrl);
+
+        if (imagePath) {
+          uploadFilesToDelete.add(imagePath);
+        }
+      });
+    }
+
+    const roomWhere = {
+      [Op.or]: [
+        { buyerId: userId },
+        { sellerId: userId },
+      ],
+    };
+
+    if (productIds.length > 0) {
+      roomWhere[Op.or].push({
+        productId: {
+          [Op.in]: productIds,
+        },
+      });
+    }
+
+    const chatRooms = await ChatRoom.findAll({
+      where: roomWhere,
+      attributes: ['id'],
+      transaction,
+    });
+    const roomIds = chatRooms.map(room => room.id);
+
+    const messageWhere = {
+      [Op.or]: [
+        { senderId: userId },
+      ],
+    };
+
+    if (roomIds.length > 0) {
+      messageWhere[Op.or].push({
+        roomId: {
+          [Op.in]: roomIds,
+        },
+      });
+    }
+
+    await ChatMessage.destroy({
+      where: messageWhere,
+      transaction,
+    });
+
+    if (roomIds.length > 0) {
+      await ChatRoom.destroy({
+        where: {
+          id: {
+            [Op.in]: roomIds,
+          },
+        },
+        transaction,
+      });
+    }
+
+    const favoriteWhere = {
+      [Op.or]: [
+        { userId },
+      ],
+    };
+
+    if (productIds.length > 0) {
+      favoriteWhere[Op.or].push({
+        productId: {
+          [Op.in]: productIds,
+        },
+      });
+    }
+
+    await Favorite.destroy({
+      where: favoriteWhere,
+      transaction,
+    });
+
+    if (productIds.length > 0) {
+      await ProductImage.destroy({
+        where: {
+          productId: {
+            [Op.in]: productIds,
+          },
+        },
+        transaction,
+      });
+
+      await Product.destroy({
+        where: {
+          id: {
+            [Op.in]: productIds,
+          },
+        },
+        transaction,
+      });
+    }
+
+    await Attendance.destroy({ where: { userId }, transaction });
+    await CreditTransaction.destroy({ where: { userId }, transaction });
+    await MissionSubmission.destroy({ where: { userId }, transaction });
+    await UserBadge.destroy({ where: { userId }, transaction });
+
+    await User.destroy({
+      where: { id: userId },
+      transaction,
+    });
+  });
+
+  await deleteUploadFiles(uploadFilesToDelete);
+};
+
 module.exports = {
   register,
   login,
@@ -301,6 +510,7 @@ module.exports = {
   logout,
   getMe,
   updateMe,
+  deleteAccount,
   toSafeUser,
   getDisplayName,
 };

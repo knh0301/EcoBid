@@ -13,6 +13,7 @@ router.post('/refresh',  authController.refresh);
 router.post('/logout',   authenticate, authController.logout);
 router.get('/me',        authenticate, authController.getMe);
 router.patch('/me',      authenticate, authController.updateMe);
+router.delete('/me',     authenticate, authController.deleteMe);
 router.post('/me/profile-image', authenticate, authController.uploadProfileImage);
 
 module.exports = router;

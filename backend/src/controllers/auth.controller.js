@@ -198,6 +198,19 @@ const uploadProfileImage = async (req, res, next) => {
   }
 };
 
+const deleteMe = async (req, res, next) => {
+  try {
+    await authService.deleteAccount(req.user.id);
+
+    res.json({
+      success: true,
+      message: '회원 탈퇴가 완료되었습니다.',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   register,
   login,
@@ -207,4 +220,5 @@ module.exports = {
   getMe,
   updateMe,
   uploadProfileImage,
+  deleteMe,
 };

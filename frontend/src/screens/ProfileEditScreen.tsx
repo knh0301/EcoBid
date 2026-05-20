@@ -74,6 +74,7 @@ export function ProfileEditScreen() {
   const [modalType, setModalType] = useState<ModalType>(null);
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -205,9 +206,21 @@ export function ProfileEditScreen() {
     setModalType('logoutDone');
   };
 
-  const handleWithdrawConfirm = () => {
-    // 나중에 여기서 회원 탈퇴 API 호출 가능
-    setModalType('withdrawDone');
+  const handleWithdrawConfirm = async () => {
+    if (isWithdrawing) {
+      return;
+    }
+
+    try {
+      setIsWithdrawing(true);
+      await authApi.deleteMe();
+      setModalType('withdrawDone');
+    } catch (err) {
+      console.warn('Withdraw error:', err);
+      setModalType('profileError');
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   const handleDone = async () => {
@@ -362,9 +375,9 @@ export function ProfileEditScreen() {
 
       <ConfirmModal
         visible={modalType === 'withdrawConfirm'}
-        title="정말 탈퇴하시겠어요?"
-        description="탈퇴 시 모든 정보는 복구되지 않습니다."
-        confirmText="확인"
+        title={isWithdrawing ? '탈퇴 처리 중...' : '정말 탈퇴하시겠어요?'}
+        description="탈퇴 시 계정 정보와 등록한 나눔 물품이 모두 삭제됩니다."
+        confirmText={isWithdrawing ? '처리 중' : '확인'}
         cancelText="취소"
         onCancel={closeModal}
         onConfirm={handleWithdrawConfirm}

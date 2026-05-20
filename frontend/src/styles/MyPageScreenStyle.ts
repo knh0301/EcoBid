@@ -155,10 +155,19 @@ export const myPageStyles = StyleSheet.create({
 
   badgeCard: {
     backgroundColor: colors.white,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.profileBorder,
-    padding: 18,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 18,
+    marginBottom: 14,
+  },
+
+  badgeHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 14,
   },
 
@@ -166,50 +175,59 @@ export const myPageStyles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
     color: colors.textDark,
-    marginBottom: 14,
+  },
+
+  badgeCountPill: {
+    minWidth: 42,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.lightGreenBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+
+  badgeCountText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: colors.primaryDark,
   },
 
   badgeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 12,
+    rowGap: 16,
   },
 
   badgeItem: {
     width: '23%',
-    aspectRatio: 1,
-    borderRadius: 10,
-    backgroundColor: colors.badgeBackground,
     alignItems: 'center',
-    paddingHorizontal: 4,
-    paddingTop: 8,
-    paddingBottom: 6,
   },
 
-  badgeEmoji: {
-    height: 26,
-    fontSize: 20,
-    lineHeight: 24,
-    textAlign: 'center',
-    marginBottom: 2,
+  badgeIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 7,
   },
 
   badgeTitle: {
-    height: 14,
-    fontSize: 8,
-    lineHeight: 10,
+    fontSize: 10.5,
+    lineHeight: 14,
     fontWeight: '900',
-    color: colors.primaryDark,
+    color: colors.textDark,
     textAlign: 'center',
     marginBottom: 2,
   },
 
   badgeDesc: {
-    height: 14,
-    fontSize: 5.5,
-    lineHeight: 7,
-    color: colors.badgeText,
+    fontSize: 8.5,
+    lineHeight: 11,
+    fontWeight: '600',
+    color: colors.textMuted,
     textAlign: 'center',
   },
 

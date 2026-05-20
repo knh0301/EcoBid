@@ -10,15 +10,80 @@ import {favoritesApi} from '../api/favorites';
 import {productsApi, Product} from '../api/products';
 import {colors} from '../styles/colors';
 
-const BADGES = [
-  {id: 1, emoji: '🛍️', title: '나눔 천사', desc: '물품을 나눈 따뜻한 마음'},
-  {id: 2, emoji: '🌎', title: '지구수호대', desc: '친환경 활동 참여'},
-  {id: 3, emoji: '💬', title: '수다쟁이', desc: '다양한 소통 참여'},
-  {id: 4, emoji: '🚎', title: '탄소 발자국 지킴이', desc: '대중교통 이용'},
-  {id: 5, emoji: '💰', title: '절약왕', desc: '크레딧 모으기'},
-  {id: 6, emoji: '🛠️', title: '금손', desc: '물품 등록 참여'},
-  {id: 7, emoji: '🏆', title: '개근상', desc: '출석 미션 수행'},
-  {id: 8, emoji: '🎯', title: '미션러너', desc: '미션 꾸준히 완료'},
+type BadgeItem = {
+  id: number;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  desc: string;
+  color: string;
+  bgColor: string;
+};
+
+const BADGES: BadgeItem[] = [
+  {
+    id: 1,
+    icon: 'gift-outline',
+    title: '나눔 천사',
+    desc: '첫 나눔 완료',
+    color: '#2F6F3E',
+    bgColor: '#EAF2E9',
+  },
+  {
+    id: 2,
+    icon: 'leaf-outline',
+    title: '지구 수호',
+    desc: '친환경 실천',
+    color: '#4F8A45',
+    bgColor: '#EEF7EA',
+  },
+  {
+    id: 3,
+    icon: 'chatbubble-ellipses-outline',
+    title: '소통왕',
+    desc: '채팅 참여',
+    color: '#3F6FA8',
+    bgColor: '#EAF2FF',
+  },
+  {
+    id: 4,
+    icon: 'bus-outline',
+    title: '대중교통',
+    desc: '탄소 절감',
+    color: '#D9822B',
+    bgColor: '#FFF3E4',
+  },
+  {
+    id: 5,
+    icon: 'wallet-outline',
+    title: '절약왕',
+    desc: '크레딧 모음',
+    color: '#B88700',
+    bgColor: '#FFF8D8',
+  },
+  {
+    id: 6,
+    icon: 'hammer-outline',
+    title: '금손',
+    desc: '물품 등록',
+    color: '#7A5CDB',
+    bgColor: '#F1EDFF',
+  },
+  {
+    id: 7,
+    icon: 'calendar-clear-outline',
+    title: '개근상',
+    desc: '출석 완료',
+    color: '#D55353',
+    bgColor: '#FFECEC',
+  },
+  {
+    id: 8,
+    icon: 'flag-outline',
+    title: '미션러너',
+    desc: '미션 참여',
+    color: '#2F6F3E',
+    bgColor: '#EAF2E9',
+  },
 ];
 
 type ActivityItem = {
@@ -201,18 +266,30 @@ export function MyPageScreen() {
         </View>
 
         <View style={styles.badgeCard}>
-          <Text style={styles.sectionTitle}>나의 배지</Text>
+          <View style={styles.badgeHeaderRow}>
+            <Text style={styles.sectionTitle}>나의 배지</Text>
+
+            <View style={styles.badgeCountPill}>
+              <Text style={styles.badgeCountText}>{BADGES.length}개</Text>
+            </View>
+          </View>
 
           <View style={styles.badgeGrid}>
             {BADGES.map(badge => (
               <View key={badge.id} style={styles.badgeItem}>
-                <Text style={styles.badgeEmoji}>{badge.emoji}</Text>
+                <View
+                  style={[
+                    styles.badgeIconCircle,
+                    {backgroundColor: badge.bgColor},
+                  ]}>
+                  <Ionicons name={badge.icon} size={24} color={badge.color} />
+                </View>
 
                 <Text style={styles.badgeTitle} numberOfLines={1}>
                   {badge.title}
                 </Text>
 
-                <Text style={styles.badgeDesc} numberOfLines={2}>
+                <Text style={styles.badgeDesc} numberOfLines={1}>
                   {badge.desc}
                 </Text>
               </View>

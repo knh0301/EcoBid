@@ -234,7 +234,7 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
 
           <TouchableOpacity
             style={styles.primaryButton}
-            onPress={() => navigation.navigate('MissionTab')}>
+            onPress={() => navigation.navigate('Mission')}>
             <Text style={styles.primaryButtonText}>크레딧 모으기</Text>
           </TouchableOpacity>
         </View>

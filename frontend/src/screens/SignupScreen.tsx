@@ -116,6 +116,9 @@ export function SignupScreen() {
         email: email.trim(),
         password,
         name: name.trim(),
+        nickname: nickname.trim(),
+        studentId: studentId.trim(),
+        department,
       });
 
       Alert.alert('회원가입 완료', '회원가입이 완료되었습니다. 로그인해주세요.', [

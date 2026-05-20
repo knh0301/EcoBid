@@ -43,6 +43,27 @@ const User = sequelize.define('User', {
     },
   },
 
+  nickname: {
+    type: DataTypes.STRING,
+    allowNull: true,
+    validate: {
+      len: {
+        args: [1, 30],
+        msg: '닉네임은 1~30자 사이여야 합니다.',
+      },
+    },
+  },
+
+  studentId: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
+  department: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
   profileImage: {
     type: DataTypes.STRING,
     allowNull: true,

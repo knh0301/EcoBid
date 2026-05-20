@@ -97,7 +97,12 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
 
       navigation.navigate('ChatDetail', {
         roomId: String(room.id),
-        name: room.seller?.name || product.seller?.name || '판매자',
+        name:
+          room.seller?.nickname ||
+          room.seller?.name ||
+          product.seller?.nickname ||
+          product.seller?.name ||
+          '판매자',
         productTitle: room.product?.title || product.title,
         productPrice: `${
           room.product?.creditPrice?.toLocaleString() ||
@@ -180,7 +185,7 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
             </View>
 
             <Text style={styles.sellerName}>
-              {product.seller?.name || '익명 사용자'}
+              {product.seller?.nickname || product.seller?.name || '익명 사용자'}
             </Text>
           </View>
 

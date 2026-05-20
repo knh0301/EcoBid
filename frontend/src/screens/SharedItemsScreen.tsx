@@ -108,6 +108,7 @@ export function SharedItemsScreen() {
         product.title,
         product.description,
         product.category,
+        product.seller?.nickname,
         product.seller?.name,
       ]
         .filter(Boolean)

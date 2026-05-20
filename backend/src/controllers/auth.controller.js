@@ -14,12 +14,12 @@ const PROFILE_MIME_EXTENSIONS = {
 
 const register = async (req, res, next) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, nickname, studentId, department } = req.body;
 
-    if (!email || !password || !name) {
+    if (!email || !password || !name || !nickname || !studentId || !department) {
       return res.status(400).json({
         success: false,
-        message: '이메일, 비밀번호, 이름은 필수입니다.',
+        message: '이메일, 비밀번호, 이름, 닉네임, 학번, 학과는 필수입니다.',
       });
     }
     if (password.length < 8) {
@@ -29,7 +29,14 @@ const register = async (req, res, next) => {
       });
     }
 
-    const result = await authService.register({ email, password, name });
+    const result = await authService.register({
+      email,
+      password,
+      name,
+      nickname,
+      studentId,
+      department,
+    });
     res.status(201).json({
       success: true,
       message: '회원가입이 완료되었습니다.',

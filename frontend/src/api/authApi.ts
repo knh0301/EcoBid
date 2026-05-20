@@ -62,6 +62,9 @@ export type UserProfile = {
   id: number;
   email: string;
   name: string;
+  nickname?: string | null;
+  studentId?: string | null;
+  department?: string | null;
   profileImage?: string | null;
   credits?: number;
   createdAt?: string;
@@ -111,6 +114,9 @@ export const authApi = {
     email: string;
     password: string;
     name: string;
+    nickname: string;
+    studentId: string;
+    department: string;
   }) => {
     const {data} = await api.post('/auth/register', payload);
     return data.data;
@@ -152,6 +158,9 @@ export const authApi = {
 
   updateMe: async (payload: {
     name?: string;
+    nickname?: string;
+    studentId?: string | null;
+    department?: string | null;
     profileImage?: string | null;
   }): Promise<UserProfile> => {
     const {data} = await api.patch<ApiResponse<{user: UserProfile}>>(

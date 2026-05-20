@@ -24,7 +24,58 @@ const generateTokens = (userId) => {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 회원가입 (일반)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const register = async ({ email, password, name }) => {
+const toSafeUser = (user) => ({
+  id: user.id,
+  email: user.email,
+  name: user.name,
+  nickname: user.nickname || user.name,
+  studentId: user.studentId,
+  department: user.department,
+  profileImage: user.profileImage,
+  provider: user.provider,
+  credits: user.credits,
+  createdAt: user.createdAt,
+});
+
+const getDisplayName = user => user?.nickname || user?.name || user?.email;
+
+const register = async ({
+  email,
+  password,
+  name,
+  nickname,
+  studentId,
+  department,
+}) => {
+  const trimmedName = String(name || '').trim();
+  const trimmedNickname = String(nickname || '').trim();
+  const trimmedStudentId = String(studentId || '').trim();
+  const trimmedDepartment = String(department || '').trim();
+
+  if (!trimmedName) {
+    const error = new Error('이름을 입력해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (!trimmedNickname) {
+    const error = new Error('닉네임을 입력해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (!trimmedStudentId) {
+    const error = new Error('학번을 입력해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (!trimmedDepartment) {
+    const error = new Error('학과를 선택해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
   // 1. 이메일 중복 체크
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
@@ -40,7 +91,10 @@ const register = async ({ email, password, name }) => {
   const user = await User.create({
     email,
     password: hashedPassword,
-    name,
+    name: trimmedName,
+    nickname: trimmedNickname,
+    studentId: trimmedStudentId,
+    department: trimmedDepartment,
     provider: 'LOCAL',
   });
 
@@ -51,16 +105,7 @@ const register = async ({ email, password, name }) => {
   await user.update({ refreshToken });
 
   // 6. 민감 정보 제거 후 반환
-  const safeUser = {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    profileImage: user.profileImage,
-    provider: user.provider,
-    createdAt: user.createdAt,
-  };
-
-  return { user: safeUser, accessToken, refreshToken };
+  return { user: toSafeUser(user), accessToken, refreshToken };
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -89,16 +134,7 @@ const login = async ({ email, password }) => {
   // 4. refreshToken 저장
   await user.update({ refreshToken });
 
-  const safeUser = {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    profileImage: user.profileImage,
-    provider: user.provider,
-    createdAt: user.createdAt,
-  };
-
-  return { user: safeUser, accessToken, refreshToken };
+  return { user: toSafeUser(user), accessToken, refreshToken };
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -110,12 +146,18 @@ const socialLogin = async ({ email, name, profileImage, provider, providerId }) 
 
   if (user) {
     // 기존 유저 → 소셜 정보 업데이트
-    await user.update({ provider, providerId, profileImage });
+    await user.update({
+      provider,
+      providerId,
+      profileImage,
+      nickname: user.nickname || name || user.name,
+    });
   } else {
     // 신규 유저 생성
     user = await User.create({
       email,
       name,
+      nickname: name,
       profileImage,
       provider,
       providerId,
@@ -128,16 +170,7 @@ const socialLogin = async ({ email, name, profileImage, provider, providerId }) 
   // 3. refreshToken 저장
   await user.update({ refreshToken });
 
-  const safeUser = {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    profileImage: user.profileImage,
-    provider: user.provider,
-    createdAt: user.createdAt,
-  };
-
-  return { user: safeUser, accessToken, refreshToken };
+  return { user: toSafeUser(user), accessToken, refreshToken };
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -195,7 +228,13 @@ const getMe = async (userId) => {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 내 정보 수정
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const updateMe = async (userId, { name, profileImage }) => {
+const updateMe = async (userId, {
+  name,
+  nickname,
+  studentId,
+  department,
+  profileImage,
+}) => {
   const user = await User.findByPk(userId);
   if (!user) {
     const error = new Error('유저를 찾을 수 없습니다.');
@@ -217,21 +256,41 @@ const updateMe = async (userId, { name, profileImage }) => {
     updatePayload.name = trimmedName;
   }
 
+  if (nickname !== undefined) {
+    const trimmedNickname = String(nickname).trim();
+
+    if (!trimmedNickname) {
+      const error = new Error('닉네임을 입력해주세요.');
+      error.status = 400;
+      throw error;
+    }
+
+    updatePayload.nickname = trimmedNickname;
+  }
+
+  if (studentId !== undefined) {
+    updatePayload.studentId = String(studentId || '').trim() || null;
+  }
+
+  if (department !== undefined) {
+    const trimmedDepartment = String(department).trim();
+
+    if (!trimmedDepartment) {
+      const error = new Error('학과를 선택해주세요.');
+      error.status = 400;
+      throw error;
+    }
+
+    updatePayload.department = trimmedDepartment;
+  }
+
   if (profileImage !== undefined) {
     updatePayload.profileImage = profileImage || null;
   }
 
   await user.update(updatePayload);
 
-  return {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    profileImage: user.profileImage,
-    provider: user.provider,
-    credits: user.credits,
-    createdAt: user.createdAt,
-  };
+  return toSafeUser(user);
 };
 
 module.exports = {
@@ -242,4 +301,6 @@ module.exports = {
   logout,
   getMe,
   updateMe,
+  toSafeUser,
+  getDisplayName,
 };

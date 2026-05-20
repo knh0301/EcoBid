@@ -2,6 +2,8 @@ const jwt = require('jsonwebtoken');
 const { User, ChatRoom, ChatMessage, Product } = require('../models');
 const { Op } = require('sequelize');
 
+const getDisplayName = user => user?.nickname || user?.name || user?.email || '알 수 없음';
+
 /**
  * 특정 사용자의 DB 채팅방 목록을 조회하고 프론트엔드가 요구하는 구조로 가공합니다.
  */
@@ -25,12 +27,12 @@ const getUserRooms = async (userId) => {
       {
         model: User,
         as: 'buyer',
-        attributes: ['id', 'name', 'profileImage']
+        attributes: ['id', 'name', 'nickname', 'profileImage']
       },
       {
         model: User,
         as: 'seller',
-        attributes: ['id', 'name', 'profileImage']
+        attributes: ['id', 'name', 'nickname', 'profileImage']
       }
     ],
     order: [['lastMessageAt', 'DESC']]
@@ -42,7 +44,7 @@ const getUserRooms = async (userId) => {
 
     return {
       id: room.id,
-      name: otherUser ? otherUser.name : '알 수 없음',
+      name: getDisplayName(otherUser),
       productTitle: room.product ? room.product.title : '삭제된 상품',
       productPrice: room.product ? `${room.product.creditPrice.toLocaleString()} 크레딧` : '0 크레딧',
       lastMessage: room.lastMessage || '',
@@ -73,7 +75,7 @@ const authenticateSocket = async socket => {
     socket.user = user
       ? {
           id: String(user.id),
-          name: user.name || user.email,
+          name: getDisplayName(user),
         }
       : {
           id: `guest-${socket.id}`,
@@ -149,8 +151,8 @@ const initializeChatSocket = io => {
         const room = await ChatRoom.findByPk(roomId, {
           include: [
             { model: Product, as: 'product' },
-            { model: User, as: 'buyer', attributes: ['id', 'name', 'profileImage'] },
-            { model: User, as: 'seller', attributes: ['id', 'name', 'profileImage'] },
+            { model: User, as: 'buyer', attributes: ['id', 'name', 'nickname', 'profileImage'] },
+            { model: User, as: 'seller', attributes: ['id', 'name', 'nickname', 'profileImage'] },
           ]
         });
 
@@ -171,7 +173,7 @@ const initializeChatSocket = io => {
         // 과거 대화 목록 조회 (오름차순)
         const chatMessages = await ChatMessage.findAll({
           where: { roomId },
-          include: [{ model: User, as: 'sender', attributes: ['id', 'name'] }],
+          include: [{ model: User, as: 'sender', attributes: ['id', 'name', 'nickname'] }],
           order: [['createdAt', 'ASC']]
         });
 
@@ -180,7 +182,7 @@ const initializeChatSocket = io => {
           roomId: msg.roomId,
           text: msg.text,
           senderId: String(msg.senderId),
-          senderName: msg.sender ? msg.sender.name : '알 수 없음',
+          senderName: getDisplayName(msg.sender),
           createdAt: msg.createdAt.toISOString ? msg.createdAt.toISOString() : msg.createdAt,
         }));
 
@@ -189,7 +191,7 @@ const initializeChatSocket = io => {
 
         const formattedRoom = {
           id: room.id,
-          name: otherUser ? otherUser.name : '알 수 없음',
+          name: getDisplayName(otherUser),
           productTitle: room.product ? room.product.title : '삭제된 상품',
           productPrice: room.product ? `${room.product.creditPrice.toLocaleString()} 크레딧` : '0 크레딧',
           lastMessage: room.lastMessage || '',
@@ -256,7 +258,7 @@ const initializeChatSocket = io => {
           roomId,
           text: trimmedText,
           senderId: String(userId),
-          senderName: sender ? sender.name : '알 수 없음',
+          senderName: getDisplayName(sender),
           createdAt: newMessage.createdAt.toISOString ? newMessage.createdAt.toISOString() : newMessage.createdAt,
         };
 

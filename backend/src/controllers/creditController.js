@@ -151,7 +151,7 @@ exports.getCreditTransactions = async (req, res, next) => {
       include: [
         {
           model: User,
-          attributes: ['id', 'name', 'profileImage', 'credits'],
+          attributes: ['id', 'name', 'nickname', 'profileImage', 'credits'],
         },
       ],
     });
@@ -175,7 +175,7 @@ exports.getCreditTransactionById = async (req, res, next) => {
       include: [
         {
           model: User,
-          attributes: ['id', 'name', 'profileImage', 'credits'],
+          attributes: ['id', 'name', 'nickname', 'profileImage', 'credits'],
         },
       ],
     });

@@ -129,7 +129,7 @@ export function MyPageScreen() {
 
       const user = await authApi.getMe();
 
-      setUserName(user.name);
+      setUserName(user.nickname || user.name);
       setProfileImageUri(resolveProfileImageUrl(user.profileImage));
 
       const joinedDate = user.createdAt || user.created_at;
@@ -229,7 +229,7 @@ export function MyPageScreen() {
                   resizeMode="cover"
                 />
               ) : (
-                <Text style={styles.profileEmoji}>🙂</Text>
+                <Ionicons name="leaf-outline" size={46} color="#7FA56F" />
               )}
             </View>
           </View>

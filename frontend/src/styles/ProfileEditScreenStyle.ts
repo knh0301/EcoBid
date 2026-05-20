@@ -60,14 +60,12 @@ export const profileEditStyles = StyleSheet.create({
     width: 82,
     height: 82,
     borderRadius: 41,
-    backgroundColor: '#D0B100',
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
     justifyContent: 'center',
     alignItems: 'center',
     overflow: 'hidden',
-  },
-
-  profileEmoji: {
-    fontSize: 42,
   },
 
   profilePhoto: {

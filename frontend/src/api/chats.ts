@@ -21,11 +21,13 @@ export type ChatRoomResponse = {
   buyer?: {
     id: number;
     name: string;
+    nickname?: string | null;
     profileImage?: string | null;
   };
   seller?: {
     id: number;
     name: string;
+    nickname?: string | null;
     profileImage?: string | null;
   };
 };

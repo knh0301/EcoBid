@@ -54,7 +54,9 @@ export function ProfileEditScreen() {
   const navigation = useNavigation<any>();
   const {logout, userInfo} = useAuth();
 
-  const [nickname, setNickname] = useState(userInfo?.name || '');
+  const [nickname, setNickname] = useState(
+    userInfo?.nickname || userInfo?.name || '',
+  );
   const [email, setEmail] = useState(userInfo?.email || '');
   const [profileImage, setProfileImage] = useState<SelectedProfileImage | null>(
     userInfo?.profileImage
@@ -65,7 +67,7 @@ export function ProfileEditScreen() {
       : null,
   );
   const [selectedDepartment, setSelectedDepartment] = useState(
-    DEPARTMENTS[0],
+    userInfo?.department || DEPARTMENTS[0],
   );
   const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
 
@@ -78,8 +80,9 @@ export function ProfileEditScreen() {
       try {
         const user = await authApi.getMe();
 
-        setNickname(user.name);
+        setNickname(user.nickname || user.name);
         setEmail(user.email);
+        setSelectedDepartment(user.department || DEPARTMENTS[0]);
         setProfileImage(
           user.profileImage
             ? {
@@ -170,12 +173,14 @@ export function ProfileEditScreen() {
       }
 
       const updatedUser = await authApi.updateMe({
-        name: trimmedNickname,
+        nickname: trimmedNickname,
+        department: selectedDepartment,
         profileImage: uploadedProfileImage,
       });
 
-      setNickname(updatedUser.name);
+      setNickname(updatedUser.nickname || updatedUser.name);
       setEmail(updatedUser.email);
+      setSelectedDepartment(updatedUser.department || selectedDepartment);
       setProfileImage(
         updatedUser.profileImage
           ? {
@@ -254,7 +259,7 @@ export function ProfileEditScreen() {
                     resizeMode="cover"
                   />
                 ) : (
-                  <Text style={styles.profileEmoji}>🙂</Text>
+                  <Ionicons name="leaf-outline" size={46} color="#7FA56F" />
                 )}
               </View>
             </View>

@@ -1,5 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import {Pressable, ScrollView, Text, View} from 'react-native';
+import {Modal, Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
@@ -23,48 +23,12 @@ type BadgeItem = {
 
 const BADGES: BadgeItem[] = [
   {
-    code: 'SHARE_ANGEL',
-    icon: 'gift-outline',
-    title: '나눔 천사',
-    desc: '나눔 완료 10회',
-    color: '#2F6F3E',
-    bgColor: '#EAF2E9',
-    isAwarded: false,
-  },
-  {
-    code: 'EARTH_GUARDIAN',
-    icon: 'leaf-outline',
-    title: '지구 수호',
-    desc: '미션 누적 50회',
-    color: '#4F8A45',
-    bgColor: '#EEF7EA',
-    isAwarded: false,
-  },
-  {
     code: 'COMMUNICATOR',
     icon: 'chatbubble-ellipses-outline',
     title: '소통왕',
     desc: '채팅방 20개',
     color: '#3F6FA8',
     bgColor: '#EAF2FF',
-    isAwarded: false,
-  },
-  {
-    code: 'PUBLIC_TRANSPORT',
-    icon: 'bus-outline',
-    title: '대중교통',
-    desc: '대중교통 10회',
-    color: '#D9822B',
-    bgColor: '#FFF3E4',
-    isAwarded: false,
-  },
-  {
-    code: 'SAVER',
-    icon: 'wallet-outline',
-    title: '절약왕',
-    desc: '5,000 크레딧',
-    color: '#B88700',
-    bgColor: '#FFF8D8',
     isAwarded: false,
   },
   {
@@ -77,21 +41,57 @@ const BADGES: BadgeItem[] = [
     isAwarded: false,
   },
   {
-    code: 'PERFECT_ATTENDANCE',
-    icon: 'calendar-clear-outline',
-    title: '개근상',
-    desc: '한 달 출석 30회',
-    color: '#D55353',
-    bgColor: '#FFECEC',
+    code: 'SAVER',
+    icon: 'wallet-outline',
+    title: '절약왕',
+    desc: '5,000 크레딧',
+    color: '#B88700',
+    bgColor: '#FFF8D8',
     isAwarded: false,
   },
   {
     code: 'MISSION_RUNNER',
     icon: 'flag-outline',
     title: '미션러너',
-    desc: '하루 미션 4개',
+    desc: '오늘 미션 4개',
     color: '#2F6F3E',
     bgColor: '#EAF2E9',
+    isAwarded: false,
+  },
+  {
+    code: 'SHARE_ANGEL',
+    icon: 'gift-outline',
+    title: '나눔 천사',
+    desc: '이번 달 나눔 10회',
+    color: '#2F6F3E',
+    bgColor: '#EAF2E9',
+    isAwarded: false,
+  },
+  {
+    code: 'EARTH_GUARDIAN',
+    icon: 'leaf-outline',
+    title: '지구 수호',
+    desc: '이번 달 미션 50회',
+    color: '#4F8A45',
+    bgColor: '#EEF7EA',
+    isAwarded: false,
+  },
+  {
+    code: 'PUBLIC_TRANSPORT',
+    icon: 'bus-outline',
+    title: '대중교통',
+    desc: '이번 달 대중교통 10회',
+    color: '#D9822B',
+    bgColor: '#FFF3E4',
+    isAwarded: false,
+  },
+  {
+    code: 'PERFECT_ATTENDANCE',
+    icon: 'calendar-clear-outline',
+    title: '개근상',
+    desc: '이번 달 출석 30회',
+    color: '#D55353',
+    bgColor: '#FFECEC',
     isAwarded: false,
   },
 ];
@@ -117,6 +117,7 @@ export function MyPageScreen() {
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [myProductCount, setMyProductCount] = useState(0);
   const [badges, setBadges] = useState<BadgeItem[]>(BADGES);
+  const [selectedBadge, setSelectedBadge] = useState<BadgeItem | null>(null);
 
   const levelInfo = getLevelInfo(totalEarnedCredits);
   const awardedBadgeCount = badges.filter(badge => badge.isAwarded).length;
@@ -298,12 +299,13 @@ export function MyPageScreen() {
 
           <View style={styles.badgeGrid}>
             {badges.map(badge => (
-              <View
+              <Pressable
                 key={badge.code}
                 style={[
                   styles.badgeItem,
                   !badge.isAwarded && styles.badgeItemLocked,
-                ]}>
+                ]}
+                onPress={() => setSelectedBadge(badge)}>
                 <View
                   style={[
                     styles.badgeIconCircle,
@@ -328,16 +330,7 @@ export function MyPageScreen() {
                   numberOfLines={1}>
                   {badge.title}
                 </Text>
-
-                <Text
-                  style={[
-                    styles.badgeDesc,
-                    !badge.isAwarded && styles.badgeDescLocked,
-                  ]}
-                  numberOfLines={1}>
-                  {badge.desc}
-                </Text>
-              </View>
+              </Pressable>
             ))}
           </View>
         </View>
@@ -374,6 +367,70 @@ export function MyPageScreen() {
           )}
         </View>
       </ScrollView>
+
+      <Modal
+        transparent
+        visible={!!selectedBadge}
+        animationType="fade"
+        onRequestClose={() => setSelectedBadge(null)}>
+        <Pressable
+          style={styles.badgeModalOverlay}
+          onPress={() => setSelectedBadge(null)}>
+          <Pressable style={styles.badgeModalContent}>
+            {selectedBadge ? (
+              <>
+                <View
+                  style={[
+                    styles.badgeModalIconCircle,
+                    {
+                      backgroundColor: selectedBadge.isAwarded
+                        ? selectedBadge.bgColor
+                        : colors.gray200,
+                    },
+                  ]}>
+                  <Ionicons
+                    name={
+                      selectedBadge.isAwarded
+                        ? selectedBadge.icon
+                        : 'lock-closed-outline'
+                    }
+                    size={28}
+                    color={
+                      selectedBadge.isAwarded
+                        ? selectedBadge.color
+                        : colors.textMuted
+                    }
+                  />
+                </View>
+
+                <Text style={styles.badgeModalTitle}>
+                  {selectedBadge.title}
+                </Text>
+
+                <Text style={styles.badgeModalDesc}>
+                  {selectedBadge.desc}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.badgeModalStatus,
+                    selectedBadge.isAwarded
+                      ? styles.badgeModalStatusAwarded
+                      : styles.badgeModalStatusLocked,
+                  ]}>
+                  {selectedBadge.isAwarded ? '획득 완료' : '조건 미달성'}
+                </Text>
+
+                <Pressable
+                  style={styles.badgeModalButton}
+                  onPress={() => setSelectedBadge(null)}>
+                  <Text style={styles.badgeModalButtonText}>확인</Text>
+                </Pressable>
+              </>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }

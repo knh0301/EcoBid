@@ -203,6 +203,7 @@ export const myPageStyles = StyleSheet.create({
   badgeItem: {
     width: '23%',
     alignItems: 'center',
+    minHeight: 70,
   },
 
   badgeItemLocked: {
@@ -224,22 +225,9 @@ export const myPageStyles = StyleSheet.create({
     fontWeight: '900',
     color: colors.textDark,
     textAlign: 'center',
-    marginBottom: 2,
   },
 
   badgeTitleLocked: {
-    color: colors.textMuted,
-  },
-
-  badgeDesc: {
-    fontSize: 8.5,
-    lineHeight: 11,
-    fontWeight: '600',
-    color: colors.textMuted,
-    textAlign: 'center',
-  },
-
-  badgeDescLocked: {
     color: colors.textMuted,
   },
 
@@ -286,5 +274,81 @@ export const myPageStyles = StyleSheet.create({
 
   minusCredit: {
     color: colors.primaryDark,
+  },
+
+  badgeModalOverlay: {
+    flex: 1,
+    backgroundColor: colors.modalOverlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+
+  badgeModalContent: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 18,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.profileBorder,
+    paddingHorizontal: 22,
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+
+  badgeModalIconCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+
+  badgeModalTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: colors.textDark,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+
+  badgeModalDesc: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+
+  badgeModalStatus: {
+    fontSize: 12,
+    fontWeight: '900',
+    marginBottom: 18,
+  },
+
+  badgeModalStatusAwarded: {
+    color: colors.primaryDark,
+  },
+
+  badgeModalStatusLocked: {
+    color: colors.textMuted,
+  },
+
+  badgeModalButton: {
+    minWidth: 96,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: colors.primaryDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+  },
+
+  badgeModalButtonText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: colors.white,
   },
 });

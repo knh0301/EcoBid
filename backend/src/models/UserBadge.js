@@ -20,14 +20,18 @@ const UserBadge = sequelize.define('UserBadge', {
     type: DataTypes.STRING,
     allowNull: false,
   },
+  periodType: {
+    type: DataTypes.ENUM('PERMANENT', 'MONTHLY', 'DAILY'),
+    defaultValue: 'PERMANENT',
+    allowNull: false,
+  },
+  periodKey: {
+    type: DataTypes.STRING,
+    defaultValue: 'ALL',
+    allowNull: false,
+  },
 }, {
   tableName: 'user_badges',
-  indexes: [
-    {
-      unique: true,
-      fields: ['user_id', 'badge_code'],
-    },
-  ],
 });
 
 module.exports = UserBadge;

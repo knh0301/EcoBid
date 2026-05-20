@@ -109,6 +109,59 @@ const ensureMissionSubmissionSchema = async () => {
   }
 };
 
+const ensureUserBadgeSchema = async () => {
+  const queryInterface = sequelize.getQueryInterface();
+  const columns = await queryInterface.describeTable('user_badges');
+
+  if (!columns.period_type) {
+    await queryInterface.addColumn('user_badges', 'period_type', {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'PERMANENT',
+    });
+  }
+
+  if (!columns.period_key) {
+    await queryInterface.addColumn('user_badges', 'period_key', {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'ALL',
+    });
+  }
+
+  const indexes = await queryInterface.showIndex('user_badges');
+  const legacyUniqueIndexes = indexes.filter(index => {
+    const fields = index.fields.map(field => field.attribute || field.name);
+
+    return index.unique &&
+      fields.includes('user_id') &&
+      fields.includes('badge_code') &&
+      fields.length === 2;
+  });
+
+  for (const index of legacyUniqueIndexes) {
+    console.log(`🔧 user_badges unique 제약 보정 중: ${index.name}`);
+    await queryInterface.removeIndex('user_badges', index.name);
+  }
+
+  const hasPeriodUniqueIndex = indexes.some(index => {
+    const fields = index.fields.map(field => field.attribute || field.name);
+
+    return index.unique &&
+      fields.includes('user_id') &&
+      fields.includes('badge_code') &&
+      fields.includes('period_key');
+  });
+
+  if (!hasPeriodUniqueIndex) {
+    await queryInterface.addIndex('user_badges', {
+      name: 'user_badges_user_id_badge_code_period_key',
+      unique: true,
+      fields: ['user_id', 'badge_code', 'period_key'],
+    });
+  }
+};
+
 // ── 모델 간 관계 정의 ──
 
 // User 관계
@@ -199,6 +252,7 @@ const syncDatabase = async () => {
     await ensureProductSchema();
     await ensureAttendanceSchema();
     await ensureMissionSubmissionSchema();
+    await ensureUserBadgeSchema();
     console.log('✅ DB 동기화 완료');
   } catch (error) {
     console.error('❌ DB 연결 실패:', error);

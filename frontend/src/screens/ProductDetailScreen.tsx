@@ -14,8 +14,9 @@ import {
   getProductImageUrls,
 } from '../api/products';
 import {creditsApi} from '../api/creditsApi';
-import {authApi} from '../api/authApi';
+import {authApi, resolveProfileImageUrl} from '../api/authApi';
 import {chatsApi} from '../api/chats';
+import {Ionicons} from '@expo/vector-icons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {productDetailStyles as styles} from '../styles/ProductDetailScreenStyle';
 import {colors} from '../styles/colors';
@@ -71,6 +72,7 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
   }, [productId]);
 
   const imageUrls = useMemo(() => getProductImageUrls(product), [product]);
+  const sellerProfileImageUri = resolveProfileImageUrl(product?.seller?.profileImage);
   const isMyProduct =
     currentUserId !== null && product?.sellerId === currentUserId;
 
@@ -104,10 +106,12 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
           product.seller?.name ||
           '판매자',
         productTitle: room.product?.title || product.title,
-        productPrice: `${
-          room.product?.creditPrice?.toLocaleString() ||
-          product.creditPrice.toLocaleString()
-        } 크레딧`,
+          productPrice: `${
+            room.product?.creditPrice?.toLocaleString() ||
+            product.creditPrice.toLocaleString()
+          } 크레딧`,
+          profileImage:
+            room.seller?.profileImage || product.seller?.profileImage || null,
       });
     } catch (error: any) {
       console.warn('Create chat room error:', error);
@@ -181,7 +185,15 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
         <View style={styles.bodyPadding}>
           <View style={styles.sellerRow}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>:)</Text>
+              {sellerProfileImageUri ? (
+                <Image
+                  source={{uri: sellerProfileImageUri}}
+                  style={styles.avatarPhoto}
+                  resizeMode="cover"
+                />
+              ) : (
+                <Ionicons name="leaf-outline" size={24} color="#7FA56F" />
+              )}
             </View>
 
             <Text style={styles.sellerName}>

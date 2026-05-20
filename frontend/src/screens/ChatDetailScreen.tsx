@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,6 +14,7 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {ChatMessage, ChatRoom, getChatSocket} from '../api/chatSocket';
 import {useAuth} from '../context/AuthContext';
 import {chatDetailStyles as styles} from '../styles/ChatDetailScreenStyle';
+import {resolveProfileImageUrl} from '../api/authApi';
 
 export function ChatDetailScreen({navigation, route}: any) {
   const {
@@ -20,6 +22,7 @@ export function ChatDetailScreen({navigation, route}: any) {
     name = '채팅',
     productTitle = '나눔 물품',
     productPrice = '크레딧 상담',
+    profileImage = null,
   } = route.params || {};
 
   const insets = useSafeAreaInsets();
@@ -131,9 +134,11 @@ export function ChatDetailScreen({navigation, route}: any) {
 
   const displayRoom = room || {
     name,
+    profileImage,
     productTitle,
     productPrice,
   };
+  const displayProfileImageUri = resolveProfileImageUrl(displayRoom.profileImage);
 
   return (
     <View
@@ -148,7 +153,23 @@ export function ChatDetailScreen({navigation, route}: any) {
           <Ionicons name="chevron-back" size={28} color="#333" />
         </TouchableOpacity>
 
-        <Text style={styles.headerTitle}>{displayRoom.name}</Text>
+        <View style={styles.headerProfile}>
+          <View style={styles.headerAvatar}>
+            {displayProfileImageUri ? (
+              <Image
+                source={{uri: displayProfileImageUri}}
+                style={styles.avatarPhoto}
+                resizeMode="cover"
+              />
+            ) : (
+              <Ionicons name="leaf-outline" size={22} color="#7FA56F" />
+            )}
+          </View>
+
+          <Text style={styles.headerTitle} numberOfLines={1}>
+            {displayRoom.name}
+          </Text>
+        </View>
 
         <View style={styles.headerRightSpace} />
       </View>
@@ -173,6 +194,9 @@ export function ChatDetailScreen({navigation, route}: any) {
           keyboardShouldPersistTaps="handled">
           {messages.map(item => {
             const isMine = String(userInfo?.id || '') === String(item.senderId);
+            const senderProfileImageUri = resolveProfileImageUrl(
+              item.senderProfileImage || displayRoom.profileImage,
+            );
 
             return (
               <View
@@ -182,11 +206,35 @@ export function ChatDetailScreen({navigation, route}: any) {
                     ? styles.sentMessageWrapper
                     : styles.receivedMessageWrapper
                 }>
-                <View style={isMine ? styles.sentBubble : styles.receivedBubble}>
-                  <Text style={isMine ? styles.sentText : styles.receivedText}>
-                    {item.text}
-                  </Text>
-                </View>
+                {isMine ? (
+                  <View style={styles.sentBubble}>
+                    <Text style={styles.sentText}>{item.text}</Text>
+                  </View>
+                ) : (
+                  <View style={styles.receivedMessageRow}>
+                    <View style={styles.messageAvatar}>
+                      {senderProfileImageUri ? (
+                        <Image
+                          source={{
+                            uri: senderProfileImageUri,
+                          }}
+                          style={styles.avatarPhoto}
+                          resizeMode="cover"
+                        />
+                      ) : (
+                        <Ionicons
+                          name="leaf-outline"
+                          size={18}
+                          color="#7FA56F"
+                        />
+                      )}
+                    </View>
+
+                    <View style={styles.receivedBubble}>
+                      <Text style={styles.receivedText}>{item.text}</Text>
+                    </View>
+                  </View>
+                )}
               </View>
             );
           })}

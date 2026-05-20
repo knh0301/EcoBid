@@ -17,6 +17,7 @@ export type ChatRoomResponse = {
     id: number;
     title: string;
     creditPrice: number;
+    imageUrl?: string | null;
   };
   buyer?: {
     id: number;

@@ -50,9 +50,18 @@ export const chatListStyles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 12,
+    overflow: 'hidden',
+  },
+
+  avatarPhoto: {
+    width: '100%',
+    height: '100%',
   },
 
   chatInfo: {

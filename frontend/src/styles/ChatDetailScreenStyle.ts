@@ -22,9 +22,31 @@ export const chatDetailStyles = StyleSheet.create({
   },
 
   headerTitle: {
-    fontSize: 20,
+    flexShrink: 1,
+    fontSize: 18,
     fontWeight: 'bold',
     color: colors.textPrimary,
+  },
+
+  headerProfile: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 12,
+  },
+
+  headerAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    marginRight: 8,
   },
 
   headerRightSpace: {
@@ -80,6 +102,30 @@ export const chatDetailStyles = StyleSheet.create({
     marginBottom: 12,
   },
 
+  receivedMessageRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    maxWidth: '88%',
+  },
+
+  messageAvatar: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    marginRight: 8,
+  },
+
+  avatarPhoto: {
+    width: '100%',
+    height: '100%',
+  },
+
   receivedBubble: {
     backgroundColor: colors.white,
     borderWidth: 1,
@@ -87,7 +133,7 @@ export const chatDetailStyles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 16,
     paddingVertical: 12,
-    maxWidth: '80%',
+    maxWidth: '100%',
   },
 
   receivedText: {

@@ -45,6 +45,7 @@ const getUserRooms = async (userId) => {
     return {
       id: room.id,
       name: getDisplayName(otherUser),
+      profileImage: otherUser ? otherUser.profileImage : null,
       productTitle: room.product ? room.product.title : '삭제된 상품',
       productPrice: room.product ? `${room.product.creditPrice.toLocaleString()} 크레딧` : '0 크레딧',
       lastMessage: room.lastMessage || '',
@@ -173,7 +174,7 @@ const initializeChatSocket = io => {
         // 과거 대화 목록 조회 (오름차순)
         const chatMessages = await ChatMessage.findAll({
           where: { roomId },
-          include: [{ model: User, as: 'sender', attributes: ['id', 'name', 'nickname'] }],
+          include: [{ model: User, as: 'sender', attributes: ['id', 'name', 'nickname', 'profileImage'] }],
           order: [['createdAt', 'ASC']]
         });
 
@@ -183,6 +184,7 @@ const initializeChatSocket = io => {
           text: msg.text,
           senderId: String(msg.senderId),
           senderName: getDisplayName(msg.sender),
+          senderProfileImage: msg.sender ? msg.sender.profileImage : null,
           createdAt: msg.createdAt.toISOString ? msg.createdAt.toISOString() : msg.createdAt,
         }));
 
@@ -192,6 +194,7 @@ const initializeChatSocket = io => {
         const formattedRoom = {
           id: room.id,
           name: getDisplayName(otherUser),
+          profileImage: otherUser ? otherUser.profileImage : null,
           productTitle: room.product ? room.product.title : '삭제된 상품',
           productPrice: room.product ? `${room.product.creditPrice.toLocaleString()} 크레딧` : '0 크레딧',
           lastMessage: room.lastMessage || '',
@@ -259,6 +262,7 @@ const initializeChatSocket = io => {
           text: trimmedText,
           senderId: String(userId),
           senderName: getDisplayName(sender),
+          senderProfileImage: sender ? sender.profileImage : null,
           createdAt: newMessage.createdAt.toISOString ? newMessage.createdAt.toISOString() : newMessage.createdAt,
         };
 

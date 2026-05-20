@@ -218,7 +218,7 @@ exports.getRoomMessages = async (req, res, next) => {
         {
           model: User,
           as: 'sender',
-          attributes: ['id', 'name', 'nickname'],
+          attributes: ['id', 'name', 'nickname', 'profileImage'],
         },
       ],
       order: [['createdAt', 'ASC']],
@@ -231,6 +231,7 @@ exports.getRoomMessages = async (req, res, next) => {
       text: msg.text,
       senderId: msg.senderId,
       senderName: getDisplayName(msg.sender),
+      senderProfileImage: msg.sender ? msg.sender.profileImage : null,
       createdAt: msg.createdAt,
     }));
 

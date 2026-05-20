@@ -10,6 +10,7 @@ const CreditTransaction = require('./CreditTransaction');
 const Favorite = require('./Favorite');
 const ChatRoom = require('./ChatRoom');
 const ChatMessage = require('./ChatMessage');
+const UserBadge = require('./UserBadge');
 
 const ensureProductSchema = async () => {
   const queryInterface = sequelize.getQueryInterface();
@@ -89,6 +90,78 @@ const ensureAttendanceSchema = async () => {
   console.log('✅ attendances 테이블 unique 제약 보정 완료');
 };
 
+const ensureMissionSubmissionSchema = async () => {
+  const queryInterface = sequelize.getQueryInterface();
+  const indexes = await queryInterface.showIndex('mission_submissions');
+
+  const legacyUniqueIndexes = indexes.filter(index => {
+    const fields = index.fields.map(field => field.attribute || field.name);
+
+    return index.unique &&
+      fields.includes('user_id') &&
+      fields.includes('mission_id') &&
+      fields.length === 2;
+  });
+
+  for (const index of legacyUniqueIndexes) {
+    console.log(`🔧 mission_submissions unique 제약 제거 중: ${index.name}`);
+    await queryInterface.removeIndex('mission_submissions', index.name);
+  }
+};
+
+const ensureUserBadgeSchema = async () => {
+  const queryInterface = sequelize.getQueryInterface();
+  const columns = await queryInterface.describeTable('user_badges');
+
+  if (!columns.period_type) {
+    await queryInterface.addColumn('user_badges', 'period_type', {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'PERMANENT',
+    });
+  }
+
+  if (!columns.period_key) {
+    await queryInterface.addColumn('user_badges', 'period_key', {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'ALL',
+    });
+  }
+
+  const indexes = await queryInterface.showIndex('user_badges');
+  const legacyUniqueIndexes = indexes.filter(index => {
+    const fields = index.fields.map(field => field.attribute || field.name);
+
+    return index.unique &&
+      fields.includes('user_id') &&
+      fields.includes('badge_code') &&
+      fields.length === 2;
+  });
+
+  for (const index of legacyUniqueIndexes) {
+    console.log(`🔧 user_badges unique 제약 보정 중: ${index.name}`);
+    await queryInterface.removeIndex('user_badges', index.name);
+  }
+
+  const hasPeriodUniqueIndex = indexes.some(index => {
+    const fields = index.fields.map(field => field.attribute || field.name);
+
+    return index.unique &&
+      fields.includes('user_id') &&
+      fields.includes('badge_code') &&
+      fields.includes('period_key');
+  });
+
+  if (!hasPeriodUniqueIndex) {
+    await queryInterface.addIndex('user_badges', {
+      name: 'user_badges_user_id_badge_code_period_key',
+      unique: true,
+      fields: ['user_id', 'badge_code', 'period_key'],
+    });
+  }
+};
+
 // ── 모델 간 관계 정의 ──
 
 // User 관계
@@ -110,6 +183,11 @@ User.belongsToMany(Product, {
 User.hasMany(ChatRoom, { foreignKey: 'buyerId', as: 'buyerChatRooms' });
 User.hasMany(ChatRoom, { foreignKey: 'sellerId', as: 'sellerChatRooms' });
 User.hasMany(ChatMessage, { foreignKey: 'senderId', as: 'sentMessages' });
+User.hasMany(UserBadge, {
+  foreignKey: 'userId',
+  as: 'badges',
+  onDelete: 'CASCADE',
+});
 
 // Product 관계
 Product.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
@@ -159,6 +237,9 @@ ChatRoom.hasMany(ChatMessage, { foreignKey: 'roomId', as: 'messages' });
 ChatMessage.belongsTo(ChatRoom, { foreignKey: 'roomId', as: 'room' });
 ChatMessage.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 
+// UserBadge 관계
+UserBadge.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // DB 연결 및 테이블 동기화
 const syncDatabase = async () => {
   try {
@@ -170,6 +251,8 @@ const syncDatabase = async () => {
     await sequelize.sync({ alter: false });
     await ensureProductSchema();
     await ensureAttendanceSchema();
+    await ensureMissionSubmissionSchema();
+    await ensureUserBadgeSchema();
     console.log('✅ DB 동기화 완료');
   } catch (error) {
     console.error('❌ DB 연결 실패:', error);
@@ -190,4 +273,5 @@ module.exports = {
   Favorite,
   ChatRoom,
   ChatMessage,
+  UserBadge,
 };

@@ -1,5 +1,5 @@
 import React, {useCallback, useState} from 'react';
-import {Pressable, ScrollView, Text, View} from 'react-native';
+import {Modal, Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
@@ -8,17 +8,92 @@ import {creditsApi, CreditTransaction} from '../api/creditsApi';
 import {authApi} from '../api/authApi';
 import {favoritesApi} from '../api/favorites';
 import {productsApi, Product} from '../api/products';
+import {badgesApi, Badge} from '../api/badges';
 import {colors} from '../styles/colors';
 
-const BADGES = [
-  {id: 1, emoji: '🛍️', title: '나눔 천사', desc: '물품을 나눈 따뜻한 마음'},
-  {id: 2, emoji: '🌎', title: '지구수호대', desc: '친환경 활동 참여'},
-  {id: 3, emoji: '💬', title: '수다쟁이', desc: '다양한 소통 참여'},
-  {id: 4, emoji: '🚎', title: '탄소 발자국 지킴이', desc: '대중교통 이용'},
-  {id: 5, emoji: '💰', title: '절약왕', desc: '크레딧 모으기'},
-  {id: 6, emoji: '🛠️', title: '금손', desc: '물품 등록 참여'},
-  {id: 7, emoji: '🏆', title: '개근상', desc: '출석 미션 수행'},
-  {id: 8, emoji: '🎯', title: '미션러너', desc: '미션 꾸준히 완료'},
+type BadgeItem = {
+  code: string;
+  icon: React.ComponentProps<typeof Ionicons>['name'];
+  title: string;
+  desc: string;
+  color: string;
+  bgColor: string;
+  isAwarded: boolean;
+};
+
+const BADGES: BadgeItem[] = [
+  {
+    code: 'COMMUNICATOR',
+    icon: 'chatbubble-ellipses-outline',
+    title: '소통왕',
+    desc: '채팅방 20개',
+    color: '#3F6FA8',
+    bgColor: '#EAF2FF',
+    isAwarded: false,
+  },
+  {
+    code: 'GOLDEN_HAND',
+    icon: 'hammer-outline',
+    title: '금손',
+    desc: '찜 합산 50회',
+    color: '#7A5CDB',
+    bgColor: '#F1EDFF',
+    isAwarded: false,
+  },
+  {
+    code: 'SAVER',
+    icon: 'wallet-outline',
+    title: '절약왕',
+    desc: '5,000 크레딧',
+    color: '#B88700',
+    bgColor: '#FFF8D8',
+    isAwarded: false,
+  },
+  {
+    code: 'MISSION_RUNNER',
+    icon: 'flag-outline',
+    title: '미션러너',
+    desc: '오늘 미션 4개',
+    color: '#2F6F3E',
+    bgColor: '#EAF2E9',
+    isAwarded: false,
+  },
+  {
+    code: 'SHARE_ANGEL',
+    icon: 'gift-outline',
+    title: '나눔 천사',
+    desc: '이번 달 나눔 10회',
+    color: '#2F6F3E',
+    bgColor: '#EAF2E9',
+    isAwarded: false,
+  },
+  {
+    code: 'EARTH_GUARDIAN',
+    icon: 'leaf-outline',
+    title: '지구 수호',
+    desc: '이번 달 미션 50회',
+    color: '#4F8A45',
+    bgColor: '#EEF7EA',
+    isAwarded: false,
+  },
+  {
+    code: 'PUBLIC_TRANSPORT',
+    icon: 'bus-outline',
+    title: '홍길동',
+    desc: '이번 달 대중교통 10회',
+    color: '#D9822B',
+    bgColor: '#FFF3E4',
+    isAwarded: false,
+  },
+  {
+    code: 'PERFECT_ATTENDANCE',
+    icon: 'calendar-clear-outline',
+    title: '개근상',
+    desc: '이번 달 출석 30회',
+    color: '#D55353',
+    bgColor: '#FFECEC',
+    isAwarded: false,
+  },
 ];
 
 type ActivityItem = {
@@ -41,8 +116,11 @@ export function MyPageScreen() {
 
   const [favoriteCount, setFavoriteCount] = useState(0);
   const [myProductCount, setMyProductCount] = useState(0);
+  const [badges, setBadges] = useState<BadgeItem[]>(BADGES);
+  const [selectedBadge, setSelectedBadge] = useState<BadgeItem | null>(null);
 
   const levelInfo = getLevelInfo(totalEarnedCredits);
+  const awardedBadgeCount = badges.filter(badge => badge.isAwarded).length;
 
   const fetchMyPageData = async () => {
     try {
@@ -58,7 +136,8 @@ export function MyPageScreen() {
         setJoinedDateText(formatJoinedDate(joinedDate));
       }
 
-      const [transactions, favoriteIds, myProducts] = await Promise.all([
+      const [transactions, favoriteIds, myProducts, fetchedBadges] =
+        await Promise.all([
         creditsApi.getCreditTransactions(user.id),
 
         favoritesApi.getFavoriteIds().catch(err => {
@@ -69,6 +148,11 @@ export function MyPageScreen() {
         productsApi.getMyProducts().catch(err => {
           console.warn('Fetch my product count error:', err);
           return [] as Product[];
+        }),
+
+        badgesApi.getMyBadges().catch(err => {
+          console.warn('Fetch badges error:', err);
+          return [] as Badge[];
         }),
       ]);
 
@@ -96,6 +180,7 @@ export function MyPageScreen() {
       setActivities(recentActivities);
       setFavoriteCount(favoriteIds.length);
       setMyProductCount(myProducts.length);
+      setBadges(mapBadges(fetchedBadges));
     } catch (err: any) {
       console.warn('Fetch mypage data error:', err);
 
@@ -106,6 +191,7 @@ export function MyPageScreen() {
       setActivities([]);
       setFavoriteCount(0);
       setMyProductCount(0);
+      setBadges(BADGES);
     } finally {
       setCreditLoading(false);
     }
@@ -201,21 +287,50 @@ export function MyPageScreen() {
         </View>
 
         <View style={styles.badgeCard}>
-          <Text style={styles.sectionTitle}>나의 배지</Text>
+          <View style={styles.badgeHeaderRow}>
+            <Text style={styles.sectionTitle}>나의 배지</Text>
+
+            <View style={styles.badgeCountPill}>
+              <Text style={styles.badgeCountText}>
+                {awardedBadgeCount}/{badges.length}개
+              </Text>
+            </View>
+          </View>
 
           <View style={styles.badgeGrid}>
-            {BADGES.map(badge => (
-              <View key={badge.id} style={styles.badgeItem}>
-                <Text style={styles.badgeEmoji}>{badge.emoji}</Text>
+            {badges.map(badge => (
+              <Pressable
+                key={badge.code}
+                style={[
+                  styles.badgeItem,
+                  !badge.isAwarded && styles.badgeItemLocked,
+                ]}
+                onPress={() => setSelectedBadge(badge)}>
+                <View
+                  style={[
+                    styles.badgeIconCircle,
+                    {
+                      backgroundColor: badge.isAwarded
+                        ? badge.bgColor
+                        : colors.gray200,
+                    },
+                  ]}>
+                  <Ionicons
+                    name={badge.isAwarded ? badge.icon : 'lock-closed-outline'}
+                    size={24}
+                    color={badge.isAwarded ? badge.color : colors.textMuted}
+                  />
+                </View>
 
-                <Text style={styles.badgeTitle} numberOfLines={1}>
+                <Text
+                  style={[
+                    styles.badgeTitle,
+                    !badge.isAwarded && styles.badgeTitleLocked,
+                  ]}
+                  numberOfLines={1}>
                   {badge.title}
                 </Text>
-
-                <Text style={styles.badgeDesc} numberOfLines={2}>
-                  {badge.desc}
-                </Text>
-              </View>
+              </Pressable>
             ))}
           </View>
         </View>
@@ -252,6 +367,70 @@ export function MyPageScreen() {
           )}
         </View>
       </ScrollView>
+
+      <Modal
+        transparent
+        visible={!!selectedBadge}
+        animationType="fade"
+        onRequestClose={() => setSelectedBadge(null)}>
+        <Pressable
+          style={styles.badgeModalOverlay}
+          onPress={() => setSelectedBadge(null)}>
+          <Pressable style={styles.badgeModalContent}>
+            {selectedBadge ? (
+              <>
+                <View
+                  style={[
+                    styles.badgeModalIconCircle,
+                    {
+                      backgroundColor: selectedBadge.isAwarded
+                        ? selectedBadge.bgColor
+                        : colors.gray200,
+                    },
+                  ]}>
+                  <Ionicons
+                    name={
+                      selectedBadge.isAwarded
+                        ? selectedBadge.icon
+                        : 'lock-closed-outline'
+                    }
+                    size={28}
+                    color={
+                      selectedBadge.isAwarded
+                        ? selectedBadge.color
+                        : colors.textMuted
+                    }
+                  />
+                </View>
+
+                <Text style={styles.badgeModalTitle}>
+                  {selectedBadge.title}
+                </Text>
+
+                <Text style={styles.badgeModalDesc}>
+                  {selectedBadge.desc}
+                </Text>
+
+                <Text
+                  style={[
+                    styles.badgeModalStatus,
+                    selectedBadge.isAwarded
+                      ? styles.badgeModalStatusAwarded
+                      : styles.badgeModalStatusLocked,
+                  ]}>
+                  {selectedBadge.isAwarded ? '획득 완료' : '조건 미달성'}
+                </Text>
+
+                <Pressable
+                  style={styles.badgeModalButton}
+                  onPress={() => setSelectedBadge(null)}>
+                  <Text style={styles.badgeModalButtonText}>확인</Text>
+                </Pressable>
+              </>
+            ) : null}
+          </Pressable>
+        </Pressable>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -341,4 +520,32 @@ function formatJoinedDate(dateString: string) {
   const day = date.getDate();
 
   return `${year}년 ${month}월 ${day}일부터 활동중`;
+}
+
+function mapBadges(fetchedBadges: Badge[]) {
+  if (fetchedBadges.length === 0) {
+    return BADGES;
+  }
+
+  const fetchedByCode = new Map(
+    fetchedBadges.map(badge => [badge.code, badge]),
+  );
+
+  return BADGES.map(badge => {
+    const fetchedBadge = fetchedByCode.get(badge.code);
+
+    if (!fetchedBadge) {
+      return badge;
+    }
+
+    return {
+      ...badge,
+      title: fetchedBadge.title,
+      desc: fetchedBadge.description,
+      color: fetchedBadge.color,
+      bgColor: fetchedBadge.bgColor,
+      icon: fetchedBadge.icon as BadgeItem['icon'],
+      isAwarded: fetchedBadge.isAwarded,
+    };
+  });
 }

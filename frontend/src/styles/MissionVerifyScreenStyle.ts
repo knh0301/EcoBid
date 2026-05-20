@@ -131,6 +131,10 @@ export const missionVerifyStyles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  submitButtonDisabled: {
+    opacity: 0.55,
+  },
+
   submitText: {
     color: colors.textLight,
     fontSize: 18,

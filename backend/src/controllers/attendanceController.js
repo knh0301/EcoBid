@@ -1,5 +1,6 @@
 const { Attendance, User, CreditTransaction, sequelize } = require('../models');
 const { Op } = require('sequelize');
+const { evaluateAndAwardBadges } = require('../services/badge.service');
 
 const MIN_ATTENDANCE_REWARD = 1;
 const MAX_ATTENDANCE_REWARD = 10;
@@ -114,6 +115,8 @@ exports.checkAttendance = async (req, res, next) => {
       return attendance;
     });
 
+    const newlyAwardedBadges = await evaluateAndAwardBadges(userId);
+
     res.status(201).json({
       success: true,
       message: '출석체크가 완료되었습니다.',
@@ -121,6 +124,7 @@ exports.checkAttendance = async (req, res, next) => {
         isAttended: true,
         reward,
         attendance: result,
+        newlyAwardedBadges,
       },
     });
   } catch (err) {

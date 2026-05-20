@@ -155,10 +155,19 @@ export const myPageStyles = StyleSheet.create({
 
   badgeCard: {
     backgroundColor: colors.white,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: colors.profileBorder,
-    padding: 18,
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 18,
+    marginBottom: 14,
+  },
+
+  badgeHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 14,
   },
 
@@ -166,51 +175,60 @@ export const myPageStyles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '900',
     color: colors.textDark,
-    marginBottom: 14,
+  },
+
+  badgeCountPill: {
+    minWidth: 42,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: colors.lightGreenBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 10,
+  },
+
+  badgeCountText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: colors.primaryDark,
   },
 
   badgeGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'space-between',
-    rowGap: 12,
+    rowGap: 16,
   },
 
   badgeItem: {
     width: '23%',
-    aspectRatio: 1,
-    borderRadius: 10,
-    backgroundColor: colors.badgeBackground,
     alignItems: 'center',
-    paddingHorizontal: 4,
-    paddingTop: 8,
-    paddingBottom: 6,
+    minHeight: 70,
   },
 
-  badgeEmoji: {
-    height: 26,
-    fontSize: 20,
-    lineHeight: 24,
-    textAlign: 'center',
-    marginBottom: 2,
+  badgeItemLocked: {
+    opacity: 0.72,
+  },
+
+  badgeIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 7,
   },
 
   badgeTitle: {
-    height: 14,
-    fontSize: 8,
-    lineHeight: 10,
+    fontSize: 10.5,
+    lineHeight: 14,
     fontWeight: '900',
-    color: colors.primaryDark,
+    color: colors.textDark,
     textAlign: 'center',
-    marginBottom: 2,
   },
 
-  badgeDesc: {
-    height: 14,
-    fontSize: 5.5,
-    lineHeight: 7,
-    color: colors.badgeText,
-    textAlign: 'center',
+  badgeTitleLocked: {
+    color: colors.textMuted,
   },
 
   activityTitle: {
@@ -256,5 +274,81 @@ export const myPageStyles = StyleSheet.create({
 
   minusCredit: {
     color: colors.primaryDark,
+  },
+
+  badgeModalOverlay: {
+    flex: 1,
+    backgroundColor: colors.modalOverlay,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+  },
+
+  badgeModalContent: {
+    width: '100%',
+    maxWidth: 320,
+    borderRadius: 18,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.profileBorder,
+    paddingHorizontal: 22,
+    paddingVertical: 24,
+    alignItems: 'center',
+  },
+
+  badgeModalIconCircle: {
+    width: 58,
+    height: 58,
+    borderRadius: 29,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+
+  badgeModalTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: colors.textDark,
+    textAlign: 'center',
+    marginBottom: 8,
+  },
+
+  badgeModalDesc: {
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: 14,
+  },
+
+  badgeModalStatus: {
+    fontSize: 12,
+    fontWeight: '900',
+    marginBottom: 18,
+  },
+
+  badgeModalStatusAwarded: {
+    color: colors.primaryDark,
+  },
+
+  badgeModalStatusLocked: {
+    color: colors.textMuted,
+  },
+
+  badgeModalButton: {
+    minWidth: 96,
+    height: 42,
+    borderRadius: 12,
+    backgroundColor: colors.primaryDark,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 18,
+  },
+
+  badgeModalButtonText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: colors.white,
   },
 });

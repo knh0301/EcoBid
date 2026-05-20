@@ -13,6 +13,8 @@ const attendanceRoutes = require('./routes/attendanceRoutes');
 const creditRoutes = require('./routes/creditRoutes');
 const favoriteRoutes = require('./routes/favoriteRoutes');
 const chatRoutes = require('./routes/chatRoutes');
+const badgeRoutes = require('./routes/badgeRoutes');
+const missionRoutes = require('./routes/missionRoutes');
 const { initializeChatSocket } = require('./socket/chatSocket');
 
 const app = express();
@@ -55,6 +57,8 @@ app.use('/api/attendance', attendanceRoutes);
 app.use('/api/credits', creditRoutes);
 app.use('/api/favorites', favoriteRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/badges', badgeRoutes);
+app.use('/api/missions', missionRoutes);
 
 // ── 404 처리 ──
 app.use((req, res) => {

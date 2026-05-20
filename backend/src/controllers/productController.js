@@ -3,6 +3,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { Op } = require('sequelize');
 const { sequelize, Product, ProductImage, User } = require('../models');
+const { evaluateAndAwardBadges } = require('../services/badge.service');
 
 const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads', 'products');
 const MIME_EXTENSIONS = {
@@ -146,6 +147,8 @@ exports.createProduct = async (req, res, next) => {
     await replaceProductImages(product.id, normalizedImageUrls, transaction);
     await transaction.commit();
 
+    const newlyAwardedBadges = await evaluateAndAwardBadges(sellerId);
+
     const createdProduct = await Product.findByPk(product.id, {
       include: productIncludes,
       order: [[{ model: ProductImage, as: 'images' }, 'sortOrder', 'ASC']],
@@ -154,9 +157,12 @@ exports.createProduct = async (req, res, next) => {
     res.status(201).json({
       success: true,
       data: createdProduct,
+      newlyAwardedBadges,
     });
   } catch (err) {
-    await transaction.rollback();
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     next(err);
   }
 };
@@ -281,6 +287,8 @@ exports.updateProduct = async (req, res, next) => {
       ? normalizeImageUrls({ imageUrl, imageUrls })
       : undefined;
 
+    const sellerId = product.sellerId;
+
     await product.update({
       title: title || product.title,
       description: description !== undefined ? description : product.description,
@@ -298,6 +306,8 @@ exports.updateProduct = async (req, res, next) => {
 
     await transaction.commit();
 
+    const newlyAwardedBadges = await evaluateAndAwardBadges(sellerId);
+
     const updatedProduct = await Product.findByPk(product.id, {
       include: productIncludes,
       order: [[{ model: ProductImage, as: 'images' }, 'sortOrder', 'ASC']],
@@ -306,9 +316,12 @@ exports.updateProduct = async (req, res, next) => {
     res.json({
       success: true,
       data: updatedProduct,
+      newlyAwardedBadges,
     });
   } catch (err) {
-    await transaction.rollback();
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     next(err);
   }
 };

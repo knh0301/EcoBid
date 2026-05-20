@@ -36,14 +36,6 @@ const MissionSubmission = sequelize.define('MissionSubmission', {
   },
 }, {
   tableName: 'mission_submissions',
-  indexes: [
-    {
-      unique: true,
-      fields: ['user_id', 'mission_id'],
-      // 참고: 현재는 한 사용자당 미션 1회 제출로 제한.
-      // 추후 반복 미션(매일 수행 등)이 필요할 경우 unique 제약조건에 날짜(date) 등을 추가하거나 제약조건을 제거해야 함.
-    },
-  ],
 });
 
 module.exports = MissionSubmission;

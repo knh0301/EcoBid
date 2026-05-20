@@ -1,5 +1,6 @@
 const { Op } = require('sequelize');
 const { sequelize, CreditTransaction, User } = require('../models');
+const { evaluateAndAwardBadges } = require('../services/badge.service');
 
 const VALID_REFERENCE_TYPES = ['ATTENDANCE', 'MISSION', 'PRODUCT'];
 
@@ -76,13 +77,18 @@ exports.createCreditTransaction = async (req, res, next) => {
 
     await transaction.commit();
 
+    const newlyAwardedBadges = await evaluateAndAwardBadges(userId);
+
     res.status(201).json({
       success: true,
       data: creditTransaction,
+      newlyAwardedBadges,
       message: '크레딧 내역이 생성되었습니다.',
     });
   } catch (err) {
-    await transaction.rollback();
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     next(err);
   }
 };
@@ -269,13 +275,18 @@ exports.updateCreditTransaction = async (req, res, next) => {
 
     await transaction.commit();
 
+    const newlyAwardedBadges = await evaluateAndAwardBadges(creditTransaction.userId);
+
     res.json({
       success: true,
       data: creditTransaction,
+      newlyAwardedBadges,
       message: '크레딧 내역이 수정되었습니다.',
     });
   } catch (err) {
-    await transaction.rollback();
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     next(err);
   }
 };

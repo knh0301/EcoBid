@@ -10,6 +10,7 @@ const CreditTransaction = require('./CreditTransaction');
 const Favorite = require('./Favorite');
 const ChatRoom = require('./ChatRoom');
 const ChatMessage = require('./ChatMessage');
+const UserBadge = require('./UserBadge');
 
 const ensureProductSchema = async () => {
   const queryInterface = sequelize.getQueryInterface();
@@ -89,6 +90,25 @@ const ensureAttendanceSchema = async () => {
   console.log('✅ attendances 테이블 unique 제약 보정 완료');
 };
 
+const ensureMissionSubmissionSchema = async () => {
+  const queryInterface = sequelize.getQueryInterface();
+  const indexes = await queryInterface.showIndex('mission_submissions');
+
+  const legacyUniqueIndexes = indexes.filter(index => {
+    const fields = index.fields.map(field => field.attribute || field.name);
+
+    return index.unique &&
+      fields.includes('user_id') &&
+      fields.includes('mission_id') &&
+      fields.length === 2;
+  });
+
+  for (const index of legacyUniqueIndexes) {
+    console.log(`🔧 mission_submissions unique 제약 제거 중: ${index.name}`);
+    await queryInterface.removeIndex('mission_submissions', index.name);
+  }
+};
+
 // ── 모델 간 관계 정의 ──
 
 // User 관계
@@ -110,6 +130,11 @@ User.belongsToMany(Product, {
 User.hasMany(ChatRoom, { foreignKey: 'buyerId', as: 'buyerChatRooms' });
 User.hasMany(ChatRoom, { foreignKey: 'sellerId', as: 'sellerChatRooms' });
 User.hasMany(ChatMessage, { foreignKey: 'senderId', as: 'sentMessages' });
+User.hasMany(UserBadge, {
+  foreignKey: 'userId',
+  as: 'badges',
+  onDelete: 'CASCADE',
+});
 
 // Product 관계
 Product.belongsTo(User, { foreignKey: 'sellerId', as: 'seller' });
@@ -159,6 +184,9 @@ ChatRoom.hasMany(ChatMessage, { foreignKey: 'roomId', as: 'messages' });
 ChatMessage.belongsTo(ChatRoom, { foreignKey: 'roomId', as: 'room' });
 ChatMessage.belongsTo(User, { foreignKey: 'senderId', as: 'sender' });
 
+// UserBadge 관계
+UserBadge.belongsTo(User, { foreignKey: 'userId', as: 'user' });
+
 // DB 연결 및 테이블 동기화
 const syncDatabase = async () => {
   try {
@@ -170,6 +198,7 @@ const syncDatabase = async () => {
     await sequelize.sync({ alter: false });
     await ensureProductSchema();
     await ensureAttendanceSchema();
+    await ensureMissionSubmissionSchema();
     console.log('✅ DB 동기화 완료');
   } catch (error) {
     console.error('❌ DB 연결 실패:', error);
@@ -190,4 +219,5 @@ module.exports = {
   Favorite,
   ChatRoom,
   ChatMessage,
+  UserBadge,
 };

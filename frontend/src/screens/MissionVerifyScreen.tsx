@@ -14,8 +14,9 @@ import {Ionicons} from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {missionVerifyStyles as styles} from '../styles/MissionVerifyScreenStyle';
+import {missionsApi} from '../api/missions';
 
-type ModalType = 'success' | 'photo_error' | 'desc_error';
+type ModalType = 'success' | 'photo_error' | 'desc_error' | 'api_error';
 
 export function MissionVerifyScreen({navigation, route}: any) {
   const insets = useSafeAreaInsets();
@@ -25,6 +26,7 @@ export function MissionVerifyScreen({navigation, route}: any) {
   const [images, setImages] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<ModalType>('success');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const pickImage = async () => {
     if (images.length >= 3) {
@@ -48,7 +50,7 @@ export function MissionVerifyScreen({navigation, route}: any) {
     setImages(images.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (images.length === 0) {
       setModalType('photo_error');
       setModalVisible(true);
@@ -61,8 +63,23 @@ export function MissionVerifyScreen({navigation, route}: any) {
       return;
     }
 
-    setModalType('success');
-    setModalVisible(true);
+    try {
+      setIsSubmitting(true);
+      await missionsApi.submitMission({
+        missionTitle,
+        content: description.trim(),
+        imageUrl: images[0] || null,
+        rewardPoints: 500,
+      });
+      setModalType('success');
+      setModalVisible(true);
+    } catch (err) {
+      console.warn('Submit mission error:', err);
+      setModalType('api_error');
+      setModalVisible(true);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleModalClose = () => {
@@ -157,8 +174,16 @@ export function MissionVerifyScreen({navigation, route}: any) {
       <View style={[styles.footer, {paddingBottom: insets.bottom + 20}]}>
         <Text style={styles.creditText}>+ 500 크레딧</Text>
 
-        <TouchableOpacity style={styles.submitButton} onPress={handleSubmit}>
-          <Text style={styles.submitText}>크레딧 신청 하기</Text>
+        <TouchableOpacity
+          style={[
+            styles.submitButton,
+            isSubmitting && styles.submitButtonDisabled,
+          ]}
+          disabled={isSubmitting}
+          onPress={handleSubmit}>
+          <Text style={styles.submitText}>
+            {isSubmitting ? '제출 중...' : '크레딧 신청 하기'}
+          </Text>
         </TouchableOpacity>
       </View>
       </KeyboardAvoidingView>
@@ -169,10 +194,10 @@ export function MissionVerifyScreen({navigation, route}: any) {
             {modalType === 'success' && (
               <>
                 <Text style={styles.modalTitle}>
-                  크레딧 신청이 완료되었어요!
+                  크레딧 지급이 완료되었어요!
                 </Text>
                 <Text style={styles.modalSubtitle}>
-                  관리자 확인 후 크레딧이 지급됩니다.
+                  조건을 만족한 배지도 함께 지급됩니다.
                 </Text>
               </>
             )}
@@ -185,6 +210,12 @@ export function MissionVerifyScreen({navigation, route}: any) {
 
             {modalType === 'desc_error' && (
               <Text style={styles.modalTitle}>활동 설명을 입력해주세요.</Text>
+            )}
+
+            {modalType === 'api_error' && (
+              <Text style={styles.modalTitle}>
+                미션 인증에 실패했어요. 잠시 후 다시 시도해주세요.
+              </Text>
             )}
 
             <TouchableOpacity

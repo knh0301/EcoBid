@@ -1,4 +1,5 @@
 const { Favorite, Product, ProductImage, User } = require('../models');
+const { evaluateAndAwardBadges } = require('../services/badge.service');
 
 const productInclude = [
   {
@@ -86,11 +87,14 @@ exports.addFavorite = async (req, res, next) => {
       },
     });
 
+    const newlyAwardedBadges = await evaluateAndAwardBadges(product.sellerId);
+
     res.status(201).json({
       success: true,
       data: {
         productId,
         isLiked: true,
+        newlyAwardedBadges,
       },
     });
   } catch (err) {

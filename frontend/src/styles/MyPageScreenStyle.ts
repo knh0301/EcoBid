@@ -205,6 +205,10 @@ export const myPageStyles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  badgeItemLocked: {
+    opacity: 0.72,
+  },
+
   badgeIconCircle: {
     width: 48,
     height: 48,
@@ -223,12 +227,20 @@ export const myPageStyles = StyleSheet.create({
     marginBottom: 2,
   },
 
+  badgeTitleLocked: {
+    color: colors.textMuted,
+  },
+
   badgeDesc: {
     fontSize: 8.5,
     lineHeight: 11,
     fontWeight: '600',
     color: colors.textMuted,
     textAlign: 'center',
+  },
+
+  badgeDescLocked: {
+    color: colors.textMuted,
   },
 
   activityTitle: {

@@ -1,5 +1,6 @@
 const { ChatRoom, ChatMessage, Product, User, ProductImage } = require('../models');
 const { Op } = require('sequelize');
+const { evaluateAndAwardBadges } = require('../services/badge.service');
 
 /**
  * 채팅방 생성 또는 기존 채팅방 반환
@@ -62,6 +63,8 @@ exports.createOrGetRoom = async (req, res, next) => {
     });
 
     // 4. 없으면 신규 생성
+    let createdNewRoom = false;
+
     if (!room) {
       const newRoom = await ChatRoom.create({
         productId,
@@ -70,6 +73,7 @@ exports.createOrGetRoom = async (req, res, next) => {
         lastMessage: '',
         lastMessageAt: new Date(),
       });
+      createdNewRoom = true;
 
       room = await ChatRoom.findByPk(newRoom.id, {
         include: [
@@ -91,9 +95,14 @@ exports.createOrGetRoom = async (req, res, next) => {
       });
     }
 
+    const newlyAwardedBadges = createdNewRoom
+      ? await evaluateAndAwardBadges(buyerId)
+      : [];
+
     res.status(200).json({
       success: true,
       data: room,
+      newlyAwardedBadges,
     });
   } catch (err) {
     next(err);

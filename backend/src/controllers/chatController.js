@@ -2,6 +2,8 @@ const { ChatRoom, ChatMessage, Product, User, ProductImage } = require('../model
 const { Op } = require('sequelize');
 const { evaluateAndAwardBadges } = require('../services/badge.service');
 
+const getDisplayName = user => user?.nickname || user?.name || '알 수 없음';
+
 /**
  * 채팅방 생성 또는 기존 채팅방 반환
  * POST /api/chats/rooms
@@ -52,12 +54,12 @@ exports.createOrGetRoom = async (req, res, next) => {
         {
           model: User,
           as: 'buyer',
-          attributes: ['id', 'name', 'profileImage'],
+          attributes: ['id', 'name', 'nickname', 'profileImage'],
         },
         {
           model: User,
           as: 'seller',
-          attributes: ['id', 'name', 'profileImage'],
+          attributes: ['id', 'name', 'nickname', 'profileImage'],
         },
       ],
     });
@@ -84,12 +86,12 @@ exports.createOrGetRoom = async (req, res, next) => {
           {
             model: User,
             as: 'buyer',
-            attributes: ['id', 'name', 'profileImage'],
+            attributes: ['id', 'name', 'nickname', 'profileImage'],
           },
           {
             model: User,
             as: 'seller',
-            attributes: ['id', 'name', 'profileImage'],
+            attributes: ['id', 'name', 'nickname', 'profileImage'],
           },
         ],
       });
@@ -133,12 +135,12 @@ exports.getRooms = async (req, res, next) => {
         {
           model: User,
           as: 'buyer',
-          attributes: ['id', 'name', 'profileImage'],
+          attributes: ['id', 'name', 'nickname', 'profileImage'],
         },
         {
           model: User,
           as: 'seller',
-          attributes: ['id', 'name', 'profileImage'],
+          attributes: ['id', 'name', 'nickname', 'profileImage'],
         },
       ],
       order: [['lastMessageAt', 'DESC']],
@@ -160,7 +162,8 @@ exports.getRooms = async (req, res, next) => {
         sellerId: room.sellerId,
         otherUser: otherUser ? {
           id: otherUser.id,
-          name: otherUser.name,
+          name: getDisplayName(otherUser),
+          nickname: otherUser.nickname,
           profileImage: otherUser.profileImage,
         } : null,
       };
@@ -215,7 +218,7 @@ exports.getRoomMessages = async (req, res, next) => {
         {
           model: User,
           as: 'sender',
-          attributes: ['id', 'name'],
+          attributes: ['id', 'name', 'nickname', 'profileImage'],
         },
       ],
       order: [['createdAt', 'ASC']],
@@ -227,7 +230,8 @@ exports.getRoomMessages = async (req, res, next) => {
       roomId: msg.roomId,
       text: msg.text,
       senderId: msg.senderId,
-      senderName: msg.sender ? msg.sender.name : '알 수 없음',
+      senderName: getDisplayName(msg.sender),
+      senderProfileImage: msg.sender ? msg.sender.profileImage : null,
       createdAt: msg.createdAt,
     }));
 

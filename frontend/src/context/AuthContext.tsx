@@ -4,6 +4,7 @@ import * as Google from 'expo-auth-session/providers/google';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {authApi, UserProfile} from '../api/authApi';
 import {tokenStorage} from '../storage/tokenStorage';
+import {disconnectChatSocket} from '../api/chatSocket';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -71,6 +72,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(true);
 
     try {
+      disconnectChatSocket();
       const result = await authApi.login({email, password});
 
       await AsyncStorage.setItem('userInfo', JSON.stringify(result.user));
@@ -101,6 +103,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       });
 
       await AsyncStorage.setItem('userInfo', JSON.stringify(result.user));
+      disconnectChatSocket();
       
       setUserInfo(result.user);
       setIsLoggedIn(true);
@@ -126,6 +129,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const clearLocalAuthState = async () => {
+    disconnectChatSocket();
     await tokenStorage.clearTokens();
     await AsyncStorage.removeItem('userInfo');
     setUserInfo(null);

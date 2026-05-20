@@ -1,5 +1,5 @@
 import React, {useCallback, useMemo, useState} from 'react';
-import {Pressable, ScrollView, Text, View} from 'react-native';
+import {Alert, Pressable, ScrollView, Text, View} from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useFocusEffect, useNavigation} from '@react-navigation/native';
@@ -10,8 +10,11 @@ import {
   Product,
   getProductImageUrls,
 } from '../api/products';
+import {favoritesApi} from '../api/favorites';
 import {ItemCard} from '../components/ItemCard';
 import {CategoryFilter} from '../components/CategoryFilter';
+import {FavoriteToast} from '../components/FavoriteToast';
+import {useFavoriteToast} from '../hooks/useFavoriteToast';
 
 const CATEGORIES = [
   '전체',
@@ -33,6 +36,8 @@ export function MySharedItemsScreen() {
 
   const [myProducts, setMyProducts] = useState<Product[]>([]);
   const [productsLoading, setProductsLoading] = useState(true);
+  const [likedIds, setLikedIds] = useState<number[]>([]);
+  const {toast, showFavoriteToast} = useFavoriteToast();
 
   const fetchCreditBalance = async () => {
     try {
@@ -53,12 +58,20 @@ export function MySharedItemsScreen() {
     try {
       setProductsLoading(true);
 
-      const products = await productsApi.getMyProducts();
+      const [products, favoriteIds] = await Promise.all([
+        productsApi.getMyProducts(),
+        favoritesApi.getFavoriteIds().catch(err => {
+          console.warn('Fetch favorite ids error:', err);
+          return [] as number[];
+        }),
+      ]);
 
       setMyProducts(products);
+      setLikedIds(favoriteIds);
     } catch (err: any) {
       console.warn('Fetch my shared products error:', err);
       setMyProducts([]);
+      setLikedIds([]);
     } finally {
       setProductsLoading(false);
     }
@@ -78,6 +91,33 @@ export function MySharedItemsScreen() {
 
     return myProducts.filter(item => item.category === selectedCategory);
   }, [selectedCategory, myProducts]);
+
+  const toggleLike = async (product: Product) => {
+    const id = product.id;
+    const shouldLike = !likedIds.includes(id);
+
+    setLikedIds(prev =>
+      shouldLike ? [...prev, id] : prev.filter(itemId => itemId !== id),
+    );
+
+    try {
+      await favoritesApi.setFavorite(id, shouldLike);
+      showFavoriteToast(
+        shouldLike
+          ? `${product.title}을(를) 찜했습니다.`
+          : `${product.title} 찜을 취소했습니다.`,
+        shouldLike ? 'liked' : 'unliked',
+      );
+    } catch (err: any) {
+      console.warn('Toggle favorite error:', err);
+
+      setLikedIds(prev =>
+        shouldLike ? prev.filter(itemId => itemId !== id) : [...prev, id],
+      );
+
+      Alert.alert('오류', '찜 상태를 변경하지 못했습니다. 다시 시도해주세요.');
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -119,6 +159,7 @@ export function MySharedItemsScreen() {
           <View style={styles.grid}>
             {filteredItems.map(item => {
               const imageUrl = getProductImageUrls(item)[0];
+              const isLiked = likedIds.includes(item.id);
 
               return (
                 <ItemCard
@@ -128,8 +169,8 @@ export function MySharedItemsScreen() {
                   icon="📦"
                   backgroundColor="#EAF2E9"
                   imageUrl={imageUrl}
-                  isLiked={false}
-                  showHeart={false}
+                  isLiked={isLiked}
+                  onHeartPress={() => toggleLike(item)}
                   onPress={() =>
                     navigation.navigate('ProductDetail', {
                       productId: item.id,
@@ -141,6 +182,12 @@ export function MySharedItemsScreen() {
           </View>
         )}
       </ScrollView>
+
+      <FavoriteToast
+        visible={toast.visible}
+        message={toast.message}
+        type={toast.type}
+      />
     </SafeAreaView>
   );
 }

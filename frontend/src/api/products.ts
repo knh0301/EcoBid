@@ -22,6 +22,7 @@ export interface Product {
   seller?: {
     id: number;
     name: string;
+    nickname?: string | null;
     profileImage?: string;
   };
   isLiked?: boolean;

@@ -51,22 +51,26 @@ export const profileEditStyles = StyleSheet.create({
     width: 82,
     height: 82,
     borderRadius: 41,
-    backgroundColor: '#95B9EE',
+    backgroundColor: 'transparent',
     justifyContent: 'center',
     alignItems: 'center',
   },
 
   profileImageInner: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: '#D0B100',
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
     justifyContent: 'center',
     alignItems: 'center',
+    overflow: 'hidden',
   },
 
-  profileEmoji: {
-    fontSize: 42,
+  profilePhoto: {
+    width: '100%',
+    height: '100%',
   },
 
   cameraButton: {
@@ -136,6 +140,10 @@ export const profileEditStyles = StyleSheet.create({
     marginTop: 10,
   },
 
+  submitButtonDisabled: {
+    opacity: 0.6,
+  },
+
   submitButtonText: {
     color: colors.textLight,
     fontSize: 14,
@@ -162,6 +170,23 @@ export const profileEditStyles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '700',
     color: colors.textDark,
+  },
+
+  loadingRow: {
+    minHeight: 32,
+    borderRadius: 8,
+    backgroundColor: '#F0F6EE',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+
+  loadingText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.primaryDark,
   },
 
   modalOverlay: {

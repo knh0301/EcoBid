@@ -1,6 +1,7 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
+  Image,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -8,47 +9,57 @@ import {
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
+import {useFocusEffect} from '@react-navigation/native';
 import {ChatRoom, getChatSocket} from '../api/chatSocket';
 import {chatListStyles as styles} from '../styles/ChatListScreenStyle';
+import {resolveProfileImageUrl} from '../api/authApi';
+import {useAuth} from '../context/AuthContext';
 
 export function ChatListScreen({navigation}: any) {
   const insets = useSafeAreaInsets();
+  const {userInfo} = useAuth();
   const [rooms, setRooms] = useState<ChatRoom[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    let isMounted = true;
-    let activeSocket: Awaited<ReturnType<typeof getChatSocket>> | null = null;
+  useFocusEffect(
+    useCallback(() => {
+      let isActive = true;
+      let activeSocket: Awaited<ReturnType<typeof getChatSocket>> | null = null;
 
-    const handleRoomsUpdate = (nextRooms: ChatRoom[]) => {
-      if (isMounted) {
-        setRooms(nextRooms);
-        setIsLoading(false);
-      }
-    };
+      setRooms([]);
+      setIsLoading(true);
 
-    getChatSocket()
-      .then(socket => {
-        if (!isMounted) {
-          return;
-        }
-
-        activeSocket = socket;
-        socket.on('chat:rooms:update', handleRoomsUpdate);
-        socket.emit('chat:rooms', handleRoomsUpdate);
-      })
-      .catch(error => {
-        console.warn('Chat rooms connection error:', error);
-        if (isMounted) {
+      const handleRoomsUpdate = (nextRooms: ChatRoom[]) => {
+        if (isActive) {
+          setRooms(nextRooms);
           setIsLoading(false);
         }
-      });
+      };
 
-    return () => {
-      isMounted = false;
-      activeSocket?.off('chat:rooms:update', handleRoomsUpdate);
-    };
-  }, []);
+      getChatSocket()
+        .then(socket => {
+          if (!isActive) {
+            return;
+          }
+
+          activeSocket = socket;
+          socket.off('chat:rooms:update', handleRoomsUpdate);
+          socket.on('chat:rooms:update', handleRoomsUpdate);
+          socket.emit('chat:rooms', handleRoomsUpdate);
+        })
+        .catch(error => {
+          console.warn('Chat rooms connection error:', error);
+          if (isActive) {
+            setIsLoading(false);
+          }
+        });
+
+      return () => {
+        isActive = false;
+        activeSocket?.off('chat:rooms:update', handleRoomsUpdate);
+      };
+    }, [userInfo?.id]),
+  );
 
   return (
     <View
@@ -69,37 +80,50 @@ export function ChatListScreen({navigation}: any) {
       ) : (
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {rooms.map(item => (
-            <TouchableOpacity
-              key={item.id}
-              style={styles.chatItem}
-              onPress={() =>
-                navigation.navigate('ChatDetail', {
-                  roomId: item.id,
-                  name: item.name,
-                  productTitle: item.productTitle,
-                  productPrice: item.productPrice,
-                })
-              }
-              activeOpacity={0.7}>
-              <View style={[styles.avatar, {backgroundColor: item.color}]}>
-                <Ionicons
-                  name={item.icon as any}
-                  size={36}
-                  color="rgba(0,0,0,0.5)"
-                />
-              </View>
-
-              <View style={styles.chatInfo}>
-                <Text style={styles.userName}>{item.name}</Text>
-
-                <Text style={styles.lastMessage} numberOfLines={1}>
-                  {item.lastMessage || '새 대화를 시작해보세요.'}
-                </Text>
-              </View>
-            </TouchableOpacity>
+            <ChatRoomRow key={item.id} item={item} navigation={navigation} />
           ))}
         </ScrollView>
       )}
     </View>
+  );
+}
+
+function ChatRoomRow({item, navigation}: {item: ChatRoom; navigation: any}) {
+  const profileImageUri = resolveProfileImageUrl(item.profileImage);
+
+  return (
+    <TouchableOpacity
+      style={styles.chatItem}
+      onPress={() =>
+        navigation.navigate('ChatDetail', {
+          roomId: item.id,
+          name: item.name,
+          productTitle: item.productTitle,
+          productImageUrl: item.productImageUrl,
+          productPrice: item.productPrice,
+          profileImage: item.profileImage,
+        })
+      }
+      activeOpacity={0.7}>
+      <View style={styles.avatar}>
+        {profileImageUri ? (
+          <Image
+            source={{uri: profileImageUri}}
+            style={styles.avatarPhoto}
+            resizeMode="cover"
+          />
+        ) : (
+          <Ionicons name="leaf-outline" size={30} color="#7FA56F" />
+        )}
+      </View>
+
+      <View style={styles.chatInfo}>
+        <Text style={styles.userName}>{item.name}</Text>
+
+        <Text style={styles.lastMessage} numberOfLines={1}>
+          {item.lastMessage || '새 대화를 시작해보세요.'}
+        </Text>
+      </View>
+    </TouchableOpacity>
   );
 }

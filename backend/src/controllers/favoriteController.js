@@ -5,7 +5,7 @@ const productInclude = [
   {
     model: User,
     as: 'seller',
-    attributes: ['id', 'name', 'profileImage'],
+    attributes: ['id', 'name', 'nickname', 'profileImage'],
   },
   {
     model: ProductImage,

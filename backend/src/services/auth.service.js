@@ -1,6 +1,23 @@
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { User } = require('../models');
+const fs = require('fs/promises');
+const path = require('path');
+const { Op } = require('sequelize');
+const {
+  sequelize,
+  Attendance,
+  ChatMessage,
+  ChatRoom,
+  CreditTransaction,
+  Favorite,
+  MissionSubmission,
+  Product,
+  ProductImage,
+  User,
+  UserBadge,
+} = require('../models');
+
+const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // JWT 토큰 생성
@@ -24,7 +41,87 @@ const generateTokens = (userId) => {
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // 회원가입 (일반)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-const register = async ({ email, password, name }) => {
+const toSafeUser = (user) => ({
+  id: user.id,
+  email: user.email,
+  name: user.name,
+  nickname: user.nickname || user.name,
+  studentId: user.studentId,
+  department: user.department,
+  profileImage: user.profileImage,
+  provider: user.provider,
+  credits: user.credits,
+  createdAt: user.createdAt,
+});
+
+const getDisplayName = user => user?.nickname || user?.name || user?.email;
+
+const resolveUploadPath = (imageUrl) => {
+  if (!imageUrl || !String(imageUrl).startsWith('/uploads/')) {
+    return null;
+  }
+
+  const relativePath = String(imageUrl).replace(/^\/uploads\//, '');
+  const filePath = path.normalize(path.join(UPLOAD_ROOT, relativePath));
+
+  if (!filePath.startsWith(UPLOAD_ROOT)) {
+    return null;
+  }
+
+  return filePath;
+};
+
+const deleteUploadFiles = async (filePaths) => {
+  await Promise.all(
+    [...filePaths].map(async filePath => {
+      try {
+        await fs.unlink(filePath);
+      } catch (err) {
+        if (err.code !== 'ENOENT') {
+          console.warn('업로드 파일 삭제 실패:', filePath, err.message);
+        }
+      }
+    }),
+  );
+};
+
+const register = async ({
+  email,
+  password,
+  name,
+  nickname,
+  studentId,
+  department,
+}) => {
+  const trimmedName = String(name || '').trim();
+  const trimmedNickname = String(nickname || '').trim();
+  const trimmedStudentId = String(studentId || '').trim();
+  const trimmedDepartment = String(department || '').trim();
+
+  if (!trimmedName) {
+    const error = new Error('이름을 입력해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (!trimmedNickname) {
+    const error = new Error('닉네임을 입력해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (!trimmedStudentId) {
+    const error = new Error('학번을 입력해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (!trimmedDepartment) {
+    const error = new Error('학과를 선택해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
   // 1. 이메일 중복 체크
   const existingUser = await User.findOne({ where: { email } });
   if (existingUser) {
@@ -40,7 +137,10 @@ const register = async ({ email, password, name }) => {
   const user = await User.create({
     email,
     password: hashedPassword,
-    name,
+    name: trimmedName,
+    nickname: trimmedNickname,
+    studentId: trimmedStudentId,
+    department: trimmedDepartment,
     provider: 'LOCAL',
   });
 
@@ -51,16 +151,7 @@ const register = async ({ email, password, name }) => {
   await user.update({ refreshToken });
 
   // 6. 민감 정보 제거 후 반환
-  const safeUser = {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    profileImage: user.profileImage,
-    provider: user.provider,
-    createdAt: user.createdAt,
-  };
-
-  return { user: safeUser, accessToken, refreshToken };
+  return { user: toSafeUser(user), accessToken, refreshToken };
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -89,16 +180,7 @@ const login = async ({ email, password }) => {
   // 4. refreshToken 저장
   await user.update({ refreshToken });
 
-  const safeUser = {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    profileImage: user.profileImage,
-    provider: user.provider,
-    createdAt: user.createdAt,
-  };
-
-  return { user: safeUser, accessToken, refreshToken };
+  return { user: toSafeUser(user), accessToken, refreshToken };
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -110,12 +192,18 @@ const socialLogin = async ({ email, name, profileImage, provider, providerId }) 
 
   if (user) {
     // 기존 유저 → 소셜 정보 업데이트
-    await user.update({ provider, providerId, profileImage });
+    await user.update({
+      provider,
+      providerId,
+      profileImage,
+      nickname: user.nickname || name || user.name,
+    });
   } else {
     // 신규 유저 생성
     user = await User.create({
       email,
       name,
+      nickname: name,
       profileImage,
       provider,
       providerId,
@@ -128,16 +216,7 @@ const socialLogin = async ({ email, name, profileImage, provider, providerId }) 
   // 3. refreshToken 저장
   await user.update({ refreshToken });
 
-  const safeUser = {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    profileImage: user.profileImage,
-    provider: user.provider,
-    createdAt: user.createdAt,
-  };
-
-  return { user: safeUser, accessToken, refreshToken };
+  return { user: toSafeUser(user), accessToken, refreshToken };
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -192,6 +271,237 @@ const getMe = async (userId) => {
   return user;
 };
 
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 내 정보 수정
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const updateMe = async (userId, {
+  name,
+  nickname,
+  studentId,
+  department,
+  profileImage,
+}) => {
+  const user = await User.findByPk(userId);
+  if (!user) {
+    const error = new Error('유저를 찾을 수 없습니다.');
+    error.status = 404;
+    throw error;
+  }
+
+  const updatePayload = {};
+
+  if (name !== undefined) {
+    const trimmedName = String(name).trim();
+
+    if (!trimmedName) {
+      const error = new Error('이름을 입력해주세요.');
+      error.status = 400;
+      throw error;
+    }
+
+    updatePayload.name = trimmedName;
+  }
+
+  if (nickname !== undefined) {
+    const trimmedNickname = String(nickname).trim();
+
+    if (!trimmedNickname) {
+      const error = new Error('닉네임을 입력해주세요.');
+      error.status = 400;
+      throw error;
+    }
+
+    updatePayload.nickname = trimmedNickname;
+  }
+
+  if (studentId !== undefined) {
+    updatePayload.studentId = String(studentId || '').trim() || null;
+  }
+
+  if (department !== undefined) {
+    const trimmedDepartment = String(department).trim();
+
+    if (!trimmedDepartment) {
+      const error = new Error('학과를 선택해주세요.');
+      error.status = 400;
+      throw error;
+    }
+
+    updatePayload.department = trimmedDepartment;
+  }
+
+  if (profileImage !== undefined) {
+    updatePayload.profileImage = profileImage || null;
+  }
+
+  await user.update(updatePayload);
+
+  return toSafeUser(user);
+};
+
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// 회원 탈퇴
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+const deleteAccount = async (userId) => {
+  const uploadFilesToDelete = new Set();
+
+  await sequelize.transaction(async (transaction) => {
+    const user = await User.scope('withSensitive').findByPk(userId, {
+      transaction,
+    });
+
+    if (!user) {
+      const error = new Error('유저를 찾을 수 없습니다.');
+      error.status = 404;
+      throw error;
+    }
+
+    const profileImagePath = resolveUploadPath(user.profileImage);
+
+    if (profileImagePath) {
+      uploadFilesToDelete.add(profileImagePath);
+    }
+
+    const products = await Product.findAll({
+      where: { sellerId: userId },
+      attributes: ['id', 'imageUrl'],
+      transaction,
+    });
+    const productIds = products.map(product => product.id);
+
+    products.forEach(product => {
+      const productImagePath = resolveUploadPath(product.imageUrl);
+
+      if (productImagePath) {
+        uploadFilesToDelete.add(productImagePath);
+      }
+    });
+
+    if (productIds.length > 0) {
+      const productImages = await ProductImage.findAll({
+        where: {
+          productId: {
+            [Op.in]: productIds,
+          },
+        },
+        attributes: ['imageUrl'],
+        transaction,
+      });
+
+      productImages.forEach(image => {
+        const imagePath = resolveUploadPath(image.imageUrl);
+
+        if (imagePath) {
+          uploadFilesToDelete.add(imagePath);
+        }
+      });
+    }
+
+    const roomWhere = {
+      [Op.or]: [
+        { buyerId: userId },
+        { sellerId: userId },
+      ],
+    };
+
+    if (productIds.length > 0) {
+      roomWhere[Op.or].push({
+        productId: {
+          [Op.in]: productIds,
+        },
+      });
+    }
+
+    const chatRooms = await ChatRoom.findAll({
+      where: roomWhere,
+      attributes: ['id'],
+      transaction,
+    });
+    const roomIds = chatRooms.map(room => room.id);
+
+    const messageWhere = {
+      [Op.or]: [
+        { senderId: userId },
+      ],
+    };
+
+    if (roomIds.length > 0) {
+      messageWhere[Op.or].push({
+        roomId: {
+          [Op.in]: roomIds,
+        },
+      });
+    }
+
+    await ChatMessage.destroy({
+      where: messageWhere,
+      transaction,
+    });
+
+    if (roomIds.length > 0) {
+      await ChatRoom.destroy({
+        where: {
+          id: {
+            [Op.in]: roomIds,
+          },
+        },
+        transaction,
+      });
+    }
+
+    const favoriteWhere = {
+      [Op.or]: [
+        { userId },
+      ],
+    };
+
+    if (productIds.length > 0) {
+      favoriteWhere[Op.or].push({
+        productId: {
+          [Op.in]: productIds,
+        },
+      });
+    }
+
+    await Favorite.destroy({
+      where: favoriteWhere,
+      transaction,
+    });
+
+    if (productIds.length > 0) {
+      await ProductImage.destroy({
+        where: {
+          productId: {
+            [Op.in]: productIds,
+          },
+        },
+        transaction,
+      });
+
+      await Product.destroy({
+        where: {
+          id: {
+            [Op.in]: productIds,
+          },
+        },
+        transaction,
+      });
+    }
+
+    await Attendance.destroy({ where: { userId }, transaction });
+    await CreditTransaction.destroy({ where: { userId }, transaction });
+    await MissionSubmission.destroy({ where: { userId }, transaction });
+    await UserBadge.destroy({ where: { userId }, transaction });
+
+    await User.destroy({
+      where: { id: userId },
+      transaction,
+    });
+  });
+
+  await deleteUploadFiles(uploadFilesToDelete);
+};
+
 module.exports = {
   register,
   login,
@@ -199,4 +509,8 @@ module.exports = {
   refreshAccessToken,
   logout,
   getMe,
+  updateMe,
+  deleteAccount,
+  toSafeUser,
+  getDisplayName,
 };

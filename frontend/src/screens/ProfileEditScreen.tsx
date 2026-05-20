@@ -1,5 +1,7 @@
-import React, {useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import {
+  ActivityIndicator,
+  Image,
   Modal,
   KeyboardAvoidingView,
   Platform,
@@ -12,8 +14,11 @@ import {
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
+import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import {profileEditStyles as styles} from '../styles/ProfileEditScreenStyle';
 import {useAuth} from '../context/AuthContext';
+import {authApi, resolveProfileImageUrl} from '../api/authApi';
 
 // 학과 정보 추가 예정
 const DEPARTMENTS = [
@@ -29,45 +34,171 @@ const DEPARTMENTS = [
   '기타',
 ];
 
-// 지금은 백엔드 연동 전이라 예시 회원 데이터로 사용.
-// 나중에는 이 부분을 API 응답값으로 대체하면 됨.
-const mockUser = {
-  nickname: '나봉',
-  department: '컴퓨터공학과',
-  email: 'nabong@inha.edu',
-};
-
 type ModalType =
   | 'logoutConfirm'
   | 'logoutDone'
   | 'withdrawConfirm'
   | 'withdrawDone'
+  | 'profileDone'
+  | 'profileError'
   | null;
+
+type SelectedProfileImage = {
+  uri: string;
+  base64?: string;
+  mimeType?: string;
+  imageUrl?: string | null;
+};
 
 export function ProfileEditScreen() {
   const navigation = useNavigation<any>();
-  const {logout} = useAuth();
+  const {logout, userInfo} = useAuth();
 
-  const [nickname, setNickname] = useState(mockUser.nickname);
+  const [nickname, setNickname] = useState(
+    userInfo?.nickname || userInfo?.name || '',
+  );
+  const [email, setEmail] = useState(userInfo?.email || '');
+  const [profileImage, setProfileImage] = useState<SelectedProfileImage | null>(
+    userInfo?.profileImage
+      ? {
+          uri: resolveProfileImageUrl(userInfo.profileImage) || userInfo.profileImage,
+          imageUrl: userInfo.profileImage,
+        }
+      : null,
+  );
   const [selectedDepartment, setSelectedDepartment] = useState(
-    mockUser.department,
+    userInfo?.department || DEPARTMENTS[0],
   );
   const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
 
   const [modalType, setModalType] = useState<ModalType>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const user = await authApi.getMe();
+
+        setNickname(user.nickname || user.name);
+        setEmail(user.email);
+        setSelectedDepartment(user.department || DEPARTMENTS[0]);
+        setProfileImage(
+          user.profileImage
+            ? {
+                uri: resolveProfileImageUrl(user.profileImage) || user.profileImage,
+                imageUrl: user.profileImage,
+              }
+            : null,
+        );
+      } catch (err) {
+        console.warn('Fetch profile error:', err);
+      } finally {
+        setIsLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
 
   const closeModal = () => {
     setModalType(null);
   };
 
-  const handleProfileUpdate = () => {
-    // 나중에 여기서 회원 정보 수정 API 호출하면 됨.
-    // 예: updateProfile({nickname, department: selectedDepartment})
-    console.log('수정할 회원 정보:', {
-      nickname,
-      department: selectedDepartment,
-      email: mockUser.email,
+  const handlePickProfileImage = async () => {
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+
+    if (!permission.granted) {
+      setModalType('profileError');
+      return;
+    }
+
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.9,
     });
+
+    if (result.canceled || !result.assets?.[0]) {
+      return;
+    }
+
+    try {
+      const manipulatedImage = await ImageManipulator.manipulateAsync(
+        result.assets[0].uri,
+        [{resize: {width: 512}}],
+        {
+          compress: 0.85,
+          format: ImageManipulator.SaveFormat.JPEG,
+          base64: true,
+        },
+      );
+
+      if (!manipulatedImage.uri || !manipulatedImage.base64) {
+        setModalType('profileError');
+        return;
+      }
+
+      setProfileImage({
+        uri: manipulatedImage.uri,
+        base64: manipulatedImage.base64,
+        mimeType: 'image/jpeg',
+      });
+    } catch (err) {
+      console.warn('Pick profile image error:', err);
+      setModalType('profileError');
+    }
+  };
+
+  const handleProfileUpdate = async () => {
+    const trimmedNickname = nickname.trim();
+
+    if (!trimmedNickname || isSaving) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      let uploadedProfileImage = profileImage?.imageUrl || null;
+
+      if (profileImage?.base64 && profileImage.mimeType) {
+        const uploadedImage = await authApi.uploadProfileImage({
+          base64: profileImage.base64,
+          mimeType: profileImage.mimeType,
+        });
+
+        uploadedProfileImage = uploadedImage.imageUrl;
+      }
+
+      const updatedUser = await authApi.updateMe({
+        nickname: trimmedNickname,
+        department: selectedDepartment,
+        profileImage: uploadedProfileImage,
+      });
+
+      setNickname(updatedUser.nickname || updatedUser.name);
+      setEmail(updatedUser.email);
+      setSelectedDepartment(updatedUser.department || selectedDepartment);
+      setProfileImage(
+        updatedUser.profileImage
+          ? {
+              uri:
+                resolveProfileImageUrl(updatedUser.profileImage) ||
+                updatedUser.profileImage,
+              imageUrl: updatedUser.profileImage,
+            }
+          : null,
+      );
+      setModalType('profileDone');
+    } catch (err) {
+      console.warn('Update profile error:', err);
+      setModalType('profileError');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleLogoutConfirm = () => {
@@ -75,9 +206,21 @@ export function ProfileEditScreen() {
     setModalType('logoutDone');
   };
 
-  const handleWithdrawConfirm = () => {
-    // 나중에 여기서 회원 탈퇴 API 호출 가능
-    setModalType('withdrawDone');
+  const handleWithdrawConfirm = async () => {
+    if (isWithdrawing) {
+      return;
+    }
+
+    try {
+      setIsWithdrawing(true);
+      await authApi.deleteMe();
+      setModalType('withdrawDone');
+    } catch (err) {
+      console.warn('Withdraw error:', err);
+      setModalType('profileError');
+    } finally {
+      setIsWithdrawing(false);
+    }
   };
 
   const handleDone = async () => {
@@ -110,17 +253,37 @@ export function ProfileEditScreen() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}>
         <View style={styles.editCard}>
-          <View style={styles.profileImageArea}>
+          {isLoadingProfile ? (
+            <View style={styles.loadingRow}>
+              <ActivityIndicator size="small" color="#79AD6F" />
+              <Text style={styles.loadingText}>회원 정보를 불러오는 중...</Text>
+            </View>
+          ) : null}
+
+          <Pressable
+            style={styles.profileImageArea}
+            onPress={handlePickProfileImage}>
             <View style={styles.profileImageOuter}>
               <View style={styles.profileImageInner}>
-                <Text style={styles.profileEmoji}>🙂</Text>
+                {profileImage?.uri ? (
+                  <Image
+                    source={{uri: profileImage.uri}}
+                    style={styles.profilePhoto}
+                    resizeMode="cover"
+                  />
+                ) : (
+                  <Ionicons name="leaf-outline" size={46} color="#7FA56F" />
+                )}
               </View>
             </View>
 
-            <Pressable style={styles.cameraButton}>
+            <Pressable
+              style={styles.cameraButton}
+              hitSlop={8}
+              onPress={handlePickProfileImage}>
               <Ionicons name="camera-outline" size={15} color="#555555" />
             </Pressable>
-          </View>
+          </Pressable>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>닉네임</Text>
@@ -148,13 +311,21 @@ export function ProfileEditScreen() {
             <Text style={styles.label}>이메일</Text>
             <TextInput
               style={[styles.input, styles.disabledInput]}
-              value={mockUser.email}
+              value={email}
               editable={false}
             />
           </View>
 
-          <Pressable style={styles.submitButton} onPress={handleProfileUpdate}>
-            <Text style={styles.submitButtonText}>회원 정보 수정하기</Text>
+          <Pressable
+            style={[
+              styles.submitButton,
+              isSaving && styles.submitButtonDisabled,
+            ]}
+            disabled={isSaving}
+            onPress={handleProfileUpdate}>
+            <Text style={styles.submitButtonText}>
+              {isSaving ? '저장 중...' : '회원 정보 수정하기'}
+            </Text>
           </Pressable>
         </View>
 
@@ -204,9 +375,9 @@ export function ProfileEditScreen() {
 
       <ConfirmModal
         visible={modalType === 'withdrawConfirm'}
-        title="정말 탈퇴하시겠어요?"
-        description="탈퇴 시 모든 정보는 복구되지 않습니다."
-        confirmText="확인"
+        title={isWithdrawing ? '탈퇴 처리 중...' : '정말 탈퇴하시겠어요?'}
+        description="탈퇴 시 계정 정보와 등록한 나눔 물품이 모두 삭제됩니다."
+        confirmText={isWithdrawing ? '처리 중' : '확인'}
         cancelText="취소"
         onCancel={closeModal}
         onConfirm={handleWithdrawConfirm}
@@ -216,6 +387,18 @@ export function ProfileEditScreen() {
         visible={modalType === 'withdrawDone'}
         title="탈퇴되었습니다."
         onConfirm={handleDone}
+      />
+
+      <DoneModal
+        visible={modalType === 'profileDone'}
+        title="회원 정보가 수정되었습니다."
+        onConfirm={closeModal}
+      />
+
+      <DoneModal
+        visible={modalType === 'profileError'}
+        title="프로필 수정에 실패했어요."
+        onConfirm={closeModal}
       />
     </SafeAreaView>
   );

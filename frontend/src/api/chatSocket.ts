@@ -5,7 +5,9 @@ import {tokenStorage} from '../storage/tokenStorage';
 export type ChatRoom = {
   id: string;
   name: string;
+  profileImage?: string | null;
   productTitle: string;
+  productImageUrl?: string | null;
   productPrice: string;
   lastMessage: string;
   color: string;
@@ -18,21 +20,24 @@ export type ChatMessage = {
   text: string;
   senderId: string;
   senderName: string;
+  senderProfileImage?: string | null;
   createdAt: string;
 };
 
 let socket: Socket | null = null;
+let socketAccessToken: string | null = null;
 
 const getSocketUrl = () => API_CONFIG.BASE_URL.replace(/\/api\/?$/, '');
 
 export const getChatSocket = async () => {
   const accessToken = await tokenStorage.getAccessToken();
 
-  if (socket?.connected) {
+  if (socket?.connected && socketAccessToken === accessToken) {
     return socket;
   }
 
   socket?.disconnect();
+  socketAccessToken = accessToken || null;
 
   socket = io(getSocketUrl(), {
     auth: {
@@ -47,4 +52,5 @@ export const getChatSocket = async () => {
 export const disconnectChatSocket = () => {
   socket?.disconnect();
   socket = null;
+  socketAccessToken = null;
 };

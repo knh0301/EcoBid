@@ -62,6 +62,9 @@ export type UserProfile = {
   id: number;
   email: string;
   name: string;
+  nickname?: string | null;
+  studentId?: string | null;
+  department?: string | null;
   profileImage?: string | null;
   credits?: number;
   createdAt?: string;
@@ -74,6 +77,34 @@ type AuthResponse = {
   refreshToken: string;
 };
 
+type ApiResponse<T> = {
+  success: boolean;
+  data: T;
+  message?: string;
+};
+
+const getApiOrigin = () => API_CONFIG.BASE_URL.replace(/\/api\/?$/, '');
+
+export const resolveProfileImageUrl = (profileImage?: string | null) => {
+  if (!profileImage) {
+    return undefined;
+  }
+
+  if (
+    profileImage.startsWith('http://') ||
+    profileImage.startsWith('https://') ||
+    profileImage.startsWith('file://')
+  ) {
+    return profileImage;
+  }
+
+  if (profileImage.startsWith('/')) {
+    return `${getApiOrigin()}${profileImage}`;
+  }
+
+  return profileImage;
+};
+
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Auth API 함수들
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -83,6 +114,9 @@ export const authApi = {
     email: string;
     password: string;
     name: string;
+    nickname: string;
+    studentId: string;
+    department: string;
   }) => {
     const {data} = await api.post('/auth/register', payload);
     return data.data;
@@ -122,11 +156,42 @@ export const authApi = {
     return data.data.user;
   },
 
+  updateMe: async (payload: {
+    name?: string;
+    nickname?: string;
+    studentId?: string | null;
+    department?: string | null;
+    profileImage?: string | null;
+  }): Promise<UserProfile> => {
+    const {data} = await api.patch<ApiResponse<{user: UserProfile}>>(
+      '/auth/me',
+      payload,
+    );
+
+    return data.data.user;
+  },
+
+  uploadProfileImage: async (payload: {
+    base64: string;
+    mimeType: string;
+  }): Promise<{imageUrl: string}> => {
+    const {data} = await api.post<ApiResponse<{imageUrl: string}>>(
+      '/auth/me/profile-image',
+      payload,
+    );
+
+    return data.data;
+  },
+
   // 로그아웃
   logout: async () => {
     await api.post('/auth/logout');
 
     await tokenStorage.clearTokens();
+  },
+
+  deleteMe: async () => {
+    await api.delete('/auth/me');
   },
 
   // 토큰 갱신

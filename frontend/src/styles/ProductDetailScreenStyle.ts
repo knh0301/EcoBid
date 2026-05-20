@@ -75,14 +75,18 @@ export const productDetailStyles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: colors.lightGreenBackground,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 8,
+    overflow: 'hidden',
   },
 
-  avatarText: {
-    fontSize: 20,
+  avatarPhoto: {
+    width: '100%',
+    height: '100%',
   },
 
   sellerName: {

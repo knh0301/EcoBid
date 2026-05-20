@@ -24,6 +24,38 @@ const ensureProductSchema = async () => {
   }
 };
 
+const ensureUserSchema = async () => {
+  const queryInterface = sequelize.getQueryInterface();
+  const userColumns = await queryInterface.describeTable('users');
+
+  if (!userColumns.nickname) {
+    await queryInterface.addColumn('users', 'nickname', {
+      type: DataTypes.STRING,
+      allowNull: true,
+    });
+
+    await sequelize.query(`
+      UPDATE users
+      SET nickname = name
+      WHERE nickname IS NULL OR nickname = ''
+    `);
+  }
+
+  if (!userColumns.student_id) {
+    await queryInterface.addColumn('users', 'student_id', {
+      type: DataTypes.STRING,
+      allowNull: true,
+    });
+  }
+
+  if (!userColumns.department) {
+    await queryInterface.addColumn('users', 'department', {
+      type: DataTypes.STRING,
+      allowNull: true,
+    });
+  }
+};
+
 const ensureAttendanceSchema = async () => {
   const [tables] = await sequelize.query(`
     SELECT sql
@@ -249,6 +281,7 @@ const syncDatabase = async () => {
     // force: false → 기존 테이블 유지
     // alter: true  → 스키마 변경 사항 자동 반영
     await sequelize.sync({ alter: false });
+    await ensureUserSchema();
     await ensureProductSchema();
     await ensureAttendanceSchema();
     await ensureMissionSubmissionSchema();

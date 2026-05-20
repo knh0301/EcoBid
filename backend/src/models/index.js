@@ -194,6 +194,37 @@ const ensureUserBadgeSchema = async () => {
   }
 };
 
+const ensureChatRoomSchema = async () => {
+  const queryInterface = sequelize.getQueryInterface();
+  const columns = await queryInterface.describeTable('chat_rooms');
+
+  if (!columns.buyer_last_read_at) {
+    await queryInterface.addColumn('chat_rooms', 'buyer_last_read_at', {
+      type: DataTypes.DATE,
+      allowNull: true,
+    });
+
+    await sequelize.query(`
+      UPDATE chat_rooms
+      SET buyer_last_read_at = COALESCE(last_message_at, updated_at, created_at)
+      WHERE buyer_last_read_at IS NULL
+    `);
+  }
+
+  if (!columns.seller_last_read_at) {
+    await queryInterface.addColumn('chat_rooms', 'seller_last_read_at', {
+      type: DataTypes.DATE,
+      allowNull: true,
+    });
+
+    await sequelize.query(`
+      UPDATE chat_rooms
+      SET seller_last_read_at = COALESCE(last_message_at, updated_at, created_at)
+      WHERE seller_last_read_at IS NULL
+    `);
+  }
+};
+
 // ── 모델 간 관계 정의 ──
 
 // User 관계
@@ -286,6 +317,7 @@ const syncDatabase = async () => {
     await ensureAttendanceSchema();
     await ensureMissionSubmissionSchema();
     await ensureUserBadgeSchema();
+    await ensureChatRoomSchema();
     console.log('✅ DB 동기화 완료');
   } catch (error) {
     console.error('❌ DB 연결 실패:', error);

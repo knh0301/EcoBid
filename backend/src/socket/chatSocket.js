@@ -4,6 +4,40 @@ const { Op } = require('sequelize');
 
 const getDisplayName = user => user?.nickname || user?.name || user?.email || '알 수 없음';
 
+const getLastReadAt = (room, userId) => {
+  const isBuyer = String(room.buyerId) === String(userId);
+  return isBuyer ? room.buyerLastReadAt : room.sellerLastReadAt;
+};
+
+const getUnreadCount = (room, userId) => {
+  const lastReadAt = getLastReadAt(room, userId) || new Date(0);
+
+  return ChatMessage.count({
+    where: {
+      roomId: room.id,
+      senderId: {
+        [Op.ne]: userId,
+      },
+      createdAt: {
+        [Op.gt]: lastReadAt,
+      },
+    },
+  });
+};
+
+const markRoomAsRead = async (room, userId) => {
+  const readAt = new Date();
+
+  if (String(room.buyerId) === String(userId)) {
+    await room.update({buyerLastReadAt: readAt});
+    return;
+  }
+
+  if (String(room.sellerId) === String(userId)) {
+    await room.update({sellerLastReadAt: readAt});
+  }
+};
+
 /**
  * 특정 사용자의 DB 채팅방 목록을 조회하고 프론트엔드가 요구하는 구조로 가공합니다.
  */
@@ -38,9 +72,10 @@ const getUserRooms = async (userId) => {
     order: [['lastMessageAt', 'DESC']]
   });
 
-  return chatRooms.map(room => {
+  return Promise.all(chatRooms.map(async room => {
     const isBuyer = String(room.buyerId) === String(userId);
     const otherUser = isBuyer ? room.seller : room.buyer;
+    const unreadCount = await getUnreadCount(room, userId);
 
     return {
       id: room.id,
@@ -50,10 +85,12 @@ const getUserRooms = async (userId) => {
       productImageUrl: room.product ? room.product.imageUrl : null,
       productPrice: room.product ? `${room.product.creditPrice.toLocaleString()} 크레딧` : '0 크레딧',
       lastMessage: room.lastMessage || '',
+      unreadCount,
+      hasUnread: unreadCount > 0,
       color: isBuyer ? '#A5C9A1' : '#FFD15B', // 구매자는 녹색 계열, 판매자는 황색 계열 아바타 배경
       icon: 'chatbubble-outline',
     };
-  });
+  }));
 };
 
 /**
@@ -169,6 +206,8 @@ const initializeChatSocket = io => {
           return;
         }
 
+        await markRoomAsRead(room, userId);
+
         // 소켓 방 참여
         socket.join(String(roomId));
 
@@ -200,6 +239,8 @@ const initializeChatSocket = io => {
           productImageUrl: room.product ? room.product.imageUrl : null,
           productPrice: room.product ? `${room.product.creditPrice.toLocaleString()} 크레딧` : '0 크레딧',
           lastMessage: room.lastMessage || '',
+          unreadCount: 0,
+          hasUnread: false,
           color: isBuyer ? '#A5C9A1' : '#FFD15B',
           icon: 'chatbubble-outline',
         };
@@ -210,8 +251,43 @@ const initializeChatSocket = io => {
           messages: formattedMessages,
         });
 
+        await emitUserRoomsUpdate(userId);
+
       } catch (err) {
         console.error('Error on chat:join:', err);
+        callback?.({success: false, message: '서버 내부 오류가 발생했습니다.'});
+      }
+    });
+
+    socket.on('chat:read', async ({roomId}, callback) => {
+      if (!roomId) {
+        callback?.({success: false, message: 'roomId가 필요합니다.'});
+        return;
+      }
+
+      if (String(userId).startsWith('guest-')) {
+        callback?.({success: false, message: '로그인이 필요합니다.'});
+        return;
+      }
+
+      try {
+        const room = await ChatRoom.findByPk(roomId);
+        if (!room) {
+          callback?.({success: false, message: '존재하지 않는 채팅방입니다.'});
+          return;
+        }
+
+        if (String(room.buyerId) !== String(userId) && String(room.sellerId) !== String(userId)) {
+          callback?.({success: false, message: '이 채팅방에 접근할 권한이 없습니다.'});
+          return;
+        }
+
+        await markRoomAsRead(room, userId);
+        await emitUserRoomsUpdate(userId);
+
+        callback?.({success: true});
+      } catch (err) {
+        console.error('Error on chat:read:', err);
         callback?.({success: false, message: '서버 내부 오류가 발생했습니다.'});
       }
     });
@@ -251,9 +327,13 @@ const initializeChatSocket = io => {
         });
 
         // B. 대화방 마지막 메시지 요약 정보 갱신
+        const isBuyerSender = String(room.buyerId) === String(userId);
         await room.update({
           lastMessage: trimmedText,
-          lastMessageAt: newMessage.createdAt
+          lastMessageAt: newMessage.createdAt,
+          ...(isBuyerSender
+            ? {buyerLastReadAt: newMessage.createdAt}
+            : {sellerLastReadAt: newMessage.createdAt}),
         });
 
         // C. 프론트엔드가 기대하는 양식에 맞추어 메시지 가공

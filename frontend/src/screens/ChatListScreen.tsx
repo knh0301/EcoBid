@@ -118,12 +118,18 @@ function ChatRoomRow({item, navigation}: {item: ChatRoom; navigation: any}) {
       </View>
 
       <View style={styles.chatInfo}>
-        <Text style={styles.userName}>{item.name}</Text>
+        <Text style={styles.userName} numberOfLines={1}>
+          {item.name}
+        </Text>
 
-        <Text style={styles.lastMessage} numberOfLines={1}>
+        <Text
+          style={[styles.lastMessage, item.hasUnread && styles.unreadLastMessage]}
+          numberOfLines={1}>
           {item.lastMessage || '새 대화를 시작해보세요.'}
         </Text>
       </View>
+
+      {item.hasUnread ? <View style={styles.unreadDot} /> : null}
     </TouchableOpacity>
   );
 }

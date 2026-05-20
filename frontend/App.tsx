@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useState} from 'react';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import {createNativeStackNavigator} from '@react-navigation/native-stack';
@@ -24,11 +24,51 @@ import {ProfileEditScreen} from './src/screens/ProfileEditScreen';
 import {MySharedItemsScreen} from './src/screens/MySharedItemsScreen';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
 import {useAuth} from './src/context/AuthContext';
+import {ChatRoom, getChatSocket} from './src/api/chatSocket';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
 
 function TabNavigator() {
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  useEffect(() => {
+    let isActive = true;
+    let activeSocket: Awaited<ReturnType<typeof getChatSocket>> | null = null;
+
+    const handleRoomsUpdate = (rooms: ChatRoom[]) => {
+      if (!isActive) {
+        return;
+      }
+
+      const nextUnreadCount = rooms.reduce(
+        (total, room) => total + (room.unreadCount || (room.hasUnread ? 1 : 0)),
+        0,
+      );
+
+      setUnreadChatCount(nextUnreadCount);
+    };
+
+    getChatSocket()
+      .then(socket => {
+        if (!isActive) {
+          return;
+        }
+
+        activeSocket = socket;
+        socket.on('chat:rooms:update', handleRoomsUpdate);
+        socket.emit('chat:rooms', handleRoomsUpdate);
+      })
+      .catch(error => {
+        console.warn('Chat unread badge connection error:', error);
+      });
+
+    return () => {
+      isActive = false;
+      activeSocket?.off('chat:rooms:update', handleRoomsUpdate);
+    };
+  }, []);
+
   return (
     <Tab.Navigator
       screenOptions={({route}) => ({
@@ -61,7 +101,20 @@ function TabNavigator() {
       <Tab.Screen name="Home" component={HomeScreen} options={{tabBarLabel: '홈'}} />
       <Tab.Screen name="Map" component={MapScreen} options={{tabBarLabel: '지도'}} />
       <Tab.Screen name="Mission" component={MissionScreen} options={{tabBarLabel: '에코'}} />
-      <Tab.Screen name="Chat" component={ChatListScreen} options={{tabBarLabel: '채팅'}} />
+      <Tab.Screen
+        name="Chat"
+        component={ChatListScreen}
+        options={{
+          tabBarLabel: '채팅',
+          tabBarBadge: unreadChatCount > 0 ? unreadChatCount : undefined,
+          tabBarBadgeStyle: {
+            backgroundColor: '#E85D4F',
+            color: '#FFFFFF',
+            fontSize: 11,
+            fontWeight: '800',
+          },
+        }}
+      />
       <Tab.Screen name="Profile" component={MyPageScreen} options={{tabBarLabel: '마이'}} />
     </Tab.Navigator>
   );

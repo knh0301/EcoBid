@@ -181,6 +181,7 @@ export const chatDetailStyles = StyleSheet.create({
     backgroundColor: colors.inputBackground,
     borderRadius: 25,
     paddingHorizontal: 20,
+    paddingVertical: 0,
     fontSize: 16,
     marginRight: 10,
     borderWidth: 1,
@@ -196,9 +197,7 @@ export const chatDetailStyles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  sendButtonText: {
-    color: colors.textLight,
-    fontSize: 14,
-    fontWeight: 'bold',
+  sendButtonDisabled: {
+    opacity: 0.6,
   },
 });

@@ -47,6 +47,7 @@ const getUserRooms = async (userId) => {
       name: getDisplayName(otherUser),
       profileImage: otherUser ? otherUser.profileImage : null,
       productTitle: room.product ? room.product.title : '삭제된 상품',
+      productImageUrl: room.product ? room.product.imageUrl : null,
       productPrice: room.product ? `${room.product.creditPrice.toLocaleString()} 크레딧` : '0 크레딧',
       lastMessage: room.lastMessage || '',
       color: isBuyer ? '#A5C9A1' : '#FFD15B', // 구매자는 녹색 계열, 판매자는 황색 계열 아바타 배경
@@ -196,6 +197,7 @@ const initializeChatSocket = io => {
           name: getDisplayName(otherUser),
           profileImage: otherUser ? otherUser.profileImage : null,
           productTitle: room.product ? room.product.title : '삭제된 상품',
+          productImageUrl: room.product ? room.product.imageUrl : null,
           productPrice: room.product ? `${room.product.creditPrice.toLocaleString()} 크레딧` : '0 크레딧',
           lastMessage: room.lastMessage || '',
           color: isBuyer ? '#A5C9A1' : '#FFD15B',

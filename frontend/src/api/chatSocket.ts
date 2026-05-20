@@ -7,6 +7,7 @@ export type ChatRoom = {
   name: string;
   profileImage?: string | null;
   productTitle: string;
+  productImageUrl?: string | null;
   productPrice: string;
   lastMessage: string;
   color: string;

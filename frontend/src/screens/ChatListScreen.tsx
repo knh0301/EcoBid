@@ -99,6 +99,7 @@ function ChatRoomRow({item, navigation}: {item: ChatRoom; navigation: any}) {
           roomId: item.id,
           name: item.name,
           productTitle: item.productTitle,
+          productImageUrl: item.productImageUrl,
           productPrice: item.productPrice,
           profileImage: item.profileImage,
         })

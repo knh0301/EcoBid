@@ -15,12 +15,14 @@ import {ChatMessage, ChatRoom, getChatSocket} from '../api/chatSocket';
 import {useAuth} from '../context/AuthContext';
 import {chatDetailStyles as styles} from '../styles/ChatDetailScreenStyle';
 import {resolveProfileImageUrl} from '../api/authApi';
+import {resolveProductImageUrl} from '../api/products';
 
 export function ChatDetailScreen({navigation, route}: any) {
   const {
     roomId,
     name = '채팅',
     productTitle = '나눔 물품',
+    productImageUrl = null,
     productPrice = '크레딧 상담',
     profileImage = null,
   } = route.params || {};
@@ -136,9 +138,11 @@ export function ChatDetailScreen({navigation, route}: any) {
     name,
     profileImage,
     productTitle,
+    productImageUrl,
     productPrice,
   };
   const displayProfileImageUri = resolveProfileImageUrl(displayRoom.profileImage);
+  const displayProductImageUri = resolveProductImageUrl(displayRoom.productImageUrl);
 
   return (
     <View
@@ -176,7 +180,15 @@ export function ChatDetailScreen({navigation, route}: any) {
 
       <View style={styles.productBar}>
         <View style={styles.productImagePlaceholder}>
-          <Ionicons name="bulb-outline" size={30} color="#666" />
+          {displayProductImageUri ? (
+            <Image
+              source={{uri: displayProductImageUri}}
+              style={styles.productImage}
+              resizeMode="cover"
+            />
+          ) : (
+            <Ionicons name="bulb-outline" size={30} color="#666" />
+          )}
         </View>
 
         <View style={styles.productInfo}>

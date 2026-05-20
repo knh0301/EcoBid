@@ -70,6 +70,12 @@ export const chatDetailStyles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 15,
+    overflow: 'hidden',
+  },
+
+  productImage: {
+    width: '100%',
+    height: '100%',
   },
 
   productInfo: {

@@ -38,11 +38,11 @@ export function ChatDetailScreen({navigation, route}: any) {
 
   useEffect(() => {
     if (!roomId) {
-    console.warn('ChatDetailScreen: roomId가 없습니다.');
-    navigation.goBack();
-    return;
+      console.warn('ChatDetailScreen: roomId가 없습니다.');
+      navigation.goBack();
+      return;
     }
-  
+
     let isMounted = true;
     let activeSocket: Awaited<ReturnType<typeof getChatSocket>> | null = null;
 
@@ -58,6 +58,10 @@ export function ChatDetailScreen({navigation, route}: any) {
 
         return [...prev, nextMessage];
       });
+
+      if (String(nextMessage.senderId) !== String(userInfo?.id || '')) {
+        activeSocket?.emit('chat:read', {roomId});
+      }
     };
 
     getChatSocket()
@@ -93,7 +97,7 @@ export function ChatDetailScreen({navigation, route}: any) {
       isMounted = false;
       activeSocket?.off('chat:message', handleMessage);
     };
-  }, [roomId]);
+  }, [navigation, roomId, userInfo?.id]);
 
   useEffect(() => {
     requestAnimationFrame(() => {
@@ -262,18 +266,20 @@ export function ChatDetailScreen({navigation, route}: any) {
             autoCapitalize="none"
             autoCorrect={false}
             blurOnSubmit={false}
-            multiline
-            textAlignVertical="center"
+            returnKeyType="send"
+            onSubmitEditing={handleSend}
           />
 
           <TouchableOpacity
-            style={styles.sendButton}
+            style={[styles.sendButton, isSending && styles.sendButtonDisabled]}
             activeOpacity={0.8}
             disabled={isSending}
             onPress={handleSend}>
-            <Text style={styles.sendButtonText}>
-              {isSending ? '...' : '전송'}
-            </Text>
+            <Ionicons
+              name={isSending ? 'hourglass-outline' : 'send'}
+              size={20}
+              color="#FFFFFF"
+            />
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

@@ -10,6 +10,8 @@ export type ChatRoom = {
   productImageUrl?: string | null;
   productPrice: string;
   lastMessage: string;
+  unreadCount?: number;
+  hasUnread?: boolean;
   color: string;
   icon: string;
 };

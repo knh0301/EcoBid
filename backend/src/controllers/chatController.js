@@ -4,6 +4,40 @@ const { evaluateAndAwardBadges } = require('../services/badge.service');
 
 const getDisplayName = user => user?.nickname || user?.name || '알 수 없음';
 
+const getLastReadAt = (room, userId) => {
+  const isBuyer = String(room.buyerId) === String(userId);
+  return isBuyer ? room.buyerLastReadAt : room.sellerLastReadAt;
+};
+
+const getUnreadCount = (room, userId) => {
+  const lastReadAt = getLastReadAt(room, userId) || new Date(0);
+
+  return ChatMessage.count({
+    where: {
+      roomId: room.id,
+      senderId: {
+        [Op.ne]: userId,
+      },
+      createdAt: {
+        [Op.gt]: lastReadAt,
+      },
+    },
+  });
+};
+
+const markRoomAsRead = async (room, userId) => {
+  const readAt = new Date();
+
+  if (String(room.buyerId) === String(userId)) {
+    await room.update({buyerLastReadAt: readAt});
+    return;
+  }
+
+  if (String(room.sellerId) === String(userId)) {
+    await room.update({sellerLastReadAt: readAt});
+  }
+};
+
 /**
  * 채팅방 생성 또는 기존 채팅방 반환
  * POST /api/chats/rooms
@@ -74,6 +108,8 @@ exports.createOrGetRoom = async (req, res, next) => {
         sellerId,
         lastMessage: '',
         lastMessageAt: new Date(),
+        buyerLastReadAt: new Date(),
+        sellerLastReadAt: new Date(),
       });
       createdNewRoom = true;
 
@@ -147,17 +183,21 @@ exports.getRooms = async (req, res, next) => {
     });
 
     // 프론트엔드가 기대하는 양식에 맞추어 formatting
-    const rooms = chatRooms.map(room => {
+    const rooms = await Promise.all(chatRooms.map(async room => {
       const isBuyer = room.buyerId === userId;
       const otherUser = isBuyer ? room.seller : room.buyer;
+      const unreadCount = await getUnreadCount(room, userId);
 
       return {
         id: room.id,
         productId: room.productId,
         productTitle: room.product ? room.product.title : '삭제된 상품',
+        productImageUrl: room.product ? room.product.imageUrl : null,
         productPrice: room.product ? room.product.creditPrice : 0,
         lastMessage: room.lastMessage || '',
         lastMessageAt: room.lastMessageAt || room.createdAt,
+        unreadCount,
+        hasUnread: unreadCount > 0,
         buyerId: room.buyerId,
         sellerId: room.sellerId,
         otherUser: otherUser ? {
@@ -167,7 +207,7 @@ exports.getRooms = async (req, res, next) => {
           profileImage: otherUser.profileImage,
         } : null,
       };
-    });
+    }));
 
     res.status(200).json({
       success: true,
@@ -210,6 +250,8 @@ exports.getRoomMessages = async (req, res, next) => {
         message: '해당 채팅방에 대한 접근 권한이 없습니다.',
       });
     }
+
+    await markRoomAsRead(room, userId);
 
     // 3. 메시지 조회 (오름차순 정렬)
     const chatMessages = await ChatMessage.findAll({

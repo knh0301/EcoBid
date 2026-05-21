@@ -81,4 +81,17 @@ export const chatListStyles = StyleSheet.create({
     color: colors.textMuted,
     fontWeight: '400',
   },
+
+  unreadLastMessage: {
+    color: colors.textPrimary,
+    fontWeight: '700',
+  },
+
+  unreadDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#E85D4F',
+    marginLeft: 12,
+  },
 });

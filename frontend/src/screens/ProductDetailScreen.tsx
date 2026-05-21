@@ -106,12 +106,13 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
           product.seller?.name ||
           '판매자',
         productTitle: room.product?.title || product.title,
-          productPrice: `${
-            room.product?.creditPrice?.toLocaleString() ||
-            product.creditPrice.toLocaleString()
-          } 크레딧`,
-          profileImage:
-            room.seller?.profileImage || product.seller?.profileImage || null,
+        productImageUrl: room.product?.imageUrl || imageUrls[0] || null,
+        productPrice: `${
+          room.product?.creditPrice?.toLocaleString() ||
+          product.creditPrice.toLocaleString()
+        } 크레딧`,
+        profileImage:
+          room.seller?.profileImage || product.seller?.profileImage || null,
       });
     } catch (error: any) {
       console.warn('Create chat room error:', error);

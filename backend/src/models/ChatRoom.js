@@ -39,6 +39,14 @@ const ChatRoom = sequelize.define('ChatRoom', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  buyerLastReadAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  sellerLastReadAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 }, {
   tableName: 'chat_rooms',
 });

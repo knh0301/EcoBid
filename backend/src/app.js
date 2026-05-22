@@ -50,6 +50,12 @@ app.get('/health', (req, res) => {
   });
 });
 
+app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'ok',
+  });
+});
+
 // ── 라우터 ──
 app.use('/api/auth', authRoutes);
 app.use('/api/products', productRoutes);

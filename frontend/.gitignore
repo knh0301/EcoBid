@@ -33,6 +33,16 @@ yarn-error.*
 # local env files
 .env*.local
 
+# env files (모든 .env 파일 차단, .env.example만 허용)
+.env
+.env.*
+!.env.example
+
+# New environment folder config
+/env/local.env
+/env/staging.env
+!/env/*.example
+
 # typescript
 *.tsbuildinfo
 

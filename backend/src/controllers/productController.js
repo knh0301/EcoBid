@@ -99,17 +99,28 @@ const productDraftJsonSchema = {
   propertyOrdering: ['title', 'category', 'description', 'suggestedCreditPrice'],
 };
 
-const generateDraftWithGemini = async ({ base64, mimeType }) => {
-  const apiKey = process.env.GEMINI_API_KEY;
+const getGeminiDraftModels = () => {
+  const primaryModel =
+    process.env.GEMINI_PRODUCT_DRAFT_MODEL || 'gemini-2.5-flash-lite';
+  const fallbackModels = (
+    process.env.GEMINI_PRODUCT_DRAFT_FALLBACK_MODELS ||
+    'gemini-3.1-flash-lite,gemini-flash-lite-latest'
+  )
+    .split(',')
+    .map((model) => model.trim())
+    .filter(Boolean);
 
-  if (!apiKey) {
-    return null;
-  }
+  return [primaryModel, ...fallbackModels].filter(
+    (model, index, models) => models.indexOf(model) === index,
+  );
+};
 
-  const model = process.env.GEMINI_PRODUCT_DRAFT_MODEL || 'gemini-2.5-flash-lite';
-  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+const requestGeminiDraft = async ({ apiKey, model, base64, mimeType }) => {
+  const endpoint =
+    `https://generativelanguage.googleapis.com/v1beta/models/${model}` +
+    `:generateContent?key=${apiKey}`;
 
-  const geminiResponse = await fetch(endpoint, {
+  return fetch(endpoint, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -138,28 +149,49 @@ const generateDraftWithGemini = async ({ base64, mimeType }) => {
       },
     }),
   });
+};
 
-  const responseBody = await geminiResponse.json();
+const generateDraftWithGemini = async ({ base64, mimeType }) => {
+  const apiKey = process.env.GEMINI_API_KEY;
 
-  if (!geminiResponse.ok) {
-    console.warn(
-      'Gemini product draft failed:',
-      responseBody.error?.message || geminiResponse.statusText,
-    );
+  if (!apiKey) {
     return null;
   }
 
-  const outputText = (responseBody.candidates || [])
-    .flatMap((candidate) => candidate.content?.parts || [])
-    .map((part) => part.text || '')
-    .join('');
+  for (const model of getGeminiDraftModels()) {
+    const geminiResponse = await requestGeminiDraft({
+      apiKey,
+      model,
+      base64,
+      mimeType,
+    });
 
-  try {
-    return normalizeDraft(JSON.parse(outputText));
-  } catch (parseError) {
-    console.warn('Gemini product draft parse failed:', parseError.message);
-    return null;
+    const responseBody = await geminiResponse.json();
+
+    if (!geminiResponse.ok) {
+      console.warn(
+        `Gemini product draft failed (${model}):`,
+        responseBody.error?.message || geminiResponse.statusText,
+      );
+      continue;
+    }
+
+    const outputText = (responseBody.candidates || [])
+      .flatMap((candidate) => candidate.content?.parts || [])
+      .map((part) => part.text || '')
+      .join('');
+
+    try {
+      return normalizeDraft(JSON.parse(outputText));
+    } catch (parseError) {
+      console.warn(
+        `Gemini product draft parse failed (${model}):`,
+        parseError.message,
+      );
+    }
   }
+
+  return null;
 };
 
 const generateDraftWithOpenAI = async ({ base64, mimeType }) => {

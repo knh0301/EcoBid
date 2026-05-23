@@ -27,6 +27,202 @@ const productIncludes = [
   },
 ];
 
+const PRODUCT_CATEGORIES = ['가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
+
+const parseOpenAIOutputText = (responseBody) => {
+  if (typeof responseBody.output_text === 'string') {
+    return responseBody.output_text;
+  }
+
+  return (responseBody.output || [])
+    .flatMap((item) => item.content || [])
+    .filter((content) => content.type === 'output_text' && content.text)
+    .map((content) => content.text)
+    .join('');
+};
+
+const normalizeDraft = (draft) => ({
+  title: String(draft.title || '').trim().slice(0, 60),
+  category: PRODUCT_CATEGORIES.includes(draft.category) ? draft.category : '기타',
+  description: String(draft.description || '').trim().slice(0, 800),
+  suggestedCreditPrice: Number.isInteger(draft.suggestedCreditPrice)
+    ? Math.max(0, draft.suggestedCreditPrice)
+    : 0,
+});
+
+const getFallbackDraft = () => ({
+  title: '나눔 물품',
+  category: '기타',
+  description:
+    '사진을 참고해 물품의 상태, 사용감, 구성품, 작동 여부를 확인한 뒤 설명을 수정해주세요.',
+  suggestedCreditPrice: 1000,
+});
+
+const sendFallbackDraft = (res) =>
+  res.json({
+    success: true,
+    data: getFallbackDraft(),
+  });
+
+const getProductDraftPrompt = () =>
+  [
+    '너는 중고 물품 나눔 앱 EcoBid의 상품 등록 도우미야.',
+    '사용자가 올린 이미지를 보고 나눔글 초안을 한국어로 작성해줘.',
+    `카테고리는 반드시 다음 중 하나로만 골라: ${PRODUCT_CATEGORIES.join(', ')}.`,
+    '이미지만 보고 확신할 수 없는 사용 기간, 작동 여부, 크기, 브랜드, 구성품은 단정하지 말고 확인이 필요하다고 써.',
+    '제목은 짧고 검색하기 쉽게, 설명은 상태와 활용처 중심으로 자연스럽게 작성해.',
+    '크레딧 가격은 무료 나눔 앱의 추천값으로 보수적으로 제안해.',
+  ].join('\n');
+
+const productDraftJsonSchema = {
+  type: 'object',
+  additionalProperties: false,
+  properties: {
+    title: {
+      type: 'string',
+      description: '사용자가 그대로 쓸 수 있는 짧은 상품 제목',
+    },
+    category: {
+      type: 'string',
+      enum: PRODUCT_CATEGORIES,
+    },
+    description: {
+      type: 'string',
+      description: '상태, 특징, 확인 필요 사항을 담은 한국어 상품 설명',
+    },
+    suggestedCreditPrice: {
+      type: 'integer',
+      description: '추천 크레딧 가격',
+    },
+  },
+  required: ['title', 'category', 'description', 'suggestedCreditPrice'],
+  propertyOrdering: ['title', 'category', 'description', 'suggestedCreditPrice'],
+};
+
+const generateDraftWithGemini = async ({ base64, mimeType }) => {
+  const apiKey = process.env.GEMINI_API_KEY;
+
+  if (!apiKey) {
+    return null;
+  }
+
+  const model = process.env.GEMINI_PRODUCT_DRAFT_MODEL || 'gemini-2.5-flash-lite';
+  const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+
+  const geminiResponse = await fetch(endpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      contents: [
+        {
+          role: 'user',
+          parts: [
+            {
+              text: getProductDraftPrompt(),
+            },
+            {
+              inline_data: {
+                mime_type: mimeType,
+                data: base64,
+              },
+            },
+          ],
+        },
+      ],
+      generationConfig: {
+        response_mime_type: 'application/json',
+        response_json_schema: productDraftJsonSchema,
+        maxOutputTokens: 600,
+      },
+    }),
+  });
+
+  const responseBody = await geminiResponse.json();
+
+  if (!geminiResponse.ok) {
+    console.warn(
+      'Gemini product draft failed:',
+      responseBody.error?.message || geminiResponse.statusText,
+    );
+    return null;
+  }
+
+  const outputText = (responseBody.candidates || [])
+    .flatMap((candidate) => candidate.content?.parts || [])
+    .map((part) => part.text || '')
+    .join('');
+
+  try {
+    return normalizeDraft(JSON.parse(outputText));
+  } catch (parseError) {
+    console.warn('Gemini product draft parse failed:', parseError.message);
+    return null;
+  }
+};
+
+const generateDraftWithOpenAI = async ({ base64, mimeType }) => {
+  if (!process.env.OPENAI_API_KEY) {
+    return null;
+  }
+
+  const model = process.env.OPENAI_PRODUCT_DRAFT_MODEL || 'gpt-5.4-mini';
+  const imageUrl = `data:${mimeType};base64,${base64}`;
+
+  const openAIResponse = await fetch('https://api.openai.com/v1/responses', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model,
+      input: [
+        {
+          role: 'user',
+          content: [
+            {
+              type: 'input_text',
+              text: getProductDraftPrompt(),
+            },
+            {
+              type: 'input_image',
+              image_url: imageUrl,
+              detail: 'low',
+            },
+          ],
+        },
+      ],
+      text: {
+        format: {
+          type: 'json_schema',
+          name: 'product_draft',
+          strict: true,
+          schema: productDraftJsonSchema,
+        },
+      },
+      max_output_tokens: 600,
+    }),
+  });
+
+  const responseBody = await openAIResponse.json();
+
+  if (!openAIResponse.ok) {
+    console.warn('OpenAI product draft failed:', responseBody.error?.message);
+    return null;
+  }
+
+  const outputText = parseOpenAIOutputText(responseBody);
+
+  try {
+    return normalizeDraft(JSON.parse(outputText));
+  } catch (parseError) {
+    console.warn('OpenAI product draft parse failed:', parseError.message);
+    return null;
+  }
+};
+
 const normalizeImageUrls = ({ imageUrl, imageUrls }) => {
   const urls = Array.isArray(imageUrls) ? imageUrls : [];
   const normalizedUrls = urls
@@ -94,6 +290,47 @@ exports.uploadProductImage = async (req, res, next) => {
       data: {
         imageUrl: `/uploads/products/${fileName}`,
       },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * 상품 이미지 기반 AI 초안 생성
+ * POST /api/products/ai-draft
+ */
+exports.generateProductDraft = async (req, res, next) => {
+  try {
+    const { base64, mimeType } = req.body;
+
+    if (!base64 || !mimeType) {
+      return res.status(400).json({
+        success: false,
+        message: 'base64, mimeType은 필수 항목입니다.',
+      });
+    }
+
+    if (!MIME_EXTENSIONS[mimeType]) {
+      return res.status(400).json({
+        success: false,
+        message: 'jpg, png, webp 이미지만 분석할 수 있습니다.',
+      });
+    }
+
+    const provider = process.env.AI_PRODUCT_DRAFT_PROVIDER || 'gemini';
+    const draft =
+      provider === 'openai'
+        ? await generateDraftWithOpenAI({ base64, mimeType })
+        : await generateDraftWithGemini({ base64, mimeType });
+
+    if (!draft) {
+      return sendFallbackDraft(res);
+    }
+
+    res.json({
+      success: true,
+      data: draft,
     });
   } catch (err) {
     next(err);

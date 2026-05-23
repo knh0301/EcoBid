@@ -12,6 +12,9 @@ router.get('/mine', authenticate, productController.getMyProducts);
 // POST /api/products/images - 상품 이미지 업로드
 router.post('/images', authenticate, productController.uploadProductImage);
 
+// POST /api/products/ai-draft - 상품 이미지 기반 AI 초안 생성
+router.post('/ai-draft', authenticate, productController.generateProductDraft);
+
 // GET /api/products/:id - 상품 상세 조회
 router.get('/:id', productController.getProductById);
 

@@ -30,6 +30,13 @@ export interface Product {
   updatedAt: string;
 }
 
+export interface ProductDraft {
+  title: string;
+  category: string;
+  description: string;
+  suggestedCreditPrice: number;
+}
+
 /**
  * API 응답 공통 포맷
  */
@@ -175,6 +182,21 @@ export const productsApi = {
   }): Promise<{imageUrl: string}> {
     const response = await apiClient.post<ApiResponse<{imageUrl: string}>>(
       '/products/images',
+      data,
+    );
+
+    return response.data.data;
+  },
+
+  /**
+   * 상품 이미지 기반 AI 초안 생성
+   */
+  async generateProductDraft(data: {
+    base64: string;
+    mimeType: string;
+  }): Promise<ProductDraft> {
+    const response = await apiClient.post<ApiResponse<ProductDraft>>(
+      '/products/ai-draft',
       data,
     );
 

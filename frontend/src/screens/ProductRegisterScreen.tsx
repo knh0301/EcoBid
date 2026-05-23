@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import {Ionicons} from '@expo/vector-icons';
 import {AlertDialog, ConfirmDialog} from '../components/EcoDialog';
 import {
   productsApi,
@@ -70,6 +71,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGeneratingDraft, setIsGeneratingDraft] = useState(false);
 
   const [alertVisible, setAlertVisible] = useState(false);
   const [alertMessage, setAlertMessage] = useState('');
@@ -192,6 +194,42 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
     );
 
     return imageUrls;
+  };
+
+  const handleGenerateDraft = async () => {
+    const imageForDraft = selectedImages.find(image => image.base64);
+
+    if (!imageForDraft?.base64) {
+      showAlert('AI 초안을 만들려면 새로 선택한 사진이 필요합니다.');
+      return;
+    }
+
+    setIsGeneratingDraft(true);
+
+    try {
+      const draft = await productsApi.generateProductDraft({
+        base64: imageForDraft.base64,
+        mimeType:
+          imageForDraft.mimeType || getFallbackMimeType(imageForDraft.uri),
+      });
+
+      setTitle(draft.title);
+      setDesc(draft.description);
+      setSelectedCategory(draft.category);
+
+      if (draft.suggestedCreditPrice > 0) {
+        setPrice(String(draft.suggestedCreditPrice));
+      }
+    } catch (error: any) {
+      console.warn('Generate product draft failed:', error.response?.data);
+
+      showAlert(
+        error.response?.data?.message ||
+          'AI 초안을 만드는 중 오류가 발생했습니다.',
+      );
+    } finally {
+      setIsGeneratingDraft(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -341,6 +379,27 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
               </TouchableOpacity>
             )}
           </View>
+
+          {!isEditMode && (
+            <TouchableOpacity
+              style={[
+                styles.aiDraftButton,
+                (selectedImages.length === 0 || isGeneratingDraft) &&
+                  styles.aiDraftButtonDisabled,
+              ]}
+              onPress={handleGenerateDraft}
+              disabled={selectedImages.length === 0 || isGeneratingDraft}>
+              {isGeneratingDraft ? (
+                <ActivityIndicator size="small" color="#5C8B5A" />
+              ) : (
+                <Ionicons name="sparkles-outline" size={18} color="#5C8B5A" />
+              )}
+
+              <Text style={styles.aiDraftButtonText}>
+                {isGeneratingDraft ? 'AI 초안 만드는 중' : 'AI 초안 만들기'}
+              </Text>
+            </TouchableOpacity>
+          )}
 
           <Text style={styles.label}>물품 이름</Text>
           <TextInput

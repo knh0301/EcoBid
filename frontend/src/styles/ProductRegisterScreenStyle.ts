@@ -39,7 +39,7 @@ export const productRegisterStyles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 8,
-    marginBottom: 24,
+    marginBottom: 12,
   },
 
   addImageBox: {
@@ -110,6 +110,29 @@ export const productRegisterStyles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 18,
     fontWeight: '800',
+  },
+
+  aiDraftButton: {
+    minHeight: 46,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#C8D8C0',
+    backgroundColor: '#F7FBF4',
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 24,
+  },
+
+  aiDraftButtonDisabled: {
+    opacity: 0.55,
+  },
+
+  aiDraftButtonText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: colors.primary,
   },
 
   label: {

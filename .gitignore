@@ -84,6 +84,7 @@ android/app/build/
 # Environment
 .env
 .env.*
+!backend/.env.example
 frontend_rn_backup_after_conflict/
 frontend_rn_cli_original/
 frontend_expo_broken/

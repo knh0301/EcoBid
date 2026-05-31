@@ -20,8 +20,8 @@ type ModalType = 'success' | 'photo_error' | 'desc_error' | 'api_error';
 
 export function MissionVerifyScreen({navigation, route}: any) {
   const insets = useSafeAreaInsets();
-  const {missionTitle = '미션 인증', rewardPoints = 500} = route.params || {};
-  const rewardAmount = Number(rewardPoints) || 500;
+  const {missionTitle = '미션 인증', rewardPoints = 50} = route.params || {};
+  const rewardAmount = Number(rewardPoints) || 50;
 
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<string[]>([]);

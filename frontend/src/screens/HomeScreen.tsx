@@ -237,7 +237,7 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
               <Text style={styles.cardSubText}>
                 {isAttendedToday
                   ? '내일도 출석하고 새로운 크레딧 보상을 받아보세요!'
-                  : '매일 출석하고 1~10 크레딧을 랜덤으로 받으세요!'}
+                  : '매일 출석하고 1 크레딧을 받으세요!'}
               </Text>
             </View>
 
@@ -320,7 +320,7 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           </Text>
 
           <Text style={styles.cardSubText}>
-            물품 거래가 완료되면 1,000크레딧을 추가로 지급해드려요.
+            물품 거래가 완료되면 100크레딧을 추가로 지급해드려요.
           </Text>
 
           <TouchableOpacity

@@ -154,7 +154,7 @@ export const AttendanceScreen: React.FC<any> = ({navigation}) => {
           <Text style={styles.statusDesc}>
             {isAttendedToday
               ? '내일도 출석하고 새로운 크레딧 보상을 받아보세요!'
-              : '출석하고 1~10 크레딧 랜덤 보상을 받아보세요.'}
+              : '출석하고 1 크레딧 보상을 받아보세요.'}
           </Text>
 
           <TouchableOpacity

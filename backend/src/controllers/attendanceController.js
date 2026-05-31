@@ -3,7 +3,7 @@ const { Op } = require('sequelize');
 const { evaluateAndAwardBadges } = require('../services/badge.service');
 
 const MIN_ATTENDANCE_REWARD = 1;
-const MAX_ATTENDANCE_REWARD = 10;
+const MAX_ATTENDANCE_REWARD = 1;
 
 const getRandomAttendanceReward = () => {
   return Math.floor(

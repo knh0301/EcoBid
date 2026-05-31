@@ -1,5 +1,6 @@
 import apiClient from './client';
 import {API_CONFIG} from '../config/apiConfig';
+import {ChatRoomResponse} from './chats';
 
 /**
  * 상품 관련 인터페이스
@@ -45,6 +46,31 @@ interface ApiResponse<T> {
   data: T;
   message?: string;
 }
+
+export type ProductTradeStatus = {
+  isSeller: boolean;
+  hasPaid: boolean;
+  canComplete: boolean;
+  isCompleted: boolean;
+  creditTransferAmount?: number | null;
+  creditTransferredAt?: string | null;
+  room?: ChatRoomResponse | null;
+};
+
+export type SendProductCreditsResult = {
+  product: Product;
+  room: ChatRoomResponse;
+  balance: number;
+  hasPaid: boolean;
+  canComplete: boolean;
+};
+
+export type CompleteProductTradeResult = {
+  product: Product;
+  room: ChatRoomResponse;
+  isCompleted: boolean;
+  canComplete: boolean;
+};
 
 const getApiOrigin = () => API_CONFIG.BASE_URL.replace(/\/api\/?$/, '');
 
@@ -127,6 +153,31 @@ export const productsApi = {
     const response = await apiClient.get<ApiResponse<Product>>(
       `/products/${productId}`,
     );
+
+    return response.data.data;
+  },
+
+  async getTradeStatus(productId: number): Promise<ProductTradeStatus> {
+    const response = await apiClient.get<ApiResponse<ProductTradeStatus>>(
+      `/products/${productId}/trade-status`,
+    );
+
+    return response.data.data;
+  },
+
+  async sendCredits(productId: number): Promise<SendProductCreditsResult> {
+    const response = await apiClient.post<ApiResponse<SendProductCreditsResult>>(
+      `/products/${productId}/send-credits`,
+    );
+
+    return response.data.data;
+  },
+
+  async completeTrade(productId: number): Promise<CompleteProductTradeResult> {
+    const response =
+      await apiClient.post<ApiResponse<CompleteProductTradeResult>>(
+        `/products/${productId}/complete`,
+      );
 
     return response.data.data;
   },

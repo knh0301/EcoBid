@@ -139,6 +139,11 @@ export const productDetailStyles = StyleSheet.create({
     backgroundColor: colors.white,
   },
 
+  actionRow: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+
   chatButton: {
     backgroundColor: colors.primary,
     borderRadius: 10,
@@ -146,8 +151,32 @@ export const productDetailStyles = StyleSheet.create({
     alignItems: 'center',
   },
 
+  secondaryActionButton: {
+    flex: 1,
+    backgroundColor: colors.primaryDarkest,
+  },
+
+  primaryActionButton: {
+    flex: 1,
+  },
+
   chatButtonText: {
     color: colors.textLight,
+    fontSize: 15,
+    fontWeight: 'bold',
+  },
+
+  disabledTradeButton: {
+    backgroundColor: colors.lightGrayBackground,
+    borderRadius: 10,
+    paddingVertical: 16,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+  },
+
+  disabledTradeButtonText: {
+    color: colors.textDisabled,
     fontSize: 15,
     fontWeight: 'bold',
   },

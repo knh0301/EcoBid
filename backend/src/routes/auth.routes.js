@@ -7,6 +7,9 @@ const { authenticate } = require('../middlewares/auth.middleware');
 router.post('/register', authController.register);
 router.post('/login',    authController.login);
 router.post('/social',   authController.socialLogin);
+router.post('/google',   authController.googleLogin);
+router.post('/password-reset/request', authController.requestPasswordReset);
+router.post('/password-reset/confirm', authController.resetPassword);
 router.post('/refresh',  authController.refresh);
 
 // 인증 필요

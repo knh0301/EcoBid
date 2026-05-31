@@ -47,6 +47,18 @@ const ChatRoom = sequelize.define('ChatRoom', {
     type: DataTypes.DATE,
     allowNull: true,
   },
+  creditTransferAmount: {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+  },
+  creditTransferredAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+  completedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 }, {
   tableName: 'chat_rooms',
 });

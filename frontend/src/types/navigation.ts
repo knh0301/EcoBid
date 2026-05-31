@@ -29,6 +29,7 @@ export type MainTabParamList = {
 export type RootStackParamList = {
   Login: undefined;
   Signup: undefined;
+  PasswordReset: undefined;
 
   MainTabs: NavigatorScreenParams<MainTabParamList>;
 
@@ -38,6 +39,10 @@ export type RootStackParamList = {
   SharedItems: undefined;
   CreditHistory: undefined;
   Attendance: undefined;
+  MissionVerify: {
+    missionTitle: string;
+    rewardPoints?: number;
+  };
 
   ProductRegister: undefined;
   ProductEdit: undefined;

@@ -2,7 +2,15 @@ const fs = require('fs/promises');
 const path = require('path');
 const crypto = require('crypto');
 const { Op } = require('sequelize');
-const { sequelize, Product, ProductImage, User } = require('../models');
+const {
+  sequelize,
+  ChatMessage,
+  ChatRoom,
+  CreditTransaction,
+  Product,
+  ProductImage,
+  User,
+} = require('../models');
 const { evaluateAndAwardBadges } = require('../services/badge.service');
 
 const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads', 'products');
@@ -255,6 +263,23 @@ const generateDraftWithOpenAI = async ({ base64, mimeType }) => {
   }
 };
 
+const chatRoomIncludes = [
+  {
+    model: Product,
+    as: 'product',
+  },
+  {
+    model: User,
+    as: 'buyer',
+    attributes: ['id', 'name', 'nickname', 'profileImage'],
+  },
+  {
+    model: User,
+    as: 'seller',
+    attributes: ['id', 'name', 'nickname', 'profileImage'],
+  },
+];
+
 const normalizeImageUrls = ({ imageUrl, imageUrls }) => {
   const urls = Array.isArray(imageUrls) ? imageUrls : [];
   const normalizedUrls = urls
@@ -285,6 +310,39 @@ const replaceProductImages = async (productId, imageUrls, transaction) => {
     { transaction },
   );
 };
+
+const getOrCreateTradeRoom = async ({ product, buyerId, transaction }) => {
+  let room = await ChatRoom.findOne({
+    where: {
+      productId: product.id,
+      buyerId,
+      sellerId: product.sellerId,
+    },
+    transaction,
+  });
+
+  if (room) {
+    return room;
+  }
+
+  room = await ChatRoom.create(
+    {
+      productId: product.id,
+      buyerId,
+      sellerId: product.sellerId,
+      lastMessage: '',
+      lastMessageAt: new Date(),
+      buyerLastReadAt: new Date(),
+      sellerLastReadAt: new Date(),
+    },
+    { transaction },
+  );
+
+  return room;
+};
+
+const formatCreditTransferMessage = ({ buyer, product }) =>
+  `${buyer.nickname || buyer.name}님이 ${product.creditPrice.toLocaleString()} 크레딧을 보냈습니다.`;
 
 /**
  * 상품 이미지 업로드
@@ -517,6 +575,351 @@ exports.getProductById = async (req, res, next) => {
       data: product,
     });
   } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * 현재 사용자의 상품 거래 상태 조회
+ * GET /api/products/:id/trade-status
+ */
+exports.getTradeStatus = async (req, res, next) => {
+  try {
+    const product = await Product.findByPk(req.params.id);
+
+    if (!product) {
+      return res.status(404).json({
+        success: false,
+        message: '상품을 찾을 수 없습니다.',
+      });
+    }
+
+    const isSeller = product.sellerId === req.user.id;
+
+    if (isSeller) {
+      return res.json({
+        success: true,
+        data: {
+          isSeller: true,
+          hasPaid: false,
+          canComplete: false,
+          isCompleted: product.status === 'SOLD',
+          creditTransferAmount: null,
+          creditTransferredAt: null,
+          room: null,
+        },
+      });
+    }
+
+    const room = await ChatRoom.findOne({
+      where: {
+        productId: product.id,
+        buyerId: req.user.id,
+        sellerId: product.sellerId,
+      },
+      include: chatRoomIncludes,
+    });
+    const hasPaid = !!room?.creditTransferredAt;
+    const isCompleted = product.status === 'SOLD' || !!room?.completedAt;
+
+    res.json({
+      success: true,
+      data: {
+        isSeller: false,
+        hasPaid,
+        canComplete: hasPaid && product.status !== 'SOLD' && !room?.completedAt,
+        isCompleted,
+        creditTransferAmount: room?.creditTransferAmount || null,
+        creditTransferredAt: room?.creditTransferredAt || null,
+        room,
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
+ * 구매자가 판매자에게 상품 크레딧 전송
+ * POST /api/products/:id/send-credits
+ */
+exports.sendProductCredits = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const buyerId = req.user.id;
+    const product = await Product.findByPk(req.params.id, { transaction });
+
+    if (!product) {
+      await transaction.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: '상품을 찾을 수 없습니다.',
+      });
+    }
+
+    if (product.sellerId === buyerId) {
+      await transaction.rollback();
+
+      return res.status(403).json({
+        success: false,
+        message: '본인이 등록한 상품에는 크레딧을 보낼 수 없습니다.',
+      });
+    }
+
+    if (product.status !== 'AVAILABLE') {
+      await transaction.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: '이미 거래 중이거나 거래 완료된 상품입니다.',
+      });
+    }
+
+    const [buyer, seller] = await Promise.all([
+      User.findByPk(buyerId, { transaction }),
+      User.findByPk(product.sellerId, { transaction }),
+    ]);
+
+    if (!buyer || !seller) {
+      await transaction.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: '거래 사용자를 찾을 수 없습니다.',
+      });
+    }
+
+    const price = Number(product.creditPrice);
+
+    if (!Number.isInteger(price) || price <= 0) {
+      await transaction.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message: '상품 크레딧 금액이 올바르지 않습니다.',
+      });
+    }
+
+    if (Number(buyer.credits || 0) < price) {
+      await transaction.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message: '보유 크레딧이 부족합니다.',
+      });
+    }
+
+    const room = await getOrCreateTradeRoom({
+      product,
+      buyerId,
+      transaction,
+    });
+
+    if (room.creditTransferredAt) {
+      await transaction.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: '이미 이 상품에 크레딧을 보냈습니다.',
+      });
+    }
+
+    const transferredAt = new Date();
+    const messageText = formatCreditTransferMessage({ buyer, product });
+
+    await buyer.decrement('credits', { by: price, transaction });
+    await seller.increment('credits', { by: price, transaction });
+
+    await CreditTransaction.bulkCreate(
+      [
+        {
+          userId: buyer.id,
+          amount: -price,
+          referenceType: 'PRODUCT',
+          referenceId: product.id,
+          description: `${product.title} 구매 크레딧 전송`,
+        },
+        {
+          userId: seller.id,
+          amount: price,
+          referenceType: 'PRODUCT',
+          referenceId: product.id,
+          description: `${product.title} 판매 크레딧 수신`,
+        },
+      ],
+      { transaction },
+    );
+
+    const message = await ChatMessage.create(
+      {
+        roomId: room.id,
+        senderId: buyer.id,
+        text: messageText,
+      },
+      { transaction },
+    );
+
+    await product.update({ status: 'RESERVED' }, { transaction });
+    await room.update(
+      {
+        creditTransferAmount: price,
+        creditTransferredAt: transferredAt,
+        lastMessage: messageText,
+        lastMessageAt: message.createdAt,
+        buyerLastReadAt: message.createdAt,
+      },
+      { transaction },
+    );
+
+    await transaction.commit();
+
+    const [updatedRoom, updatedBuyer] = await Promise.all([
+      ChatRoom.findByPk(room.id, {
+        include: chatRoomIncludes,
+      }),
+      User.findByPk(buyer.id),
+    ]);
+
+    res.status(201).json({
+      success: true,
+      message: '크레딧을 보냈습니다.',
+      data: {
+        product: await Product.findByPk(product.id, {
+          include: productIncludes,
+          order: [[{ model: ProductImage, as: 'images' }, 'sortOrder', 'ASC']],
+        }),
+        room: updatedRoom,
+        message: {
+          id: message.id,
+          roomId: message.roomId,
+          text: message.text,
+          senderId: message.senderId,
+          senderName: buyer.nickname || buyer.name,
+          senderProfileImage: buyer.profileImage || null,
+          createdAt: message.createdAt,
+        },
+        balance: updatedBuyer?.credits ?? 0,
+        hasPaid: true,
+        canComplete: true,
+      },
+    });
+  } catch (err) {
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
+    next(err);
+  }
+};
+
+/**
+ * 구매자 거래 완료 처리
+ * POST /api/products/:id/complete
+ */
+exports.completeTrade = async (req, res, next) => {
+  const transaction = await sequelize.transaction();
+
+  try {
+    const buyerId = req.user.id;
+    const product = await Product.findByPk(req.params.id, { transaction });
+
+    if (!product) {
+      await transaction.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: '상품을 찾을 수 없습니다.',
+      });
+    }
+
+    if (product.sellerId === buyerId) {
+      await transaction.rollback();
+
+      return res.status(403).json({
+        success: false,
+        message: '판매자는 거래완료를 누를 수 없습니다.',
+      });
+    }
+
+    const room = await ChatRoom.findOne({
+      where: {
+        productId: product.id,
+        buyerId,
+        sellerId: product.sellerId,
+      },
+      transaction,
+    });
+
+    if (!room || !room.creditTransferredAt) {
+      await transaction.rollback();
+
+      return res.status(400).json({
+        success: false,
+        message: '크레딧을 먼저 보내야 거래완료를 할 수 있습니다.',
+      });
+    }
+
+    if (product.status === 'SOLD' || room.completedAt) {
+      await transaction.rollback();
+
+      return res.status(409).json({
+        success: false,
+        message: '이미 거래완료된 상품입니다.',
+      });
+    }
+
+    const completedAt = new Date();
+    const buyer = await User.findByPk(buyerId, { transaction });
+    const messageText = `${buyer?.nickname || buyer?.name || '구매자'}님이 거래를 완료했습니다.`;
+    const message = await ChatMessage.create(
+      {
+        roomId: room.id,
+        senderId: buyerId,
+        text: messageText,
+      },
+      { transaction },
+    );
+
+    await product.update({ status: 'SOLD' }, { transaction });
+    await room.update(
+      {
+        completedAt,
+        lastMessage: messageText,
+        lastMessageAt: message.createdAt,
+        buyerLastReadAt: message.createdAt,
+      },
+      { transaction },
+    );
+
+    await transaction.commit();
+
+    const [updatedProduct, updatedRoom, newlyAwardedBadges] = await Promise.all([
+      Product.findByPk(product.id, {
+        include: productIncludes,
+        order: [[{ model: ProductImage, as: 'images' }, 'sortOrder', 'ASC']],
+      }),
+      ChatRoom.findByPk(room.id, {
+        include: chatRoomIncludes,
+      }),
+      evaluateAndAwardBadges(product.sellerId),
+    ]);
+
+    res.json({
+      success: true,
+      message: '거래가 완료되었습니다.',
+      data: {
+        product: updatedProduct,
+        room: updatedRoom,
+        isCompleted: true,
+        canComplete: false,
+        newlyAwardedBadges,
+      },
+    });
+  } catch (err) {
+    if (!transaction.finished) {
+      await transaction.rollback();
+    }
     next(err);
   }
 };

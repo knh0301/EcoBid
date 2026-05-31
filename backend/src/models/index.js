@@ -54,6 +54,28 @@ const ensureUserSchema = async () => {
       allowNull: true,
     });
   }
+
+  if (!userColumns.password_reset_token_hash) {
+    await queryInterface.addColumn('users', 'password_reset_token_hash', {
+      type: DataTypes.STRING,
+      allowNull: true,
+    });
+  }
+
+  if (!userColumns.password_reset_expires_at) {
+    await queryInterface.addColumn('users', 'password_reset_expires_at', {
+      type: DataTypes.DATE,
+      allowNull: true,
+    });
+  }
+
+  if (!userColumns.password_reset_attempt_count) {
+    await queryInterface.addColumn('users', 'password_reset_attempt_count', {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 0,
+    });
+  }
 };
 
 const ensureAttendanceSchema = async () => {
@@ -222,6 +244,27 @@ const ensureChatRoomSchema = async () => {
       SET seller_last_read_at = COALESCE(last_message_at, updated_at, created_at)
       WHERE seller_last_read_at IS NULL
     `);
+  }
+
+  if (!columns.credit_transfer_amount) {
+    await queryInterface.addColumn('chat_rooms', 'credit_transfer_amount', {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    });
+  }
+
+  if (!columns.credit_transferred_at) {
+    await queryInterface.addColumn('chat_rooms', 'credit_transferred_at', {
+      type: DataTypes.DATE,
+      allowNull: true,
+    });
+  }
+
+  if (!columns.completed_at) {
+    await queryInterface.addColumn('chat_rooms', 'completed_at', {
+      type: DataTypes.DATE,
+      allowNull: true,
+    });
   }
 };
 

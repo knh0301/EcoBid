@@ -8,6 +8,17 @@ type SubmitMissionPayload = {
   rewardPoints?: number;
 };
 
+export type RecommendedMission = {
+  id: string;
+  title: string;
+  description: string;
+  desc?: string;
+  rewardPoints: number;
+  creditText: string;
+  status: 'active' | 'completed';
+  buttonText: string;
+};
+
 type SubmitMissionResponse = {
   success: boolean;
   message: string;
@@ -18,6 +29,15 @@ type SubmitMissionResponse = {
 };
 
 export const missionsApi = {
+  async getRecommendedMissions(limit = 2): Promise<RecommendedMission[]> {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: RecommendedMission[];
+    }>(`/missions/recommended?limit=${limit}`);
+
+    return response.data.data ?? [];
+  },
+
   async submitMission(payload: SubmitMissionPayload) {
     const response = await apiClient.post<SubmitMissionResponse>(
       '/missions/submissions',

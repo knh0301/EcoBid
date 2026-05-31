@@ -12,6 +12,7 @@ import {ChatListScreen} from './src/screens/ChatListScreen';
 import {MyPageScreen} from './src/screens/MyPageScreen';
 import {LoginScreen} from './src/screens/LoginScreen';
 import {SignupScreen} from './src/screens/SignupScreen';
+import {PasswordResetScreen} from './src/screens/PasswordResetScreen';
 import {ChatDetailScreen} from './src/screens/ChatDetailScreen';
 import {AttendanceScreen} from './src/screens/AttendanceScreen';
 import {ProductRegisterScreen} from './src/screens/ProductRegisterScreen';
@@ -161,6 +162,7 @@ export default function App(): React.JSX.Element {
           <>
             <Stack.Screen name="Login" component={LoginScreen} />
             <Stack.Screen name="Signup" component={SignupScreen} />
+            <Stack.Screen name="PasswordReset" component={PasswordResetScreen} />
           </>
         )}
       </Stack.Navigator>

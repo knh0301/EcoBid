@@ -66,6 +66,7 @@ export type UserProfile = {
   studentId?: string | null;
   department?: string | null;
   profileImage?: string | null;
+  provider?: 'LOCAL' | 'GOOGLE' | 'KAKAO';
   credits?: number;
   createdAt?: string;
   created_at?: string;
@@ -75,6 +76,11 @@ type AuthResponse = {
   user: UserProfile;
   accessToken: string;
   refreshToken: string;
+};
+
+type PasswordResetRequestResponse = {
+  expiresAt: string;
+  resetCode?: string;
 };
 
 type ApiResponse<T> = {
@@ -148,6 +154,35 @@ export const authApi = {
     await tokenStorage.setRefreshToken(result.refreshToken);
 
     return result;
+  },
+
+  googleLogin: async (payload: {accessToken: string}) => {
+    const {data} = await api.post('/auth/google', payload);
+    const result: AuthResponse = data.data;
+
+    await tokenStorage.setAccessToken(result.accessToken);
+    await tokenStorage.setRefreshToken(result.refreshToken);
+
+    return result;
+  },
+
+  requestPasswordReset: async (payload: {
+    email: string;
+  }): Promise<PasswordResetRequestResponse> => {
+    const {data} = await api.post<ApiResponse<PasswordResetRequestResponse>>(
+      '/auth/password-reset/request',
+      payload,
+    );
+
+    return data.data;
+  },
+
+  resetPassword: async (payload: {
+    email: string;
+    code: string;
+    password: string;
+  }): Promise<void> => {
+    await api.post('/auth/password-reset/confirm', payload);
   },
 
   // 내 정보 조회

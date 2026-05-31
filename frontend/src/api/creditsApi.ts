@@ -13,6 +13,13 @@ export type CreditTransaction = {
   createdAt: string;
 };
 
+export type DepartmentCreditRanking = {
+  rank: number;
+  department: string;
+  totalCredits: number;
+  userCount: number;
+};
+
 type ApiResponse<T> = {
   success: boolean;
   data: T;
@@ -26,6 +33,16 @@ const calculateBalance = (transactions: CreditTransaction[]) => {
 };
 
 export const creditsApi = {
+  async getDepartmentCreditRankings(
+    limit = 3,
+  ): Promise<DepartmentCreditRanking[]> {
+    const response = await apiClient.get<ApiResponse<DepartmentCreditRanking[]>>(
+      `/credits/department-rankings?limit=${limit}`,
+    );
+
+    return response.data.data ?? [];
+  },
+
   async getCreditTransactions(userId: number): Promise<CreditTransaction[]> {
     const response = await apiClient.get<ApiResponse<CreditTransaction[]>>(
       `/credits?userId=${userId}`,

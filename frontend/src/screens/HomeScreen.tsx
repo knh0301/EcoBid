@@ -11,7 +11,8 @@ import {
 import {useFocusEffect} from '@react-navigation/native';
 import {getProductImageUrls, productsApi, Product} from '../api/products';
 import {favoritesApi} from '../api/favorites';
-import {creditsApi} from '../api/creditsApi';
+import {creditsApi, DepartmentCreditRanking} from '../api/creditsApi';
+import {missionsApi, RecommendedMission} from '../api/missions';
 import {attendanceAPI} from '../api/attendanceService';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {homeScreenStyles as styles} from '../styles/HomeScreenStyle';
@@ -20,23 +21,24 @@ import {FavoriteToast} from '../components/FavoriteToast';
 import {useFavoriteToast} from '../hooks/useFavoriteToast';
 
 interface MissionCardProps {
-  title: string;
-  desc: string;
+  mission: RecommendedMission;
+  onPress: () => void;
 }
 
-const ranks = [
-  {rank: '1', dept: '컴퓨터공학과', credit: '112,894 크레딧'},
-  {rank: '2', dept: '디자인테크놀로지학과', credit: '112,894 크레딧'},
-  {rank: '3', dept: '기계공학과', credit: '112,894 크레딧'},
-];
-
-const MissionCard: React.FC<MissionCardProps> = ({title, desc}) => (
+const MissionCard: React.FC<MissionCardProps> = ({mission, onPress}) => (
   <View style={styles.missionCard}>
-    <Text style={styles.missionTitle}>{title}</Text>
-    <Text style={styles.missionDesc}>{desc}</Text>
-    <Text style={styles.missionCredit}>+500 크레딧</Text>
+    <Text style={styles.missionTitle}>{mission.title}</Text>
+    <Text style={styles.missionDesc}>
+      {mission.description || mission.desc}
+    </Text>
+    <Text style={styles.missionCredit}>
+      +{mission.rewardPoints.toLocaleString()} 크레딧
+    </Text>
 
-    <TouchableOpacity style={styles.missionButton}>
+    <TouchableOpacity
+      style={styles.missionButton}
+      onPress={onPress}
+      activeOpacity={0.8}>
       <Text style={styles.missionButtonText}>인증하기</Text>
     </TouchableOpacity>
   </View>
@@ -53,6 +55,14 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
 
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
+  const [departmentRanks, setDepartmentRanks] = useState<
+    DepartmentCreditRanking[]
+  >([]);
+  const [rankLoading, setRankLoading] = useState(true);
+  const [recommendedMissions, setRecommendedMissions] = useState<
+    RecommendedMission[]
+  >([]);
+  const [missionLoading, setMissionLoading] = useState(true);
   const [isAttendedToday, setIsAttendedToday] = useState(false);
   const [todayAttendanceReward, setTodayAttendanceReward] = useState<
     number | null
@@ -101,6 +111,36 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
     }
   };
 
+  const fetchDepartmentRankings = async () => {
+    try {
+      setRankLoading(true);
+
+      const rankings = await creditsApi.getDepartmentCreditRankings(3);
+
+      setDepartmentRanks(rankings);
+    } catch (err: any) {
+      console.warn('Fetch department rankings error:', err);
+      setDepartmentRanks([]);
+    } finally {
+      setRankLoading(false);
+    }
+  };
+
+  const fetchRecommendedMissions = async () => {
+    try {
+      setMissionLoading(true);
+
+      const missions = await missionsApi.getRecommendedMissions(2);
+
+      setRecommendedMissions(missions);
+    } catch (err: any) {
+      console.warn('Fetch recommended missions error:', err);
+      setRecommendedMissions([]);
+    } finally {
+      setMissionLoading(false);
+    }
+  };
+
   const fetchAttendanceStatus = async () => {
     try {
       setAttendanceLoading(true);
@@ -121,6 +161,8 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
   useFocusEffect(useCallback(() => {
     fetchProducts();
     fetchCreditBalance();
+    fetchDepartmentRankings();
+    fetchRecommendedMissions();
     fetchAttendanceStatus();
   }, []));
 
@@ -130,6 +172,8 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
     await Promise.all([
       fetchProducts(false),
       fetchCreditBalance(),
+      fetchDepartmentRankings(),
+      fetchRecommendedMissions(),
       fetchAttendanceStatus(),
     ]);
 
@@ -242,20 +286,32 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
         <View style={styles.card}>
           <Text style={styles.cardTitle}>크레딧 총액 학과 순위</Text>
 
-          <View style={styles.rankList}>
-            {ranks.map(item => (
-              <View
-                key={item.rank}
-                style={[
-                  styles.rankItem,
-                  item.rank === '1' && styles.rankItemFirst,
-                ]}>
-                <Text style={styles.rankNumber}>{item.rank}</Text>
-                <Text style={styles.rankDept}>{item.dept}</Text>
-                <Text style={styles.rankCredit}>{item.credit}</Text>
-              </View>
-            ))}
-          </View>
+          {rankLoading ? (
+            <ActivityIndicator
+              size="small"
+              color="#5C8B5A"
+              style={styles.inlineLoadingIndicator}
+            />
+          ) : departmentRanks.length === 0 ? (
+            <Text style={styles.cardSubText}>아직 순위 데이터가 없습니다.</Text>
+          ) : (
+            <View style={styles.rankList}>
+              {departmentRanks.map(item => (
+                <View
+                  key={`${item.rank}-${item.department}`}
+                  style={[
+                    styles.rankItem,
+                    item.rank === 1 && styles.rankItemFirst,
+                  ]}>
+                  <Text style={styles.rankNumber}>{item.rank}</Text>
+                  <Text style={styles.rankDept}>{item.department}</Text>
+                  <Text style={styles.rankCredit}>
+                    {item.totalCredits.toLocaleString()} 크레딧
+                  </Text>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         <View style={styles.card}>
@@ -276,17 +332,34 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
 
         <Text style={styles.sectionTitle}>추천 미션</Text>
 
-        <View style={styles.missionRow}>
-          <MissionCard
-            title="텀블러 사용하기"
-            desc="텀블러 사용을 인증하고 크레딧을 받으세요."
+        {missionLoading ? (
+          <ActivityIndicator
+            size="small"
+            color="#5C8B5A"
+            style={styles.inlineLoadingIndicator}
           />
-
-          <MissionCard
-            title="대중교통 이용하기"
-            desc="대중교통 이용을 인증하고 크레딧을 받으세요."
-          />
-        </View>
+        ) : recommendedMissions.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyText}>
+              오늘 추천 미션을 모두 완료했습니다.
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.missionRow}>
+            {recommendedMissions.map(mission => (
+              <MissionCard
+                key={mission.id}
+                mission={mission}
+                onPress={() =>
+                  navigation.navigate('MissionVerify', {
+                    missionTitle: mission.title,
+                    rewardPoints: mission.rewardPoints,
+                  })
+                }
+              />
+            ))}
+          </View>
+        )}
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>나눔 물품 리스트</Text>

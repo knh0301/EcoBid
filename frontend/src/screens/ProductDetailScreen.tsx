@@ -11,6 +11,7 @@ import {
 import {
   productsApi,
   Product,
+  ProductTradeStatus,
   getProductImageUrls,
 } from '../api/products';
 import {creditsApi} from '../api/creditsApi';
@@ -32,6 +33,10 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
   const [creditLoading, setCreditLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState<number | null>(null);
   const [isChatStarting, setIsChatStarting] = useState(false);
+  const [tradeStatus, setTradeStatus] = useState<ProductTradeStatus | null>(
+    null,
+  );
+  const [tradeActionLoading, setTradeActionLoading] = useState(false);
 
   const fetchProduct = async () => {
     try {
@@ -39,9 +44,11 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
         productsApi.getProductById(productId),
         authApi.getMe(),
       ]);
+      const status = await productsApi.getTradeStatus(productId);
 
       setProduct(data);
       setCurrentUserId(user.id);
+      setTradeStatus(status);
     } catch (error) {
       console.error('Fetch product detail error:', error);
       Alert.alert('오류', '상품 정보를 불러오는 중 오류가 발생했습니다.');
@@ -75,6 +82,9 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
   const sellerProfileImageUri = resolveProfileImageUrl(product?.seller?.profileImage);
   const isMyProduct =
     currentUserId !== null && product?.sellerId === currentUserId;
+  const isSold = product?.status === 'SOLD' || tradeStatus?.isCompleted;
+  const isReservedByAnotherBuyer =
+    product?.status === 'RESERVED' && !tradeStatus?.hasPaid;
 
   const navigateToEdit = () => {
     if (!product) {
@@ -123,6 +133,112 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
     } finally {
       setIsChatStarting(false);
     }
+  };
+
+  const handleSendCredits = async () => {
+    if (!product || tradeActionLoading) {
+      return;
+    }
+
+    if (creditBalance < product.creditPrice) {
+      Alert.alert(
+        '크레딧 부족',
+        `${product.creditPrice.toLocaleString()} 크레딧이 필요합니다.`,
+      );
+      return;
+    }
+
+    Alert.alert(
+      '크레딧 보내기',
+      `${product.creditPrice.toLocaleString()} 크레딧을 판매자에게 보낼까요?`,
+      [
+        {text: '취소', style: 'cancel'},
+        {
+          text: '보내기',
+          onPress: async () => {
+            try {
+              setTradeActionLoading(true);
+
+              const result = await productsApi.sendCredits(product.id);
+
+              setProduct(result.product);
+              setCreditBalance(result.balance);
+              setTradeStatus(prev => ({
+                ...(prev || {
+                  isSeller: false,
+                  isCompleted: false,
+                  creditTransferAmount: product.creditPrice,
+                  creditTransferredAt: null,
+                  room: result.room,
+                }),
+                hasPaid: true,
+                canComplete: result.canComplete,
+                room: result.room,
+              }));
+
+              Alert.alert(
+                '전송 완료',
+                '크레딧 전송 내역이 채팅방에 남았습니다. 이제 거래완료를 할 수 있습니다.',
+              );
+            } catch (error: any) {
+              console.warn('Send product credits error:', error);
+              Alert.alert(
+                '전송 실패',
+                error.response?.data?.message ||
+                  '크레딧을 보내는 중 오류가 발생했습니다.',
+              );
+            } finally {
+              setTradeActionLoading(false);
+            }
+          },
+        },
+      ],
+    );
+  };
+
+  const handleCompleteTrade = async () => {
+    if (!product || tradeActionLoading) {
+      return;
+    }
+
+    Alert.alert('거래완료', '이 물품 거래를 완료 처리할까요?', [
+      {text: '취소', style: 'cancel'},
+      {
+        text: '완료',
+        onPress: async () => {
+          try {
+            setTradeActionLoading(true);
+
+            const result = await productsApi.completeTrade(product.id);
+
+            setProduct(result.product);
+            setTradeStatus(prev => ({
+              ...(prev || {
+                isSeller: false,
+                hasPaid: true,
+                creditTransferAmount: product.creditPrice,
+                creditTransferredAt: null,
+                room: result.room,
+              }),
+              isCompleted: result.isCompleted,
+              canComplete: result.canComplete,
+              room: result.room,
+            }));
+
+            Alert.alert('완료', '거래가 완료되었습니다.');
+          } catch (error: any) {
+            console.warn('Complete product trade error:', error);
+            Alert.alert(
+              '완료 실패',
+              error.response?.data?.message ||
+                '거래완료 처리 중 오류가 발생했습니다.',
+            );
+          } finally {
+            setTradeActionLoading(false);
+          }
+        },
+      },
+    ]);
   };
 
   if (isLoading) {
@@ -206,7 +322,11 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
 
           <Text style={styles.itemCategory}>
             {product.category ||
-              (product.status === 'AVAILABLE' ? '나눔 중' : product.status)}
+              (product.status === 'AVAILABLE'
+                ? '나눔 중'
+                : product.status === 'RESERVED'
+                  ? '거래 진행 중'
+                  : '거래 완료')}
           </Text>
 
           <Text style={styles.itemDesc}>
@@ -220,18 +340,50 @@ export const ProductDetailScreen: React.FC<any> = ({navigation, route}) => {
       </ScrollView>
 
       <View style={[styles.bottomBar, {paddingBottom: insets.bottom + 16}]}>
-        <TouchableOpacity
-          style={styles.chatButton}
-          disabled={isChatStarting}
-          onPress={isMyProduct ? navigateToEdit : navigateToChat}>
-          <Text style={styles.chatButtonText}>
-            {isMyProduct
-              ? '수정하기'
-              : isChatStarting
-                ? '채팅방 여는 중...'
-                : '채팅하기'}
-          </Text>
-        </TouchableOpacity>
+        {isMyProduct ? (
+          <TouchableOpacity style={styles.chatButton} onPress={navigateToEdit}>
+            <Text style={styles.chatButtonText}>수정하기</Text>
+          </TouchableOpacity>
+        ) : isSold ? (
+          <View style={styles.disabledTradeButton}>
+            <Text style={styles.disabledTradeButtonText}>거래 완료된 물품</Text>
+          </View>
+        ) : isReservedByAnotherBuyer ? (
+          <View style={styles.disabledTradeButton}>
+            <Text style={styles.disabledTradeButtonText}>거래 진행 중</Text>
+          </View>
+        ) : (
+          <View style={styles.actionRow}>
+            <TouchableOpacity
+              style={[styles.chatButton, styles.secondaryActionButton]}
+              disabled={isChatStarting || tradeActionLoading}
+              onPress={navigateToChat}>
+              <Text style={styles.chatButtonText}>
+                {isChatStarting ? '채팅방 여는 중...' : '채팅하기'}
+              </Text>
+            </TouchableOpacity>
+
+            {tradeStatus?.hasPaid ? (
+              <TouchableOpacity
+                style={[styles.chatButton, styles.primaryActionButton]}
+                disabled={!tradeStatus.canComplete || tradeActionLoading}
+                onPress={handleCompleteTrade}>
+                <Text style={styles.chatButtonText}>
+                  {tradeActionLoading ? '처리 중...' : '거래완료'}
+                </Text>
+              </TouchableOpacity>
+            ) : (
+              <TouchableOpacity
+                style={[styles.chatButton, styles.primaryActionButton]}
+                disabled={tradeActionLoading || creditLoading}
+                onPress={handleSendCredits}>
+                <Text style={styles.chatButtonText}>
+                  {tradeActionLoading ? '전송 중...' : '크레딧 보내기'}
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
       </View>
     </View>
   );

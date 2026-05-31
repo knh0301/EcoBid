@@ -20,12 +20,15 @@ type ModalType = 'success' | 'photo_error' | 'desc_error' | 'api_error';
 
 export function MissionVerifyScreen({navigation, route}: any) {
   const insets = useSafeAreaInsets();
-  const {missionTitle} = route.params || {missionTitle: '미션 인증'};
+  const {missionTitle = '미션 인증', rewardPoints = 500} = route.params || {};
+  const rewardAmount = Number(rewardPoints) || 500;
 
   const [description, setDescription] = useState('');
   const [images, setImages] = useState<string[]>([]);
   const [modalVisible, setModalVisible] = useState(false);
   const [modalType, setModalType] = useState<ModalType>('success');
+  const [modalMessage, setModalMessage] = useState('');
+  const [awardedRewardPoints, setAwardedRewardPoints] = useState(rewardAmount);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const pickImage = async () => {
@@ -65,16 +68,21 @@ export function MissionVerifyScreen({navigation, route}: any) {
 
     try {
       setIsSubmitting(true);
-      await missionsApi.submitMission({
+      const result = await missionsApi.submitMission({
         missionTitle,
         content: description.trim(),
         imageUrl: images[0] || null,
-        rewardPoints: 500,
+        rewardPoints: rewardAmount,
       });
+      setAwardedRewardPoints(result.rewardPoints);
       setModalType('success');
       setModalVisible(true);
-    } catch (err) {
+    } catch (err: any) {
       console.warn('Submit mission error:', err);
+      setModalMessage(
+        err?.response?.data?.message ||
+          '미션 인증에 실패했어요. 잠시 후 다시 시도해주세요.',
+      );
       setModalType('api_error');
       setModalVisible(true);
     } finally {
@@ -172,7 +180,9 @@ export function MissionVerifyScreen({navigation, route}: any) {
       </ScrollView>
 
       <View style={[styles.footer, {paddingBottom: insets.bottom + 20}]}>
-        <Text style={styles.creditText}>+ 500 크레딧</Text>
+        <Text style={styles.creditText}>
+          + {rewardAmount.toLocaleString()} 크레딧
+        </Text>
 
         <TouchableOpacity
           style={[
@@ -197,7 +207,7 @@ export function MissionVerifyScreen({navigation, route}: any) {
                   크레딧 지급이 완료되었어요!
                 </Text>
                 <Text style={styles.modalSubtitle}>
-                  조건을 만족한 배지도 함께 지급됩니다.
+                  {awardedRewardPoints.toLocaleString()} 크레딧이 지급되었습니다.
                 </Text>
               </>
             )}
@@ -213,9 +223,7 @@ export function MissionVerifyScreen({navigation, route}: any) {
             )}
 
             {modalType === 'api_error' && (
-              <Text style={styles.modalTitle}>
-                미션 인증에 실패했어요. 잠시 후 다시 시도해주세요.
-              </Text>
+              <Text style={styles.modalTitle}>{modalMessage}</Text>
             )}
 
             <TouchableOpacity

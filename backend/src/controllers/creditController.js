@@ -12,6 +12,53 @@ const getDateRange = (year, month) => {
 };
 
 /**
+ * 학과별 크레딧 총액 순위
+ * GET /api/credits/department-rankings
+ */
+exports.getDepartmentCreditRankings = async (req, res, next) => {
+  try {
+    const requestedLimit = Number(req.query.limit);
+    const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
+      ? Math.min(requestedLimit, 20)
+      : 3;
+    const departmentExpr = sequelize.fn(
+      'COALESCE',
+      sequelize.fn('NULLIF', sequelize.fn('TRIM', sequelize.col('department')), ''),
+      '학과 미지정',
+    );
+
+    const rows = await User.findAll({
+      attributes: [
+        [departmentExpr, 'department'],
+        [sequelize.fn('SUM', sequelize.col('credits')), 'totalCredits'],
+        [sequelize.fn('COUNT', sequelize.col('id')), 'userCount'],
+      ],
+      group: [departmentExpr],
+      order: [
+        [sequelize.fn('SUM', sequelize.col('credits')), 'DESC'],
+        [sequelize.fn('COUNT', sequelize.col('id')), 'DESC'],
+      ],
+      limit,
+      raw: true,
+    });
+
+    const rankings = rows.map((item, index) => ({
+      rank: index + 1,
+      department: item.department,
+      totalCredits: Number(item.totalCredits || 0),
+      userCount: Number(item.userCount || 0),
+    }));
+
+    res.json({
+      success: true,
+      data: rankings,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+/**
  * 크레딧 내역 생성
  * POST /api/credits
  */

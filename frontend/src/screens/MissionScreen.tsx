@@ -1,7 +1,16 @@
-import React from 'react';
-import {ScrollView, Text, View, TouchableOpacity} from 'react-native';
+import React, {useState} from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  Share,
+  Text,
+  View,
+  TouchableOpacity,
+} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {missionStyles} from '../styles/MissionScreenStyle';
+import {missionsApi} from '../api/missions';
 
 const MISSION_DATA = [
   {
@@ -23,8 +32,9 @@ const MISSION_DATA = [
   {
     id: '3',
     title: '친구 초대하기',
-    desc: '친구 초대 해줘용.',
+    desc: '친구에게 EcoBid를 공유하고 함께 친환경 나눔을 시작해요.',
     credit: '+ 2,000 크레딧',
+    rewardPoints: 2000,
     buttonText: '초대하기',
     status: 'active',
   },
@@ -44,6 +54,7 @@ const DAILY_MISSIONS = [
     title: '텀블러 사용하기',
     desc: '일회용품 대신 텀블러를 사용해보는건 어떨까요?',
     credit: '+ 50 크레딧',
+    rewardPoints: 50,
     buttonText: '크레딧 지급 완료',
     status: 'completed',
   },
@@ -52,6 +63,7 @@ const DAILY_MISSIONS = [
     title: '분리수거 하기',
     desc: '페트병 라벨 제거, 캔 압축 등 올바른 분리수거를 해봐요.',
     credit: '+ 50 크레딧',
+    rewardPoints: 50,
     buttonText: '인증하기',
     status: 'active',
   },
@@ -60,6 +72,7 @@ const DAILY_MISSIONS = [
     title: '내 용기 이용하여 음식 포장하기',
     desc: '일회용품 대신 집에 있던 용기를 활용해보세요.',
     credit: '+ 50 크레딧',
+    rewardPoints: 50,
     buttonText: '인증하기',
     status: 'active',
   },
@@ -68,6 +81,7 @@ const DAILY_MISSIONS = [
     title: '음식 남기지 않기',
     desc: '음식물 쓰레기를 줄여요.',
     credit: '+ 50 크레딧',
+    rewardPoints: 50,
     buttonText: '인증하기',
     status: 'active',
   },
@@ -76,6 +90,7 @@ const DAILY_MISSIONS = [
     title: '대중교통 이용하기',
     desc: '대중교통도 잘 되어있다.',
     credit: '+ 50 크레딧',
+    rewardPoints: 50,
     buttonText: '인증하기',
     status: 'active',
   },
@@ -84,6 +99,7 @@ const DAILY_MISSIONS = [
     title: '이면지 활용하기',
     desc: '점점',
     credit: '+ 50 크레딧',
+    rewardPoints: 50,
     buttonText: '인증하기',
     status: 'active',
   },
@@ -92,6 +108,7 @@ const DAILY_MISSIONS = [
     title: '10,000보 걷기',
     desc: '쓰기',
     credit: '+ 50 크레딧',
+    rewardPoints: 50,
     buttonText: '인증하기',
     status: 'active',
   },
@@ -100,6 +117,7 @@ const DAILY_MISSIONS = [
     title: '리필 제품 구매하기',
     desc: '구찮다.',
     credit: '+ 50 크레딧',
+    rewardPoints: 50,
     buttonText: '인증하기',
     status: 'active',
   },
@@ -108,12 +126,21 @@ const DAILY_MISSIONS = [
     title: '안쓰는 멀티탭 뽑기',
     desc: '전기세 줄줄 샌다.',
     credit: '+ 50 크레딧',
+    rewardPoints: 50,
     buttonText: '인증하기',
     status: 'active',
   },
 ];
 
-const MissionCard = ({item, navigation}: {item: any; navigation: any}) => (
+const MissionCard = ({
+  item,
+  isLoading,
+  onPress,
+}: {
+  item: any;
+  isLoading: boolean;
+  onPress: () => void;
+}) => (
   <View style={missionStyles.card}>
     <View style={missionStyles.cardHeader}>
       <Text style={missionStyles.cardTitle}>{item.title}</Text>
@@ -131,29 +158,78 @@ const MissionCard = ({item, navigation}: {item: any; navigation: any}) => (
         item.status === 'completed' && missionStyles.buttonCompleted,
       ]}
       activeOpacity={0.7}
-      disabled={item.status === 'completed'}
-      onPress={() => {
-        if (item.buttonText === '인증하기') {
-          navigation.navigate('MissionVerify', {missionTitle: item.title});
-        } else if (item.buttonText === '출석하기') {
-          navigation.navigate('Attendance');
-        } else if (item.buttonText === '나눔 물품 등록하기') {
-          navigation.navigate('ProductRegister');
-        }
-      }}>
-      <Text
-        style={[
-          missionStyles.buttonText,
-          item.status === 'completed' && missionStyles.buttonTextCompleted,
-        ]}>
-        {item.buttonText}
-      </Text>
+      disabled={item.status === 'completed' || isLoading}
+      onPress={onPress}>
+      {isLoading ? (
+        <ActivityIndicator size="small" color="#FFFFFF" />
+      ) : (
+        <Text
+          style={[
+            missionStyles.buttonText,
+            item.status === 'completed' && missionStyles.buttonTextCompleted,
+          ]}>
+          {item.buttonText}
+        </Text>
+      )}
     </TouchableOpacity>
   </View>
 );
 
 export function MissionScreen({navigation}: any) {
   const insets = useSafeAreaInsets();
+  const [submittingMissionId, setSubmittingMissionId] = useState<string | null>(
+    null,
+  );
+
+  const handleFriendInvite = async (item: any) => {
+    try {
+      setSubmittingMissionId(item.id);
+
+      const shareResult = await Share.share({
+        title: 'EcoBid 친구 초대',
+        message:
+          'EcoBid에서 안 쓰는 물건을 나누고 친환경 미션으로 크레딧도 모아봐!',
+      });
+
+      if (shareResult.action === Share.dismissedAction) {
+        return;
+      }
+
+      const result = await missionsApi.submitMission({
+        missionTitle: item.title,
+        content: '친구에게 EcoBid 초대 메시지를 공유했습니다.',
+        rewardPoints: item.rewardPoints,
+      });
+
+      Alert.alert(
+        '친구 초대 완료',
+        `${result.rewardPoints.toLocaleString()} 크레딧이 지급되었습니다.`,
+      );
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        '친구 초대 보상을 지급하지 못했습니다. 다시 시도해주세요.';
+
+      Alert.alert('초대 실패', message);
+    } finally {
+      setSubmittingMissionId(null);
+    }
+  };
+
+  const handleMissionPress = (item: any) => {
+    if (item.buttonText === '인증하기') {
+      navigation.navigate('MissionVerify', {
+        missionTitle: item.title,
+        rewardPoints: item.rewardPoints || 500,
+      });
+    } else if (item.buttonText === '출석하기') {
+      navigation.navigate('Attendance');
+    } else if (item.buttonText === '나눔 물품 등록하기') {
+      navigation.navigate('ProductRegister');
+    } else if (item.buttonText === '초대하기') {
+      handleFriendInvite(item);
+    }
+  };
 
   return (
     <View
@@ -173,7 +249,12 @@ export function MissionScreen({navigation}: any) {
         </Text>
 
         {MISSION_DATA.map(item => (
-          <MissionCard key={item.id} item={item} navigation={navigation} />
+          <MissionCard
+            key={item.id}
+            item={item}
+            isLoading={submittingMissionId === item.id}
+            onPress={() => handleMissionPress(item)}
+          />
         ))}
 
         <Text style={missionStyles.sectionTitle}>데일리 미션</Text>
@@ -190,7 +271,12 @@ export function MissionScreen({navigation}: any) {
         </View>
 
         {DAILY_MISSIONS.map(item => (
-          <MissionCard key={item.id} item={item} navigation={navigation} />
+          <MissionCard
+            key={item.id}
+            item={item}
+            isLoading={submittingMissionId === item.id}
+            onPress={() => handleMissionPress(item)}
+          />
         ))}
       </ScrollView>
     </View>

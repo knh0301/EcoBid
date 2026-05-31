@@ -279,4 +279,9 @@ export const homeScreenStyles = StyleSheet.create({
   loadingIndicator: {
     marginTop: 20,
   },
+
+  inlineLoadingIndicator: {
+    marginTop: 12,
+    marginBottom: 4,
+  },
 });

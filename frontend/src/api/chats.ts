@@ -13,6 +13,9 @@ export type ChatRoomResponse = {
   sellerId: number;
   lastMessage?: string | null;
   lastMessageAt?: string | null;
+  creditTransferAmount?: number | null;
+  creditTransferredAt?: string | null;
+  completedAt?: string | null;
   product?: {
     id: number;
     title: string;

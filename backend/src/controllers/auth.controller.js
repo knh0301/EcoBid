@@ -99,6 +99,81 @@ const socialLogin = async (req, res, next) => {
   }
 };
 
+const googleLogin = async (req, res, next) => {
+  try {
+    const { accessToken } = req.body;
+
+    if (!accessToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'Google 인증 토큰이 필요합니다.',
+      });
+    }
+
+    const result = await authService.googleLogin({ accessToken });
+
+    res.json({
+      success: true,
+      message: 'Google 로그인 성공',
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const requestPasswordReset = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: '이메일을 입력해주세요.',
+      });
+    }
+
+    const result = await authService.requestPasswordReset({ email });
+
+    res.json({
+      success: true,
+      message: '비밀번호 재설정 코드를 확인해주세요.',
+      data: result,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const { email, code, password } = req.body;
+
+    if (!email || !code || !password) {
+      return res.status(400).json({
+        success: false,
+        message: '이메일, 재설정 코드, 새 비밀번호를 모두 입력해주세요.',
+      });
+    }
+
+    if (password.length < 8) {
+      return res.status(400).json({
+        success: false,
+        message: '비밀번호는 8자 이상이어야 합니다.',
+      });
+    }
+
+    await authService.resetPassword({ email, code, password });
+
+    res.json({
+      success: true,
+      message: '비밀번호가 변경되었습니다. 새 비밀번호로 로그인해주세요.',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 const refresh = async (req, res, next) => {
   try {
     const { refreshToken } = req.body;
@@ -215,6 +290,9 @@ module.exports = {
   register,
   login,
   socialLogin,
+  googleLogin,
+  requestPasswordReset,
+  resetPassword,
   refresh,
   logout,
   getMe,

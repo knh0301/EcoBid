@@ -108,7 +108,7 @@ export function LoginScreen() {
 
             <View style={styles.findPasswordRow}>
               <Text style={styles.findPasswordText}>비밀번호를 잊으셨나요?</Text>
-              <Pressable>
+              <Pressable onPress={() => navigation.navigate('PasswordReset')}>
                 <Text style={styles.findPasswordLink}> 비밀번호 찾기</Text>
               </Pressable>
             </View>
@@ -135,7 +135,7 @@ export function LoginScreen() {
               ) : (
                 <>
                   <Text style={styles.googleIcon}>G</Text>
-                  <Text style={styles.googleButtonText}>Sign up with Google</Text>
+                  <Text style={styles.googleButtonText}>Google로 로그인</Text>
                 </>
               )}
             </Pressable>

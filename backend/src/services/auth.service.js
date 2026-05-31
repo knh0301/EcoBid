@@ -1,8 +1,10 @@
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const fs = require('fs/promises');
 const path = require('path');
 const { Op } = require('sequelize');
+const mailer = require('../utils/mailer');
 const {
   sequelize,
   Attendance,
@@ -18,6 +20,42 @@ const {
 } = require('../models');
 
 const UPLOAD_ROOT = path.join(__dirname, '..', '..', 'uploads');
+const DEFAULT_PASSWORD_RESET_TTL_MINUTES = 15;
+const DEFAULT_PASSWORD_RESET_MAX_ATTEMPTS = 5;
+
+const normalizeEmail = email => String(email || '').trim().toLowerCase();
+
+const emailWhere = email => sequelize.where(
+  sequelize.fn('LOWER', sequelize.col('email')),
+  normalizeEmail(email),
+);
+
+const getPasswordResetTtlMinutes = () => {
+  const ttlMinutes = Number(process.env.PASSWORD_RESET_CODE_TTL_MINUTES);
+
+  return Number.isFinite(ttlMinutes) && ttlMinutes > 0
+    ? ttlMinutes
+    : DEFAULT_PASSWORD_RESET_TTL_MINUTES;
+};
+
+const getPasswordResetMaxAttempts = () => {
+  const maxAttempts = Number(process.env.PASSWORD_RESET_MAX_ATTEMPTS);
+
+  return Number.isFinite(maxAttempts) && maxAttempts > 0
+    ? maxAttempts
+    : DEFAULT_PASSWORD_RESET_MAX_ATTEMPTS;
+};
+
+const shouldExposePasswordResetCode = () =>
+  process.env.PASSWORD_RESET_RETURN_CODE === 'true';
+
+const createPasswordResetCode = () => String(crypto.randomInt(100000, 1000000));
+
+const hashPasswordResetCode = ({ email, code }) =>
+  crypto
+    .createHash('sha256')
+    .update(`${normalizeEmail(email)}:${String(code || '').trim()}`)
+    .digest('hex');
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // JWT 토큰 생성
@@ -93,6 +131,7 @@ const register = async ({
   studentId,
   department,
 }) => {
+  const normalizedEmail = normalizeEmail(email);
   const trimmedName = String(name || '').trim();
   const trimmedNickname = String(nickname || '').trim();
   const trimmedStudentId = String(studentId || '').trim();
@@ -123,7 +162,9 @@ const register = async ({
   }
 
   // 1. 이메일 중복 체크
-  const existingUser = await User.findOne({ where: { email } });
+  const existingUser = await User.findOne({
+    where: emailWhere(normalizedEmail),
+  });
   if (existingUser) {
     const error = new Error('이미 사용 중인 이메일입니다.');
     error.status = 409;
@@ -135,7 +176,7 @@ const register = async ({
 
   // 3. 유저 생성
   const user = await User.create({
-    email,
+    email: normalizedEmail,
     password: hashedPassword,
     name: trimmedName,
     nickname: trimmedNickname,
@@ -159,7 +200,9 @@ const register = async ({
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const login = async ({ email, password }) => {
   // 1. 유저 조회 (password 포함)
-  const user = await User.scope('withSensitive').findOne({ where: { email } });
+  const user = await User.scope('withSensitive').findOne({
+    where: emailWhere(email),
+  });
   if (!user || !user.password) {
     const error = new Error('이메일 또는 비밀번호가 올바르지 않습니다.');
     error.status = 401;
@@ -187,8 +230,12 @@ const login = async ({ email, password }) => {
 // 소셜 로그인 (Google / Kakao)
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const socialLogin = async ({ email, name, profileImage, provider, providerId }) => {
+  const normalizedEmail = normalizeEmail(email);
+
   // 1. 기존 유저 조회 또는 신규 생성
-  let user = await User.scope('withSensitive').findOne({ where: { email } });
+  let user = await User.scope('withSensitive').findOne({
+    where: emailWhere(normalizedEmail),
+  });
 
   if (user) {
     // 기존 유저 → 소셜 정보 업데이트
@@ -201,7 +248,7 @@ const socialLogin = async ({ email, name, profileImage, provider, providerId }) 
   } else {
     // 신규 유저 생성
     user = await User.create({
-      email,
+      email: normalizedEmail,
       name,
       nickname: name,
       profileImage,
@@ -217,6 +264,184 @@ const socialLogin = async ({ email, name, profileImage, provider, providerId }) 
   await user.update({ refreshToken });
 
   return { user: toSafeUser(user), accessToken, refreshToken };
+};
+
+const fetchGoogleProfile = async (accessToken) => {
+  const response = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
+
+  if (!response.ok) {
+    const error = new Error('Google 인증 정보를 확인할 수 없습니다.');
+    error.status = 401;
+    throw error;
+  }
+
+  const profile = await response.json();
+
+  if (!profile.sub || !profile.email) {
+    const error = new Error('Google 계정 정보를 불러올 수 없습니다.');
+    error.status = 401;
+    throw error;
+  }
+
+  return {
+    email: profile.email,
+    name: profile.name || profile.email.split('@')[0],
+    profileImage: profile.picture,
+    provider: 'GOOGLE',
+    providerId: profile.sub,
+  };
+};
+
+const googleLogin = async ({ accessToken }) => {
+  const googleProfile = await fetchGoogleProfile(accessToken);
+
+  return socialLogin(googleProfile);
+};
+
+const requestPasswordReset = async ({ email }) => {
+  const normalizedEmail = normalizeEmail(email);
+  const ttlMinutes = getPasswordResetTtlMinutes();
+  const expiresAt = new Date(Date.now() + ttlMinutes * 60 * 1000);
+  const user = await User.scope('withSensitive').findOne({
+    where: emailWhere(normalizedEmail),
+  });
+
+  if (!user) {
+    return {
+      expiresAt: expiresAt.toISOString(),
+      resetCode: undefined,
+    };
+  }
+
+  const resetCode = createPasswordResetCode();
+  const passwordResetTokenHash = hashPasswordResetCode({
+    email: normalizedEmail,
+    code: resetCode,
+  });
+
+  await user.update({
+    passwordResetTokenHash,
+    passwordResetExpiresAt: expiresAt,
+    passwordResetAttemptCount: 0,
+  });
+
+  if (process.env.NODE_ENV === 'development') {
+    console.info(`[Password reset] ${normalizedEmail}: ${resetCode}`);
+  }
+
+  // 이메일 발송 비동기 처리 (응답 지연 방지를 위해 await 하지 않음)
+  mailer.sendMail({
+    to: normalizedEmail,
+    subject: '[EcoBid] 비밀번호 재설정 안내',
+    text: `비밀번호 재설정 코드는 다음과 같습니다: ${resetCode}\n이 코드는 ${ttlMinutes}분간 유효합니다.`,
+    html: `
+      <div style="font-family: sans-serif; padding: 20px;">
+        <h2>EcoBid 비밀번호 재설정</h2>
+        <p>요청하신 비밀번호 재설정 코드는 다음과 같습니다:</p>
+        <div style="background-color: #f4f4f4; padding: 15px; font-size: 24px; font-weight: bold; letter-spacing: 5px; text-align: center; margin: 20px 0;">
+          ${resetCode}
+        </div>
+        <p>이 코드는 ${ttlMinutes}분간 유효합니다.</p>
+        <p>본인이 요청하지 않은 경우 이 메일을 무시해 주세요.</p>
+      </div>
+    `,
+  }).catch(err => {
+    console.error('비밀번호 재설정 메일 발송 중 오류:', err);
+  });
+
+  return {
+    expiresAt: expiresAt.toISOString(),
+    resetCode: shouldExposePasswordResetCode() ? resetCode : undefined,
+  };
+};
+
+const resetPassword = async ({ email, code, password }) => {
+  const normalizedEmail = normalizeEmail(email);
+  const normalizedCode = String(code || '').trim();
+
+  if (!normalizedEmail || !normalizedCode) {
+    const error = new Error('이메일과 재설정 코드를 입력해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (!password || password.length < 8) {
+    const error = new Error('비밀번호는 8자 이상이어야 합니다.');
+    error.status = 400;
+    throw error;
+  }
+
+  const user = await User.scope('withSensitive').findOne({
+    where: emailWhere(normalizedEmail),
+  });
+
+  const invalidCodeError = new Error('재설정 코드가 올바르지 않거나 만료되었습니다.');
+  invalidCodeError.status = 400;
+
+  if (!user || !user.passwordResetTokenHash || !user.passwordResetExpiresAt) {
+    throw invalidCodeError;
+  }
+
+  if (new Date(user.passwordResetExpiresAt).getTime() < Date.now()) {
+    await user.update({
+      passwordResetTokenHash: null,
+      passwordResetExpiresAt: null,
+      passwordResetAttemptCount: 0,
+    });
+
+    throw invalidCodeError;
+  }
+
+  const maxAttempts = getPasswordResetMaxAttempts();
+  const attemptCount = Number(user.passwordResetAttemptCount || 0);
+
+  if (attemptCount >= maxAttempts) {
+    await user.update({
+      passwordResetTokenHash: null,
+      passwordResetExpiresAt: null,
+      passwordResetAttemptCount: 0,
+    });
+
+    throw invalidCodeError;
+  }
+
+  const submittedHash = hashPasswordResetCode({
+    email: normalizedEmail,
+    code: normalizedCode,
+  });
+
+  if (submittedHash !== user.passwordResetTokenHash) {
+    const nextAttemptCount = attemptCount + 1;
+
+    await user.update({
+      passwordResetAttemptCount: nextAttemptCount,
+      ...(nextAttemptCount >= maxAttempts
+        ? {
+            passwordResetTokenHash: null,
+            passwordResetExpiresAt: null,
+            passwordResetAttemptCount: 0,
+          }
+        : {}),
+    });
+
+    throw invalidCodeError;
+  }
+
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  await user.update({
+    password: hashedPassword,
+    passwordResetTokenHash: null,
+    passwordResetExpiresAt: null,
+    passwordResetAttemptCount: 0,
+    refreshToken: null,
+  });
+
+  return { user: toSafeUser(user) };
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -506,6 +731,9 @@ module.exports = {
   register,
   login,
   socialLogin,
+  googleLogin,
+  requestPasswordReset,
+  resetPassword,
   refreshAccessToken,
   logout,
   getMe,

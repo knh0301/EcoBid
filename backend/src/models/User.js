@@ -88,6 +88,25 @@ const User = sequelize.define('User', {
     allowNull: true,
   },
 
+  // 비밀번호 재설정 코드 해시
+  passwordResetTokenHash: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+
+  // 비밀번호 재설정 코드 만료 시각
+  passwordResetExpiresAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
+
+  // 비밀번호 재설정 코드 검증 실패 횟수
+  passwordResetAttemptCount: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0,
+    allowNull: false,
+  },
+
   // 보유 크레딧 잔액 캐시
   credits: {
     type: DataTypes.INTEGER,
@@ -100,7 +119,13 @@ const User = sequelize.define('User', {
   // password, refreshToken은 기본 조회에서 제외
   defaultScope: {
     attributes: {
-      exclude: ['password', 'refreshToken'],
+      exclude: [
+        'password',
+        'refreshToken',
+        'passwordResetTokenHash',
+        'passwordResetExpiresAt',
+        'passwordResetAttemptCount',
+      ],
     },
   },
   // 민감 정보 포함 조회용 scope

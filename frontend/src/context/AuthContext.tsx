@@ -6,7 +6,6 @@ import {Alert, Platform} from 'react-native';
 import {authApi, UserProfile} from '../api/authApi';
 import {tokenStorage} from '../storage/tokenStorage';
 import {disconnectChatSocket} from '../api/chatSocket';
-import {isTestAuthEnabled, TEST_AUTH_KEY, TEST_USER} from '../auth/testAuth';
 
 WebBrowser.maybeCompleteAuthSession();
 
@@ -42,7 +41,6 @@ interface AuthContextType {
   userInfo: UserProfile | null;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
-  continueAsTestUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -92,12 +90,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkLoginStatus = async () => {
     try {
-      if (await isTestAuthEnabled()) {
-        setUserInfo(TEST_USER);
-        setIsLoggedIn(true);
-        return;
-      }
-
       const accessToken = await tokenStorage.getAccessToken();
       const refreshToken = await tokenStorage.getRefreshToken();
 
@@ -119,18 +111,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const continueAsTestUser = async () => {
-    if (!__DEV__) {
-      throw new Error('테스트 로그인은 개발 환경에서만 사용할 수 있습니다.');
-    }
-
-    disconnectChatSocket();
-    await tokenStorage.clearTokens();
-    await AsyncStorage.setItem(TEST_AUTH_KEY, 'true');
-    await AsyncStorage.setItem('userInfo', JSON.stringify(TEST_USER));
-    setUserInfo(TEST_USER);
-    setIsLoggedIn(true);
-  };
 
   const loginWithEmail = async (email: string, password: string) => {
     setIsLoading(true);
@@ -214,7 +194,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearLocalAuthState = async () => {
     disconnectChatSocket();
     await tokenStorage.clearTokens();
-    await AsyncStorage.removeItem(TEST_AUTH_KEY);
+    await AsyncStorage.removeItem('isTestAuthMode');
     await AsyncStorage.removeItem('userInfo');
     setUserInfo(null);
     setIsLoggedIn(false);
@@ -228,7 +208,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userInfo,
         loginWithEmail,
         signInWithGoogle,
-        continueAsTestUser,
         logout,
       }}>
       {children}

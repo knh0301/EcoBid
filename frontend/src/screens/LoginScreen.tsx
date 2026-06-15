@@ -21,7 +21,6 @@ export function LoginScreen() {
   const {
     loginWithEmail,
     signInWithGoogle,
-    continueAsTestUser,
     isLoading: authLoading,
   } = useAuth();
 
@@ -64,13 +63,6 @@ export function LoginScreen() {
     }
   };
 
-  const handleTestLogin = async () => {
-    try {
-      await continueAsTestUser();
-    } catch (error: any) {
-      Alert.alert('테스트 진입 실패', error.message || '다시 시도해주세요.');
-    }
-  };
 
   const isButtonLoading = loginLoading || authLoading;
 
@@ -149,14 +141,6 @@ export function LoginScreen() {
               )}
             </Pressable>
 
-            {__DEV__ && (
-              <Pressable
-                style={styles.testButton}
-                onPress={handleTestLogin}
-                disabled={isButtonLoading}>
-                <Text style={styles.testButtonText}>테스트로 둘러보기</Text>
-              </Pressable>
-            )}
 
             <View style={styles.signupRow}>
               <Text style={styles.signupText}>계정이 없으신가요?</Text>

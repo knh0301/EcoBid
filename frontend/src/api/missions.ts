@@ -1,6 +1,5 @@
 import apiClient from './client';
 import {Badge} from './badges';
-import {isTestAuthEnabled} from '../auth/testAuth';
 
 type SubmitMissionPayload = {
   missionTitle: string;
@@ -31,10 +30,6 @@ type SubmitMissionResponse = {
 
 export const missionsApi = {
   async getRecommendedMissions(limit = 2): Promise<RecommendedMission[]> {
-    if (await isTestAuthEnabled()) {
-      return [];
-    }
-
     const response = await apiClient.get<{
       success: boolean;
       data: RecommendedMission[];
@@ -44,13 +39,6 @@ export const missionsApi = {
   },
 
   async submitMission(payload: SubmitMissionPayload) {
-    if (await isTestAuthEnabled()) {
-      return {
-        rewardPoints: payload.rewardPoints ?? 50,
-        newlyAwardedBadges: [] as Badge[],
-      };
-    }
-
     const response = await apiClient.post<SubmitMissionResponse>(
       '/missions/submissions',
       payload,

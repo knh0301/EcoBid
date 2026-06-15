@@ -2,7 +2,6 @@ import axios from 'axios';
 import {API_CONFIG} from '../config/apiConfig';
 import {tokenStorage} from '../storage/tokenStorage';
 import {refreshAuthTokens} from './authTokenManager';
-import {isTestAuthEnabled, TEST_USER} from '../auth/testAuth';
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 // Axios 인스턴스 생성
@@ -194,10 +193,6 @@ export const authApi = {
 
   // 내 정보 조회
   getMe: async (): Promise<UserProfile> => {
-    if (await isTestAuthEnabled()) {
-      return TEST_USER;
-    }
-
     const {data} = await api.get('/auth/me');
     return data.data.user;
   },
@@ -231,11 +226,6 @@ export const authApi = {
 
   // 로그아웃
   logout: async () => {
-    if (await isTestAuthEnabled()) {
-      await tokenStorage.clearTokens();
-      return;
-    }
-
     await api.post('/auth/logout');
 
     await tokenStorage.clearTokens();

@@ -1,6 +1,5 @@
 import apiClient from './client';
 import {Product} from './products';
-import {isTestAuthEnabled} from '../auth/testAuth';
 
 type ApiResponse<T> = {
   success: boolean;
@@ -15,28 +14,16 @@ type FavoriteState = {
 
 export const favoritesApi = {
   async getFavorites(): Promise<Product[]> {
-    if (await isTestAuthEnabled()) {
-      return [];
-    }
-
     const response = await apiClient.get<ApiResponse<Product[]>>('/favorites');
     return response.data.data ?? [];
   },
 
   async getFavoriteIds(): Promise<number[]> {
-    if (await isTestAuthEnabled()) {
-      return [];
-    }
-
     const response = await apiClient.get<ApiResponse<number[]>>('/favorites/ids');
     return response.data.data ?? [];
   },
 
   async addFavorite(productId: number): Promise<FavoriteState> {
-    if (await isTestAuthEnabled()) {
-      return {productId, isLiked: true};
-    }
-
     const response = await apiClient.post<ApiResponse<FavoriteState>>(
       `/favorites/${productId}`,
     );
@@ -44,10 +31,6 @@ export const favoritesApi = {
   },
 
   async removeFavorite(productId: number): Promise<FavoriteState> {
-    if (await isTestAuthEnabled()) {
-      return {productId, isLiked: false};
-    }
-
     const response = await apiClient.delete<ApiResponse<FavoriteState>>(
       `/favorites/${productId}`,
     );

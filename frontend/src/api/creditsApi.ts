@@ -1,6 +1,5 @@
 import apiClient from './client';
 import {authApi} from './authApi';
-import {isTestAuthEnabled} from '../auth/testAuth';
 
 export type CreditReferenceType = 'ATTENDANCE' | 'MISSION' | 'PRODUCT';
 
@@ -58,19 +57,11 @@ export const creditsApi = {
   },
 
   async getMyCreditTransactions(): Promise<CreditTransaction[]> {
-    if (await isTestAuthEnabled()) {
-      return [];
-    }
-
     const user = await authApi.getMe();
     return creditsApi.getCreditTransactions(user.id);
   },
 
   async getMyCreditBalance(): Promise<number> {
-    if (await isTestAuthEnabled()) {
-      return 0;
-    }
-
     const transactions = await creditsApi.getMyCreditTransactions();
     return calculateBalance(transactions);
   },

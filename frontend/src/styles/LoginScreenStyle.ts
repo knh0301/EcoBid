@@ -145,24 +145,6 @@ export const loginStyles = StyleSheet.create({
     color: colors.textDark,
   },
 
-  testButton: {
-    width: '100%',
-    height: 42,
-    borderRadius: 9,
-    backgroundColor: colors.lightGreenBackground,
-    borderWidth: 1,
-    borderColor: colors.historyBorder,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 14,
-  },
-
-  testButtonText: {
-    fontSize: 12,
-    fontWeight: '900',
-    color: colors.primaryDark,
-  },
-
   signupRow: {
     flexDirection: 'row',
     marginTop: 22,

@@ -1,5 +1,4 @@
 import apiClient from './client';
-import {isTestAuthEnabled} from '../auth/testAuth';
 
 type ApiResponse<T> = {
   success: boolean;
@@ -39,10 +38,6 @@ export type ChatRoomResponse = {
 
 export const chatsApi = {
   async createOrGetRoom(productId: number): Promise<ChatRoomResponse> {
-    if (await isTestAuthEnabled()) {
-      throw new Error('테스트 모드에서는 채팅방을 만들 수 없습니다.');
-    }
-
     const response = await apiClient.post<ApiResponse<ChatRoomResponse>>(
       '/chats/rooms',
       {productId},

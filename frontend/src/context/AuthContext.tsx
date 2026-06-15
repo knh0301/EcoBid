@@ -6,13 +6,16 @@ import {Alert, Platform} from 'react-native';
 import {authApi, UserProfile} from '../api/authApi';
 import {tokenStorage} from '../storage/tokenStorage';
 import {disconnectChatSocket} from '../api/chatSocket';
+import {isTestAuthEnabled, TEST_AUTH_KEY, TEST_USER} from '../auth/testAuth';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const readEnv = (value?: string) => {
   const trimmedValue = value?.trim();
 
-  return trimmedValue && !trimmedValue.startsWith('YOUR_') ? trimmedValue : '';
+  return trimmedValue && !trimmedValue.startsWith('YOUR_')
+    ? trimmedValue
+    : undefined;
 };
 
 const GOOGLE_CLIENT_IDS = {
@@ -20,6 +23,11 @@ const GOOGLE_CLIENT_IDS = {
   androidClientId: readEnv(process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID),
   iosClientId: readEnv(process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID),
 };
+const GOOGLE_CLIENT_ID_FALLBACK =
+  GOOGLE_CLIENT_IDS.webClientId ||
+  GOOGLE_CLIENT_IDS.androidClientId ||
+  GOOGLE_CLIENT_IDS.iosClientId ||
+  'google-client-id-not-configured';
 
 const getPlatformGoogleClientId = () =>
   Platform.select({
@@ -34,6 +42,7 @@ interface AuthContextType {
   userInfo: UserProfile | null;
   loginWithEmail: (email: string, password: string) => Promise<void>;
   signInWithGoogle: () => Promise<void>;
+  continueAsTestUser: () => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -45,9 +54,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userInfo, setUserInfo] = useState<UserProfile | null>(null);
 
   const [request, response, promptAsync] = Google.useAuthRequest({
+    clientId: GOOGLE_CLIENT_ID_FALLBACK,
     webClientId: GOOGLE_CLIENT_IDS.webClientId,
     androidClientId: GOOGLE_CLIENT_IDS.androidClientId,
     iosClientId: GOOGLE_CLIENT_IDS.iosClientId,
+    scopes: ['openid', 'profile', 'email'],
     selectAccount: true,
     language: 'ko',
   });
@@ -60,8 +71,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (response?.type === 'success') {
       const accessToken =
         response.authentication?.accessToken || response.params.access_token;
+      const idToken =
+        response.authentication?.idToken || response.params.id_token;
 
-      handleGoogleToken(accessToken).catch((error: any) => {
+      handleGoogleToken({accessToken, idToken}).catch((error: any) => {
         const message =
           error?.response?.data?.message ||
           error?.message ||
@@ -79,6 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const checkLoginStatus = async () => {
     try {
+      if (await isTestAuthEnabled()) {
+        setUserInfo(TEST_USER);
+        setIsLoggedIn(true);
+        return;
+      }
+
       const accessToken = await tokenStorage.getAccessToken();
       const refreshToken = await tokenStorage.getRefreshToken();
 
@@ -100,6 +119,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const continueAsTestUser = async () => {
+    if (!__DEV__) {
+      throw new Error('테스트 로그인은 개발 환경에서만 사용할 수 있습니다.');
+    }
+
+    disconnectChatSocket();
+    await tokenStorage.clearTokens();
+    await AsyncStorage.setItem(TEST_AUTH_KEY, 'true');
+    await AsyncStorage.setItem('userInfo', JSON.stringify(TEST_USER));
+    setUserInfo(TEST_USER);
+    setIsLoggedIn(true);
+  };
+
   const loginWithEmail = async (email: string, password: string) => {
     setIsLoading(true);
 
@@ -115,8 +147,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const handleGoogleToken = async (accessToken?: string) => {
-    if (!accessToken) {
+  const handleGoogleToken = async ({
+    accessToken,
+    idToken,
+  }: {
+    accessToken?: string;
+    idToken?: string;
+  }) => {
+    if (!accessToken && !idToken) {
       throw new Error('Google 인증 토큰을 받지 못했습니다.');
     }
 
@@ -124,7 +162,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     try {
       disconnectChatSocket();
-      const result = await authApi.googleLogin({accessToken});
+      const result = await authApi.googleLogin({accessToken, idToken});
 
       await AsyncStorage.setItem('userInfo', JSON.stringify(result.user));
       setUserInfo(result.user);
@@ -136,7 +174,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithGoogle = async () => {
     if (!getPlatformGoogleClientId()) {
-      throw new Error('Google OAuth 클라이언트 ID를 환경변수에 설정해주세요.');
+      throw new Error(
+        Platform.select({
+          android:
+            'Android용 Google OAuth 클라이언트 ID를 EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID에 설정해주세요.',
+          ios:
+            'iOS용 Google OAuth 클라이언트 ID를 EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID에 설정해주세요.',
+          default:
+            'Web용 Google OAuth 클라이언트 ID를 EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID에 설정해주세요.',
+        }) || 'Google OAuth 클라이언트 ID를 환경변수에 설정해주세요.',
+      );
     }
 
     if (!request) {
@@ -167,6 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearLocalAuthState = async () => {
     disconnectChatSocket();
     await tokenStorage.clearTokens();
+    await AsyncStorage.removeItem(TEST_AUTH_KEY);
     await AsyncStorage.removeItem('userInfo');
     setUserInfo(null);
     setIsLoggedIn(false);
@@ -180,6 +228,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         userInfo,
         loginWithEmail,
         signInWithGoogle,
+        continueAsTestUser,
         logout,
       }}>
       {children}

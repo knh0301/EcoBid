@@ -266,7 +266,7 @@ const socialLogin = async ({ email, name, profileImage, provider, providerId }) 
   return { user: toSafeUser(user), accessToken, refreshToken };
 };
 
-const fetchGoogleProfile = async (accessToken) => {
+const fetchGoogleProfileWithAccessToken = async (accessToken) => {
   const response = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -296,8 +296,39 @@ const fetchGoogleProfile = async (accessToken) => {
   };
 };
 
-const googleLogin = async ({ accessToken }) => {
-  const googleProfile = await fetchGoogleProfile(accessToken);
+const fetchGoogleProfileWithIdToken = async (idToken) => {
+  const tokenInfoUrl = new URL('https://oauth2.googleapis.com/tokeninfo');
+  tokenInfoUrl.searchParams.set('id_token', idToken);
+
+  const response = await fetch(tokenInfoUrl);
+
+  if (!response.ok) {
+    const error = new Error('Google 인증 정보를 확인할 수 없습니다.');
+    error.status = 401;
+    throw error;
+  }
+
+  const profile = await response.json();
+
+  if (!profile.sub || !profile.email) {
+    const error = new Error('Google 계정 정보를 불러올 수 없습니다.');
+    error.status = 401;
+    throw error;
+  }
+
+  return {
+    email: profile.email,
+    name: profile.name || profile.email.split('@')[0],
+    profileImage: profile.picture,
+    provider: 'GOOGLE',
+    providerId: profile.sub,
+  };
+};
+
+const googleLogin = async ({ accessToken, idToken }) => {
+  const googleProfile = idToken
+    ? await fetchGoogleProfileWithIdToken(idToken)
+    : await fetchGoogleProfileWithAccessToken(accessToken);
 
   return socialLogin(googleProfile);
 };

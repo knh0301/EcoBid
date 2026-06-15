@@ -42,6 +42,11 @@ export function ChatListScreen({navigation}: any) {
             return;
           }
 
+          if (!socket) {
+            setIsLoading(false);
+            return;
+          }
+
           activeSocket = socket;
           socket.off('chat:rooms:update', handleRoomsUpdate);
           socket.on('chat:rooms:update', handleRoomsUpdate);

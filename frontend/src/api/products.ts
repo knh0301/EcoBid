@@ -1,6 +1,7 @@
 import apiClient from './client';
 import {API_CONFIG} from '../config/apiConfig';
 import {ChatRoomResponse} from './chats';
+import {isTestAuthEnabled} from '../auth/testAuth';
 
 /**
  * 상품 관련 인터페이스
@@ -122,6 +123,10 @@ export const productsApi = {
   },
 
   async getMyProducts(): Promise<Product[]> {
+    if (await isTestAuthEnabled()) {
+      return [];
+    }
+
     const response = await apiClient.get<ApiResponse<Product[]>>(
       '/products/mine',
     );
@@ -158,6 +163,18 @@ export const productsApi = {
   },
 
   async getTradeStatus(productId: number): Promise<ProductTradeStatus> {
+    if (await isTestAuthEnabled()) {
+      return {
+        isSeller: false,
+        hasPaid: false,
+        canComplete: false,
+        isCompleted: false,
+        creditTransferAmount: null,
+        creditTransferredAt: null,
+        room: null,
+      };
+    }
+
     const response = await apiClient.get<ApiResponse<ProductTradeStatus>>(
       `/products/${productId}/trade-status`,
     );
@@ -166,6 +183,10 @@ export const productsApi = {
   },
 
   async sendCredits(productId: number): Promise<SendProductCreditsResult> {
+    if (await isTestAuthEnabled()) {
+      throw new Error('테스트 모드에서는 크레딧을 보낼 수 없습니다.');
+    }
+
     const response = await apiClient.post<ApiResponse<SendProductCreditsResult>>(
       `/products/${productId}/send-credits`,
     );
@@ -174,6 +195,10 @@ export const productsApi = {
   },
 
   async completeTrade(productId: number): Promise<CompleteProductTradeResult> {
+    if (await isTestAuthEnabled()) {
+      throw new Error('테스트 모드에서는 거래완료를 할 수 없습니다.');
+    }
+
     const response =
       await apiClient.post<ApiResponse<CompleteProductTradeResult>>(
         `/products/${productId}/complete`,
@@ -194,6 +219,10 @@ export const productsApi = {
     imageUrls?: string[];
     sellerId?: number;
   }): Promise<Product> {
+    if (await isTestAuthEnabled()) {
+      throw new Error('테스트 모드에서는 상품을 등록할 수 없습니다.');
+    }
+
     const response = await apiClient.post<ApiResponse<Product>>(
       '/products',
       data,
@@ -209,6 +238,10 @@ export const productsApi = {
     productId: number,
     data: Partial<Product>,
   ): Promise<Product> {
+    if (await isTestAuthEnabled()) {
+      throw new Error('테스트 모드에서는 상품을 수정할 수 없습니다.');
+    }
+
     const response = await apiClient.put<ApiResponse<Product>>(
       `/products/${productId}`,
       data,
@@ -221,6 +254,10 @@ export const productsApi = {
    * 상품 삭제
    */
   async deleteProduct(productId: number): Promise<void> {
+    if (await isTestAuthEnabled()) {
+      throw new Error('테스트 모드에서는 상품을 삭제할 수 없습니다.');
+    }
+
     await apiClient.delete(`/products/${productId}`);
   },
 
@@ -231,6 +268,12 @@ export const productsApi = {
     base64: string;
     mimeType: string;
   }): Promise<{imageUrl: string}> {
+    if (await isTestAuthEnabled()) {
+      return {
+        imageUrl: `data:${data.mimeType};base64,${data.base64}`,
+      };
+    }
+
     const response = await apiClient.post<ApiResponse<{imageUrl: string}>>(
       '/products/images',
       data,
@@ -246,6 +289,15 @@ export const productsApi = {
     base64: string;
     mimeType: string;
   }): Promise<ProductDraft> {
+    if (await isTestAuthEnabled()) {
+      return {
+        title: '테스트 나눔 물품',
+        category: '기타',
+        description: '테스트 모드에서 생성된 상품 설명입니다.',
+        suggestedCreditPrice: 100,
+      };
+    }
+
     const response = await apiClient.post<ApiResponse<ProductDraft>>(
       '/products/ai-draft',
       data,

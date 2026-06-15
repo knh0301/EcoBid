@@ -56,6 +56,11 @@ function TabNavigator() {
           return;
         }
 
+        if (!socket) {
+          setUnreadChatCount(0);
+          return;
+        }
+
         activeSocket = socket;
         socket.on('chat:rooms:update', handleRoomsUpdate);
         socket.emit('chat:rooms', handleRoomsUpdate);

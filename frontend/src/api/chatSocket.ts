@@ -34,6 +34,13 @@ const getSocketUrl = () => API_CONFIG.BASE_URL.replace(/\/api\/?$/, '');
 export const getChatSocket = async () => {
   const accessToken = await tokenStorage.getAccessToken();
 
+  if (!accessToken) {
+    socket?.disconnect();
+    socket = null;
+    socketAccessToken = null;
+    return null;
+  }
+
   if (socket?.connected && socketAccessToken === accessToken) {
     return socket;
   }

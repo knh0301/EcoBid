@@ -101,16 +101,16 @@ const socialLogin = async (req, res, next) => {
 
 const googleLogin = async (req, res, next) => {
   try {
-    const { accessToken } = req.body;
+    const { accessToken, idToken } = req.body;
 
-    if (!accessToken) {
+    if (!accessToken && !idToken) {
       return res.status(400).json({
         success: false,
         message: 'Google 인증 토큰이 필요합니다.',
       });
     }
 
-    const result = await authService.googleLogin({ accessToken });
+    const result = await authService.googleLogin({ accessToken, idToken });
 
     res.json({
       success: true,

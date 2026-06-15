@@ -12,7 +12,6 @@ import {useFocusEffect} from '@react-navigation/native';
 import {getProductImageUrls, productsApi, Product} from '../api/products';
 import {favoritesApi} from '../api/favorites';
 import {creditsApi, DepartmentCreditRanking} from '../api/creditsApi';
-import {missionsApi, RecommendedMission} from '../api/missions';
 import {attendanceAPI} from '../api/attendanceService';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {homeScreenStyles as styles} from '../styles/HomeScreenStyle';
@@ -20,27 +19,58 @@ import {ItemCard} from '../components/ItemCard';
 import {FavoriteToast} from '../components/FavoriteToast';
 import {useFavoriteToast} from '../hooks/useFavoriteToast';
 
-interface MissionCardProps {
-  mission: RecommendedMission;
-  onPress: () => void;
-}
+const PARTNER_BANNERS = [
+  {
+    id: 'refill-market',
+    brand: '리필마켓',
+    title: '텀블러 지참 시 리필 10% 할인',
+    subtitle: '친환경 생활용품 제휴 혜택',
+    badge: '제휴',
+    backgroundColor: '#EAF2E9',
+    accentColor: '#5C8B5A',
+  },
+  {
+    id: 'campus-cafe',
+    brand: '캠퍼스카페',
+    title: '다회용 컵 이용 고객 스탬프 2배',
+    subtitle: '학교 앞 카페 배너 공간',
+    badge: 'NEW',
+    backgroundColor: '#FDF8EC',
+    accentColor: '#B5852B',
+  },
+  {
+    id: 'repair-lab',
+    brand: '리페어랩',
+    title: '수리 상담 예약하면 진단비 할인',
+    subtitle: '고장난 물건 오래 쓰기 캠페인',
+    badge: 'HOT',
+    backgroundColor: '#EEF4FF',
+    accentColor: '#4D73B9',
+  },
+];
 
-const MissionCard: React.FC<MissionCardProps> = ({mission, onPress}) => (
-  <View style={styles.missionCard}>
-    <Text style={styles.missionTitle}>{mission.title}</Text>
-    <Text style={styles.missionDesc}>
-      {mission.description || mission.desc}
-    </Text>
-    <Text style={styles.missionCredit}>
-      +{mission.rewardPoints.toLocaleString()} 크레딧
-    </Text>
+const PartnerBanner = ({banner}: {banner: (typeof PARTNER_BANNERS)[number]}) => (
+  <View
+    style={[
+      styles.partnerBanner,
+      {backgroundColor: banner.backgroundColor},
+    ]}>
+    <View style={styles.partnerBannerTop}>
+      <Text style={[styles.partnerBadge, {color: banner.accentColor}]}>
+        {banner.badge}
+      </Text>
+      <View
+        style={[
+          styles.partnerLogo,
+          {backgroundColor: banner.accentColor},
+        ]}>
+        <Text style={styles.partnerLogoText}>{banner.brand.slice(0, 1)}</Text>
+      </View>
+    </View>
 
-    <TouchableOpacity
-      style={styles.missionButton}
-      onPress={onPress}
-      activeOpacity={0.8}>
-      <Text style={styles.missionButtonText}>인증하기</Text>
-    </TouchableOpacity>
+    <Text style={styles.partnerBrand}>{banner.brand}</Text>
+    <Text style={styles.partnerTitle}>{banner.title}</Text>
+    <Text style={styles.partnerSubtitle}>{banner.subtitle}</Text>
   </View>
 );
 
@@ -59,10 +89,6 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
     DepartmentCreditRanking[]
   >([]);
   const [rankLoading, setRankLoading] = useState(true);
-  const [recommendedMissions, setRecommendedMissions] = useState<
-    RecommendedMission[]
-  >([]);
-  const [missionLoading, setMissionLoading] = useState(true);
   const [isAttendedToday, setIsAttendedToday] = useState(false);
   const [todayAttendanceReward, setTodayAttendanceReward] = useState<
     number | null
@@ -126,21 +152,6 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
     }
   };
 
-  const fetchRecommendedMissions = async () => {
-    try {
-      setMissionLoading(true);
-
-      const missions = await missionsApi.getRecommendedMissions(2);
-
-      setRecommendedMissions(missions);
-    } catch (err: any) {
-      console.warn('Fetch recommended missions error:', err);
-      setRecommendedMissions([]);
-    } finally {
-      setMissionLoading(false);
-    }
-  };
-
   const fetchAttendanceStatus = async () => {
     try {
       setAttendanceLoading(true);
@@ -162,7 +173,6 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
     fetchProducts();
     fetchCreditBalance();
     fetchDepartmentRankings();
-    fetchRecommendedMissions();
     fetchAttendanceStatus();
   }, []));
 
@@ -173,7 +183,6 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
       fetchProducts(false),
       fetchCreditBalance(),
       fetchDepartmentRankings(),
-      fetchRecommendedMissions(),
       fetchAttendanceStatus(),
     ]);
 
@@ -320,7 +329,7 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           </Text>
 
           <Text style={styles.cardSubText}>
-            물품 거래가 완료되면 1,000크레딧을 추가로 지급해드려요.
+            물품 거래가 완료되면 100크레딧을 추가로 지급해드려요.
           </Text>
 
           <TouchableOpacity
@@ -330,36 +339,16 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.sectionTitle}>추천 미션</Text>
+        <Text style={styles.sectionTitle}>업체 배너</Text>
 
-        {missionLoading ? (
-          <ActivityIndicator
-            size="small"
-            color="#5C8B5A"
-            style={styles.inlineLoadingIndicator}
-          />
-        ) : recommendedMissions.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Text style={styles.emptyText}>
-              오늘 추천 미션을 모두 완료했습니다.
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.missionRow}>
-            {recommendedMissions.map(mission => (
-              <MissionCard
-                key={mission.id}
-                mission={mission}
-                onPress={() =>
-                  navigation.navigate('MissionVerify', {
-                    missionTitle: mission.title,
-                    rewardPoints: mission.rewardPoints,
-                  })
-                }
-              />
-            ))}
-          </View>
-        )}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.partnerBannerList}>
+          {PARTNER_BANNERS.map(banner => (
+            <PartnerBanner key={banner.id} banner={banner} />
+          ))}
+        </ScrollView>
 
         <View style={styles.sectionHeader}>
           <Text style={styles.sectionTitle}>나눔 물품 리스트</Text>

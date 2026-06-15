@@ -12,7 +12,7 @@ const {
   getMissionCatalog,
 } = require('../services/missionCatalog');
 
-const DEFAULT_MISSION_REWARD = 500;
+const DEFAULT_MISSION_REWARD = 50;
 
 const getTodayDateRange = () => {
   const today = new Intl.DateTimeFormat('en-CA', {
@@ -38,7 +38,7 @@ const resolveMissionReward = (title, requestedRewardPoints) => {
 
   return Number.isInteger(requestedRewardPoints) &&
     requestedRewardPoints > 0 &&
-    requestedRewardPoints <= 5000
+    requestedRewardPoints <= 500
     ? requestedRewardPoints
     : DEFAULT_MISSION_REWARD;
 };

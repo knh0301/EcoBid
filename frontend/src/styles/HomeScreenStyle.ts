@@ -251,6 +251,69 @@ export const homeScreenStyles = StyleSheet.create({
     fontSize: 11,
   },
 
+  partnerBannerList: {
+    gap: 12,
+    paddingRight: 16,
+    marginBottom: 24,
+  },
+
+  partnerBanner: {
+    width: 260,
+    minHeight: 142,
+    borderRadius: 10,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    justifyContent: 'space-between',
+  },
+
+  partnerBannerTop: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+
+  partnerBadge: {
+    fontSize: 11,
+    fontWeight: '800',
+  },
+
+  partnerLogo: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  partnerLogoText: {
+    color: colors.textLight,
+    fontSize: 15,
+    fontWeight: '900',
+  },
+
+  partnerBrand: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+
+  partnerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: colors.textPrimary,
+    lineHeight: 22,
+    marginBottom: 6,
+  },
+
+  partnerSubtitle: {
+    fontSize: 12,
+    color: colors.textMuted,
+    lineHeight: 17,
+  },
+
   productGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',

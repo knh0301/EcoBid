@@ -39,6 +39,12 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
+        const refreshToken = await tokenStorage.getRefreshToken();
+
+        if (!refreshToken) {
+          return Promise.reject(error);
+        }
+
         const newAccessToken = await refreshAuthTokens();
 
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
@@ -156,7 +162,7 @@ export const authApi = {
     return result;
   },
 
-  googleLogin: async (payload: {accessToken: string}) => {
+  googleLogin: async (payload: {accessToken?: string; idToken?: string}) => {
     const {data} = await api.post('/auth/google', payload);
     const result: AuthResponse = data.data;
 

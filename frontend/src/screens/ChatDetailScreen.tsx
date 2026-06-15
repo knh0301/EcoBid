@@ -70,6 +70,10 @@ export function ChatDetailScreen({navigation, route}: any) {
           return;
         }
 
+        if (!socket) {
+          return;
+        }
+
         activeSocket = socket;
         socket.on('chat:message', handleMessage);
         socket.emit(
@@ -116,6 +120,11 @@ export function ChatDetailScreen({navigation, route}: any) {
 
     try {
       const socket = await getChatSocket();
+
+      if (!socket) {
+        console.warn('Send chat message skipped: auth token is missing.');
+        return;
+      }
 
       socket.emit(
         'chat:send',

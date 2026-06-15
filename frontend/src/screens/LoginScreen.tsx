@@ -63,6 +63,7 @@ export function LoginScreen() {
     }
   };
 
+
   const isButtonLoading = loginLoading || authLoading;
 
   return (
@@ -139,6 +140,7 @@ export function LoginScreen() {
                 </>
               )}
             </Pressable>
+
 
             <View style={styles.signupRow}>
               <Text style={styles.signupText}>계정이 없으신가요?</Text>

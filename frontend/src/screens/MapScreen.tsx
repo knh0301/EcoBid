@@ -25,6 +25,11 @@ type MapPoint = {
     latitude: number;
     longitude: number;
   };
+  details?: {
+    benefits: string;
+    operatingHours: string;
+    contact: string;
+  };
 };
 
 const DEFAULT_REGION: Region = {
@@ -114,6 +119,7 @@ export function MapScreen() {
   );
   const [searchMarker, setSearchMarker] = useState<MapPoint | null>(null);
   const [dynamicPoints, setDynamicPoints] = useState<MapPoint[]>([]);
+  const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
 
   const visiblePoints = useMemo(() => {
     const allPoints = [...MAP_POINTS, ...dynamicPoints];
@@ -155,48 +161,29 @@ export function MapScreen() {
       const lat = currentLocation.coords.latitude;
       const lng = currentLocation.coords.longitude;
 
-      const newPoints: MapPoint[] = [
-        {
-          id: `dynamic-partner-1-${Date.now()}`,
-          title: '제휴 리필 매장',
-          description: '개인 용기를 가져오면 에코 포인트를 받을 수 있어요',
-          category: '제휴매장',
-          coordinate: {
-            latitude: lat + (Math.random() - 0.5) * 0.01,
-            longitude: lng + (Math.random() - 0.5) * 0.01,
-          },
-        },
-        {
-          id: `dynamic-partner-2-${Date.now()}`,
-          title: '지구사랑 카페',
-          description: '텀블러 지참 시 음료 500원 할인 및 친환경 빨대 제공',
-          category: '제휴매장',
-          coordinate: {
-            latitude: lat + (Math.random() - 0.5) * 0.01,
-            longitude: lng + (Math.random() - 0.5) * 0.01,
-          },
-        },
-        {
-          id: `dynamic-partner-3-${Date.now()}`,
-          title: '에코 프레시 마트',
-          description: '포장지 없는 채소 구매 시 에코 포인트 2배 적립',
-          category: '제휴매장',
-          coordinate: {
-            latitude: lat + (Math.random() - 0.5) * 0.01,
-            longitude: lng + (Math.random() - 0.5) * 0.01,
-          },
-        },
-        {
-          id: `dynamic-partner-4-${Date.now()}`,
-          title: '그린 베이커리',
-          description: '개인 다회용기에 빵 포장 시 미니 스콘 무료 증정',
-          category: '제휴매장',
-          coordinate: {
-            latitude: lat + (Math.random() - 0.5) * 0.01,
-            longitude: lng + (Math.random() - 0.5) * 0.01,
-          },
-        },
-      ];
+      const newPoints: MapPoint[] = [];
+      const generateCategories = ['나눔물품', '제휴매장', '제로웨이스트'];
+      
+      generateCategories.forEach(category => {
+        for (let i = 0; i < 15; i++) {
+          newPoints.push({
+            id: `dynamic-${category}-${Date.now()}-${i}`,
+            title: `[${category}] 에코 스토어 ${i + 1}호점`,
+            description: `이곳은 ${category}에 특화된 친환경 매장입니다.`,
+            category: category,
+            coordinate: {
+              latitude: lat + (Math.random() - 0.5) * 0.03,
+              longitude: lng + (Math.random() - 0.5) * 0.03,
+            },
+            details: {
+              benefits: `${category} 관련 특별 할인 제공 및 에코 포인트 2배 적립`,
+              operatingHours: '평일 09:00 - 18:00 (주말 및 공휴일 휴무)',
+              contact: `02-1234-${Math.floor(1000 + Math.random() * 9000)}`,
+            }
+          });
+        }
+      });
+
       setDynamicPoints(newPoints);
 
       const nextRegion = {
@@ -358,6 +345,7 @@ export function MapScreen() {
           region={region}
           showsUserLocation={locationGranted}
           showsMyLocationButton={false}
+          onPress={() => setSelectedPoint(null)}
           onRegionChangeComplete={setRegion}>
           {visiblePoints.map(point => (
             <Marker
@@ -365,6 +353,10 @@ export function MapScreen() {
               coordinate={point.coordinate}
               title={point.title}
               description={point.description}
+              onPress={(e) => {
+                e.stopPropagation();
+                setSelectedPoint(point);
+              }}
               pinColor={
                 point.id === 'search-result' ? colors.googleBlue : colors.primary
               }
@@ -384,12 +376,38 @@ export function MapScreen() {
           )}
         </TouchableOpacity>
 
-        <View style={screenStyles.statusPanel}>
-          <View style={screenStyles.statusIcon}>
-            <Ionicons name="leaf-outline" size={18} color={colors.primary} />
+        {selectedPoint ? (
+          <View style={screenStyles.detailPanel}>
+            <View style={screenStyles.detailHeader}>
+              <View>
+                <Text style={screenStyles.detailCategory}>{selectedPoint.category}</Text>
+                <Text style={screenStyles.detailTitle}>{selectedPoint.title}</Text>
+              </View>
+              <TouchableOpacity onPress={() => setSelectedPoint(null)}>
+                <Ionicons name="close-circle" size={28} color={colors.textDisabled} />
+              </TouchableOpacity>
+            </View>
+            <Text style={screenStyles.detailDesc}>{selectedPoint.description}</Text>
+            
+            <View style={screenStyles.detailSection}>
+              <Text style={screenStyles.detailSectionTitle}>✨ 혜택 상세정보</Text>
+              <Text style={screenStyles.detailSectionText}>{selectedPoint.details?.benefits || '제공되는 혜택이 없습니다.'}</Text>
+            </View>
+            
+            <View style={screenStyles.detailSection}>
+              <Text style={screenStyles.detailSectionTitle}>🏪 매장 정보</Text>
+              <Text style={screenStyles.detailSectionText}>운영: {selectedPoint.details?.operatingHours || '정보 없음'}</Text>
+              <Text style={screenStyles.detailSectionText}>연락처: {selectedPoint.details?.contact || '정보 없음'}</Text>
+            </View>
           </View>
-          <Text style={screenStyles.statusText}>{statusMessage}</Text>
-        </View>
+        ) : (
+          <View style={screenStyles.statusPanel}>
+            <View style={screenStyles.statusIcon}>
+              <Ionicons name="leaf-outline" size={18} color={colors.primary} />
+            </View>
+            <Text style={screenStyles.statusText}>{statusMessage}</Text>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -537,5 +555,60 @@ const screenStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  detailPanel: {
+    position: 'absolute',
+    left: 14,
+    right: 14,
+    bottom: 14,
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  detailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  detailCategory: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  detailTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  detailDesc: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 16,
+  },
+  detailSection: {
+    backgroundColor: colors.grayBackground,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  detailSectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 6,
+  },
+  detailSectionText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
 });

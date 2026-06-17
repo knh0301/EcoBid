@@ -48,13 +48,43 @@ const MAP_POINTS: MapPoint[] = [
     },
   },
   {
-    id: 'partner-store',
+    id: 'partner-store-1',
     title: '제휴 리필 매장',
-    description: '개인 용기를 가져오면 포인트를 받을 수 있어요',
+    description: '개인 용기를 가져오면 에코 포인트를 받을 수 있어요',
     category: '제휴매장',
     coordinate: {
       latitude: 37.5658,
       longitude: 126.9769,
+    },
+  },
+  {
+    id: 'partner-store-2',
+    title: '지구사랑 카페',
+    description: '텀블러 지참 시 음료 500원 할인 및 친환경 빨대 제공',
+    category: '제휴매장',
+    coordinate: {
+      latitude: 37.5645,
+      longitude: 126.9750,
+    },
+  },
+  {
+    id: 'partner-store-3',
+    title: '에코 프레시 마트',
+    description: '포장지 없는 채소 구매 시 에코 포인트 2배 적립',
+    category: '제휴매장',
+    coordinate: {
+      latitude: 37.5680,
+      longitude: 126.9800,
+    },
+  },
+  {
+    id: 'partner-store-4',
+    title: '그린 베이커리',
+    description: '개인 다회용기에 빵 포장 시 미니 스콘 무료 증정',
+    category: '제휴매장',
+    coordinate: {
+      latitude: 37.5630,
+      longitude: 126.9785,
     },
   },
   {

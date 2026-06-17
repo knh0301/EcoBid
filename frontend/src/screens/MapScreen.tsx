@@ -352,7 +352,6 @@ export function MapScreen() {
               key={point.id}
               coordinate={point.coordinate}
               title={point.title}
-              description={point.description}
               onPress={(e) => {
                 e.stopPropagation();
                 setSelectedPoint(point);
@@ -377,28 +376,31 @@ export function MapScreen() {
         </TouchableOpacity>
 
         {selectedPoint ? (
-          <View style={screenStyles.detailPanel}>
-            <View style={screenStyles.detailHeader}>
-              <View>
-                <Text style={screenStyles.detailCategory}>{selectedPoint.category}</Text>
-                <Text style={screenStyles.detailTitle}>{selectedPoint.title}</Text>
+          <View style={screenStyles.bottomSheet}>
+            <View style={screenStyles.bottomSheetHandle} />
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={screenStyles.bottomSheetContent}>
+              <View style={screenStyles.detailHeader}>
+                <View>
+                  <Text style={screenStyles.detailCategory}>{selectedPoint.category}</Text>
+                  <Text style={screenStyles.detailTitle}>{selectedPoint.title}</Text>
+                </View>
+                <TouchableOpacity onPress={() => setSelectedPoint(null)}>
+                  <Ionicons name="close-circle" size={28} color={colors.textDisabled} />
+                </TouchableOpacity>
               </View>
-              <TouchableOpacity onPress={() => setSelectedPoint(null)}>
-                <Ionicons name="close-circle" size={28} color={colors.textDisabled} />
-              </TouchableOpacity>
-            </View>
-            <Text style={screenStyles.detailDesc}>{selectedPoint.description}</Text>
-            
-            <View style={screenStyles.detailSection}>
-              <Text style={screenStyles.detailSectionTitle}>✨ 혜택 상세정보</Text>
-              <Text style={screenStyles.detailSectionText}>{selectedPoint.details?.benefits || '제공되는 혜택이 없습니다.'}</Text>
-            </View>
-            
-            <View style={screenStyles.detailSection}>
-              <Text style={screenStyles.detailSectionTitle}>🏪 매장 정보</Text>
-              <Text style={screenStyles.detailSectionText}>운영: {selectedPoint.details?.operatingHours || '정보 없음'}</Text>
-              <Text style={screenStyles.detailSectionText}>연락처: {selectedPoint.details?.contact || '정보 없음'}</Text>
-            </View>
+              <Text style={screenStyles.detailDesc}>{selectedPoint.description}</Text>
+              
+              <View style={screenStyles.detailSection}>
+                <Text style={screenStyles.detailSectionTitle}>✨ 혜택 상세정보</Text>
+                <Text style={screenStyles.detailSectionText}>{selectedPoint.details?.benefits || '제공되는 혜택이 없습니다.'}</Text>
+              </View>
+              
+              <View style={screenStyles.detailSection}>
+                <Text style={screenStyles.detailSectionTitle}>🏪 매장 정보</Text>
+                <Text style={screenStyles.detailSectionText}>운영: {selectedPoint.details?.operatingHours || '정보 없음'}</Text>
+                <Text style={screenStyles.detailSectionText}>연락처: {selectedPoint.details?.contact || '정보 없음'}</Text>
+              </View>
+            </ScrollView>
           </View>
         ) : (
           <View style={screenStyles.statusPanel}>
@@ -556,21 +558,33 @@ const screenStyles = StyleSheet.create({
     fontWeight: '700',
     textAlign: 'center',
   },
-  detailPanel: {
+  bottomSheet: {
     position: 'absolute',
-    left: 14,
-    right: 14,
-    bottom: 14,
+    left: 0,
+    right: 0,
+    bottom: 0,
     backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    maxHeight: '50%',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    elevation: 4,
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
+    paddingTop: 12,
+  },
+  bottomSheetHandle: {
+    width: 40,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.border,
+    alignSelf: 'center',
+    marginBottom: 12,
+  },
+  bottomSheetContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 24,
   },
   detailHeader: {
     flexDirection: 'row',

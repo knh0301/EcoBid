@@ -1,7 +1,9 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Keyboard,
+  PanResponder,
   Platform,
   ScrollView,
   StyleSheet,
@@ -24,6 +26,11 @@ type MapPoint = {
   coordinate: {
     latitude: number;
     longitude: number;
+  };
+  details?: {
+    benefits: string;
+    operatingHours: string;
+    contact: string;
   };
 };
 
@@ -48,13 +55,43 @@ const MAP_POINTS: MapPoint[] = [
     },
   },
   {
-    id: 'partner-store',
+    id: 'partner-store-1',
     title: '제휴 리필 매장',
-    description: '개인 용기를 가져오면 포인트를 받을 수 있어요',
+    description: '개인 용기를 가져오면 에코 포인트를 받을 수 있어요',
     category: '제휴매장',
     coordinate: {
       latitude: 37.5658,
       longitude: 126.9769,
+    },
+  },
+  {
+    id: 'partner-store-2',
+    title: '지구사랑 카페',
+    description: '텀블러 지참 시 음료 500원 할인 및 친환경 빨대 제공',
+    category: '제휴매장',
+    coordinate: {
+      latitude: 37.5645,
+      longitude: 126.9750,
+    },
+  },
+  {
+    id: 'partner-store-3',
+    title: '에코 프레시 마트',
+    description: '포장지 없는 채소 구매 시 에코 포인트 2배 적립',
+    category: '제휴매장',
+    coordinate: {
+      latitude: 37.5680,
+      longitude: 126.9800,
+    },
+  },
+  {
+    id: 'partner-store-4',
+    title: '그린 베이커리',
+    description: '개인 다회용기에 빵 포장 시 미니 스콘 무료 증정',
+    category: '제휴매장',
+    coordinate: {
+      latitude: 37.5630,
+      longitude: 126.9785,
     },
   },
   {
@@ -83,15 +120,83 @@ export function MapScreen() {
     '위치 권한을 허용하면 현재 위치 주변을 볼 수 있어요.',
   );
   const [searchMarker, setSearchMarker] = useState<MapPoint | null>(null);
+  const [dynamicPoints, setDynamicPoints] = useState<MapPoint[]>([]);
+  const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null);
 
   const visiblePoints = useMemo(() => {
+    const allPoints = [...MAP_POINTS, ...dynamicPoints];
     const basePoints =
       activeFilter === '전체'
-        ? MAP_POINTS
-        : MAP_POINTS.filter(point => point.category === activeFilter);
+        ? allPoints
+        : allPoints.filter(point => point.category === activeFilter);
 
     return searchMarker ? [searchMarker, ...basePoints] : basePoints;
-  }, [activeFilter, searchMarker]);
+  }, [activeFilter, searchMarker, dynamicPoints]);
+
+  const translateY = useRef(new Animated.Value(600)).current;
+  const lastY = useRef(0);
+
+  useEffect(() => {
+    const listener = translateY.addListener(({ value }) => {
+      lastY.current = value;
+    });
+    return () => translateY.removeListener(listener);
+  }, [translateY]);
+
+  const openSheet = () => {
+    Animated.spring(translateY, {
+      toValue: 0,
+      useNativeDriver: true,
+      bounciness: 4,
+    }).start();
+  };
+
+  const expandSheet = () => {
+    Animated.spring(translateY, {
+      toValue: -200,
+      useNativeDriver: true,
+      bounciness: 4,
+    }).start();
+  };
+
+  const closeSheet = () => {
+    Animated.timing(translateY, {
+      toValue: 600,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => setSelectedPoint(null));
+  };
+
+  useEffect(() => {
+    if (selectedPoint) {
+      translateY.setValue(600);
+      openSheet();
+    }
+  }, [selectedPoint]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        translateY.setOffset(lastY.current);
+        translateY.setValue(0);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        translateY.setValue(gestureState.dy);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        translateY.flattenOffset();
+        
+        if (lastY.current > 100) {
+          closeSheet();
+        } else if (lastY.current < -50) {
+          expandSheet();
+        } else {
+          openSheet();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     requestCurrentLocation();
@@ -120,9 +225,37 @@ export function MapScreen() {
         accuracy: Location.Accuracy.Balanced,
       });
 
+      const lat = currentLocation.coords.latitude;
+      const lng = currentLocation.coords.longitude;
+
+      const newPoints: MapPoint[] = [];
+      const generateCategories = ['나눔물품', '제휴매장', '제로웨이스트'];
+      
+      generateCategories.forEach(category => {
+        for (let i = 0; i < 15; i++) {
+          newPoints.push({
+            id: `dynamic-${category}-${Date.now()}-${i}`,
+            title: `[${category}] 에코 스토어 ${i + 1}호점`,
+            description: `이곳은 ${category}에 특화된 친환경 매장입니다.`,
+            category: category,
+            coordinate: {
+              latitude: lat + (Math.random() - 0.5) * 0.03,
+              longitude: lng + (Math.random() - 0.5) * 0.03,
+            },
+            details: {
+              benefits: `${category} 관련 특별 할인 제공 및 에코 포인트 2배 적립`,
+              operatingHours: '평일 09:00 - 18:00 (주말 및 공휴일 휴무)',
+              contact: `02-1234-${Math.floor(1000 + Math.random() * 9000)}`,
+            }
+          });
+        }
+      });
+
+      setDynamicPoints(newPoints);
+
       const nextRegion = {
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
+        latitude: lat,
+        longitude: lng,
         latitudeDelta: 0.018,
         longitudeDelta: 0.018,
       };
@@ -279,13 +412,17 @@ export function MapScreen() {
           region={region}
           showsUserLocation={locationGranted}
           showsMyLocationButton={false}
+          onPress={() => setSelectedPoint(null)}
           onRegionChangeComplete={setRegion}>
           {visiblePoints.map(point => (
             <Marker
               key={point.id}
               coordinate={point.coordinate}
               title={point.title}
-              description={point.description}
+              onPress={(e) => {
+                e.stopPropagation();
+                setSelectedPoint(point);
+              }}
               pinColor={
                 point.id === 'search-result' ? colors.googleBlue : colors.primary
               }
@@ -305,12 +442,45 @@ export function MapScreen() {
           )}
         </TouchableOpacity>
 
-        <View style={screenStyles.statusPanel}>
-          <View style={screenStyles.statusIcon}>
-            <Ionicons name="leaf-outline" size={18} color={colors.primary} />
+        {selectedPoint && (
+          <Animated.View style={[screenStyles.bottomSheet, { transform: [{ translateY }] }]}>
+            <View {...panResponder.panHandlers} style={screenStyles.dragArea}>
+              <View style={screenStyles.bottomSheetHandle} />
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={screenStyles.bottomSheetContent}>
+              <View style={screenStyles.detailHeader}>
+                <View>
+                  <Text style={screenStyles.detailCategory}>{selectedPoint.category}</Text>
+                  <Text style={screenStyles.detailTitle}>{selectedPoint.title}</Text>
+                </View>
+                <TouchableOpacity onPress={() => closeSheet()}>
+                  <Ionicons name="close-circle" size={28} color={colors.textDisabled} />
+                </TouchableOpacity>
+              </View>
+              <Text style={screenStyles.detailDesc}>{selectedPoint.description}</Text>
+              
+              <View style={screenStyles.detailSection}>
+                <Text style={screenStyles.detailSectionTitle}>✨ 혜택 상세정보</Text>
+                <Text style={screenStyles.detailSectionText}>{selectedPoint.details?.benefits || '제공되는 혜택이 없습니다.'}</Text>
+              </View>
+              
+              <View style={screenStyles.detailSection}>
+                <Text style={screenStyles.detailSectionTitle}>🏪 매장 정보</Text>
+                <Text style={screenStyles.detailSectionText}>운영: {selectedPoint.details?.operatingHours || '정보 없음'}</Text>
+                <Text style={screenStyles.detailSectionText}>연락처: {selectedPoint.details?.contact || '정보 없음'}</Text>
+              </View>
+            </ScrollView>
+          </Animated.View>
+        )}
+
+        {!selectedPoint && (
+          <View style={screenStyles.statusPanel}>
+            <View style={screenStyles.statusIcon}>
+              <Ionicons name="leaf-outline" size={18} color={colors.primary} />
+            </View>
+            <Text style={screenStyles.statusText}>{statusMessage}</Text>
           </View>
-          <Text style={screenStyles.statusText}>{statusMessage}</Text>
-        </View>
+        )}
       </View>
     </View>
   );
@@ -458,5 +628,77 @@ const screenStyles = StyleSheet.create({
     fontSize: 15,
     fontWeight: '700',
     textAlign: 'center',
+  },
+  bottomSheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    bottom: -200,
+    height: 550,
+    paddingBottom: 200,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 12,
+    elevation: 10,
+  },
+  dragArea: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
+  },
+  bottomSheetHandle: {
+    width: 44,
+    height: 5,
+    borderRadius: 3,
+    backgroundColor: colors.border,
+  },
+  bottomSheetContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 24,
+  },
+  detailHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 8,
+  },
+  detailCategory: {
+    fontSize: 12,
+    color: colors.primary,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  detailTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: colors.textPrimary,
+  },
+  detailDesc: {
+    fontSize: 14,
+    color: colors.textSecondary,
+    marginBottom: 16,
+  },
+  detailSection: {
+    backgroundColor: colors.grayBackground,
+    padding: 12,
+    borderRadius: 8,
+    marginBottom: 8,
+  },
+  detailSectionTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textPrimary,
+    marginBottom: 6,
+  },
+  detailSectionText: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    lineHeight: 18,
   },
 });

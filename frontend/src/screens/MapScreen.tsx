@@ -1,7 +1,9 @@
 import React, {useEffect, useMemo, useRef, useState} from 'react';
 import {
   ActivityIndicator,
+  Animated,
   Keyboard,
+  PanResponder,
   Platform,
   ScrollView,
   StyleSheet,
@@ -130,6 +132,71 @@ export function MapScreen() {
 
     return searchMarker ? [searchMarker, ...basePoints] : basePoints;
   }, [activeFilter, searchMarker, dynamicPoints]);
+
+  const translateY = useRef(new Animated.Value(600)).current;
+  const lastY = useRef(0);
+
+  useEffect(() => {
+    const listener = translateY.addListener(({ value }) => {
+      lastY.current = value;
+    });
+    return () => translateY.removeListener(listener);
+  }, [translateY]);
+
+  const openSheet = () => {
+    Animated.spring(translateY, {
+      toValue: 0,
+      useNativeDriver: true,
+      bounciness: 4,
+    }).start();
+  };
+
+  const expandSheet = () => {
+    Animated.spring(translateY, {
+      toValue: -200,
+      useNativeDriver: true,
+      bounciness: 4,
+    }).start();
+  };
+
+  const closeSheet = () => {
+    Animated.timing(translateY, {
+      toValue: 600,
+      duration: 250,
+      useNativeDriver: true,
+    }).start(() => setSelectedPoint(null));
+  };
+
+  useEffect(() => {
+    if (selectedPoint) {
+      translateY.setValue(600);
+      openSheet();
+    }
+  }, [selectedPoint]);
+
+  const panResponder = useRef(
+    PanResponder.create({
+      onStartShouldSetPanResponder: () => true,
+      onPanResponderGrant: () => {
+        translateY.setOffset(lastY.current);
+        translateY.setValue(0);
+      },
+      onPanResponderMove: (_, gestureState) => {
+        translateY.setValue(gestureState.dy);
+      },
+      onPanResponderRelease: (_, gestureState) => {
+        translateY.flattenOffset();
+        
+        if (lastY.current > 100) {
+          closeSheet();
+        } else if (lastY.current < -50) {
+          expandSheet();
+        } else {
+          openSheet();
+        }
+      },
+    })
+  ).current;
 
   useEffect(() => {
     requestCurrentLocation();
@@ -375,16 +442,18 @@ export function MapScreen() {
           )}
         </TouchableOpacity>
 
-        {selectedPoint ? (
-          <View style={screenStyles.bottomSheet}>
-            <View style={screenStyles.bottomSheetHandle} />
+        {selectedPoint && (
+          <Animated.View style={[screenStyles.bottomSheet, { transform: [{ translateY }] }]}>
+            <View {...panResponder.panHandlers} style={screenStyles.dragArea}>
+              <View style={screenStyles.bottomSheetHandle} />
+            </View>
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={screenStyles.bottomSheetContent}>
               <View style={screenStyles.detailHeader}>
                 <View>
                   <Text style={screenStyles.detailCategory}>{selectedPoint.category}</Text>
                   <Text style={screenStyles.detailTitle}>{selectedPoint.title}</Text>
                 </View>
-                <TouchableOpacity onPress={() => setSelectedPoint(null)}>
+                <TouchableOpacity onPress={() => closeSheet()}>
                   <Ionicons name="close-circle" size={28} color={colors.textDisabled} />
                 </TouchableOpacity>
               </View>
@@ -401,8 +470,10 @@ export function MapScreen() {
                 <Text style={screenStyles.detailSectionText}>연락처: {selectedPoint.details?.contact || '정보 없음'}</Text>
               </View>
             </ScrollView>
-          </View>
-        ) : (
+          </Animated.View>
+        )}
+
+        {!selectedPoint && (
           <View style={screenStyles.statusPanel}>
             <View style={screenStyles.statusIcon}>
               <Ionicons name="leaf-outline" size={18} color={colors.primary} />
@@ -562,25 +633,30 @@ const screenStyles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
+    bottom: -200,
+    height: 550,
+    paddingBottom: 200,
     backgroundColor: colors.white,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
-    maxHeight: '50%',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 10,
-    paddingTop: 12,
+  },
+  dragArea: {
+    paddingTop: 16,
+    paddingBottom: 16,
+    width: '100%',
+    alignItems: 'center',
+    backgroundColor: 'transparent',
   },
   bottomSheetHandle: {
-    width: 40,
+    width: 44,
     height: 5,
     borderRadius: 3,
     backgroundColor: colors.border,
-    alignSelf: 'center',
-    marginBottom: 12,
   },
   bottomSheetContent: {
     paddingHorizontal: 20,

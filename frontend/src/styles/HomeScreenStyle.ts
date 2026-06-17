@@ -253,36 +253,64 @@ export const homeScreenStyles = StyleSheet.create({
 
   partnerBannerList: {
     gap: 12,
-    paddingRight: 16,
     marginBottom: 24,
   },
 
   partnerBanner: {
-    width: 260,
-    minHeight: 142,
-    borderRadius: 10,
-    padding: 14,
+    height: 82,
+    borderRadius: 14,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
     borderWidth: 1,
     borderColor: colors.borderLight,
-    justifyContent: 'space-between',
+    justifyContent: 'center',
+    overflow: 'hidden',
+    shadowColor: colors.black,
+    shadowOffset: {width: 0, height: 4},
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+
+  partnerBannerCircle: {
+    position: 'absolute',
+    right: -20,
+    top: -26,
+    width: 82,
+    height: 82,
+    borderRadius: 41,
+    opacity: 0.16,
+  },
+
+  partnerBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
   },
 
   partnerBannerTop: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 10,
+    gap: 6,
+    marginBottom: 3,
   },
 
-  partnerBadge: {
-    fontSize: 11,
-    fontWeight: '800',
+  partnerAdText: {
+    fontSize: 10,
+    fontWeight: '900',
+    color: colors.textMuted,
+    letterSpacing: 0,
+  },
+
+  partnerBannerBody: {
+    flex: 1,
+    minWidth: 0,
   },
 
   partnerLogo: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -295,23 +323,29 @@ export const homeScreenStyles = StyleSheet.create({
 
   partnerBrand: {
     fontSize: 12,
-    fontWeight: '700',
+    fontWeight: '800',
     color: colors.textSecondary,
-    marginBottom: 4,
   },
 
   partnerTitle: {
-    fontSize: 16,
-    fontWeight: '800',
+    fontSize: 14,
+    fontWeight: '900',
     color: colors.textPrimary,
-    lineHeight: 22,
-    marginBottom: 6,
+    lineHeight: 19,
   },
 
-  partnerSubtitle: {
-    fontSize: 12,
-    color: colors.textMuted,
-    lineHeight: 17,
+  partnerCta: {
+    minHeight: 30,
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  partnerCtaText: {
+    fontSize: 11,
+    fontWeight: '900',
+    color: colors.textLight,
   },
 
   productGrid: {

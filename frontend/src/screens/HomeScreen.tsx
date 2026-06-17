@@ -1,4 +1,4 @@
-import React, {useCallback, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,9 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  NativeScrollEvent,
+  NativeSyntheticEvent,
+  useWindowDimensions,
 } from 'react-native';
 import {useFocusEffect} from '@react-navigation/native';
 import {getProductImageUrls, productsApi, Product} from '../api/products';
@@ -26,6 +29,7 @@ const PARTNER_BANNERS = [
     title: '텀블러 지참 시 리필 10% 할인',
     subtitle: '친환경 생활용품 제휴 혜택',
     badge: '제휴',
+    cta: '쿠폰 받기',
     backgroundColor: '#EAF2E9',
     accentColor: '#5C8B5A',
   },
@@ -35,6 +39,7 @@ const PARTNER_BANNERS = [
     title: '다회용 컵 이용 고객 스탬프 2배',
     subtitle: '학교 앞 카페 배너 공간',
     badge: 'NEW',
+    cta: '혜택 보기',
     backgroundColor: '#FDF8EC',
     accentColor: '#B5852B',
   },
@@ -44,21 +49,66 @@ const PARTNER_BANNERS = [
     title: '수리 상담 예약하면 진단비 할인',
     subtitle: '고장난 물건 오래 쓰기 캠페인',
     badge: 'HOT',
+    cta: '예약하기',
     backgroundColor: '#EEF4FF',
     accentColor: '#4D73B9',
   },
+  {
+    id: 'zero-shop',
+    brand: '제로샵',
+    title: '친환경 세제 리필 첫 구매 15% 할인',
+    subtitle: '빈 용기 가져오면 더 가벼운 장보기',
+    badge: 'SALE',
+    cta: '매장 찾기',
+    backgroundColor: '#F0F7F4',
+    accentColor: '#3B9277',
+  },
+  {
+    id: 'green-books',
+    brand: '그린북스',
+    title: '중고 전공서 구매 시 에코백 증정',
+    subtitle: '새 책보다 부담 없는 순환 독서',
+    badge: '추천',
+    cta: '둘러보기',
+    backgroundColor: '#FFF1ED',
+    accentColor: '#C8664D',
+  },
 ];
 
-const PartnerBanner = ({banner}: {banner: (typeof PARTNER_BANNERS)[number]}) => (
+const LOOP_PARTNER_BANNERS = [
+  ...PARTNER_BANNERS,
+  ...PARTNER_BANNERS,
+  ...PARTNER_BANNERS,
+];
+const PARTNER_BANNER_GAP = 12;
+const PARTNER_BANNER_SIDE_PEEK = 24;
+const PARTNER_BANNER_INTERVAL_MS = 2500;
+const PARTNER_BANNER_START_INDEX = PARTNER_BANNERS.length;
+
+const PartnerBanner = ({
+  banner,
+  width,
+}: {
+  banner: (typeof PARTNER_BANNERS)[number];
+  width: number;
+}) => (
   <View
     style={[
       styles.partnerBanner,
-      {backgroundColor: banner.backgroundColor},
+      {
+        width,
+        backgroundColor: banner.backgroundColor,
+        borderColor: banner.accentColor,
+      },
     ]}>
-    <View style={styles.partnerBannerTop}>
-      <Text style={[styles.partnerBadge, {color: banner.accentColor}]}>
-        {banner.badge}
-      </Text>
+    <View
+      style={[
+        styles.partnerBannerCircle,
+        {backgroundColor: banner.accentColor},
+      ]}
+    />
+
+    <View style={styles.partnerBannerContent}>
       <View
         style={[
           styles.partnerLogo,
@@ -66,16 +116,31 @@ const PartnerBanner = ({banner}: {banner: (typeof PARTNER_BANNERS)[number]}) => 
         ]}>
         <Text style={styles.partnerLogoText}>{banner.brand.slice(0, 1)}</Text>
       </View>
-    </View>
 
-    <Text style={styles.partnerBrand}>{banner.brand}</Text>
-    <Text style={styles.partnerTitle}>{banner.title}</Text>
-    <Text style={styles.partnerSubtitle}>{banner.subtitle}</Text>
+      <View style={styles.partnerBannerBody}>
+        <View style={styles.partnerBannerTop}>
+          <Text style={styles.partnerBrand}>{banner.brand}</Text>
+          <Text style={styles.partnerAdText}>AD</Text>
+        </View>
+
+        <Text style={styles.partnerTitle} numberOfLines={1}>
+          {banner.title}
+        </Text>
+      </View>
+
+      <View style={[styles.partnerCta, {backgroundColor: banner.accentColor}]}>
+        <Text style={styles.partnerCtaText}>{banner.cta}</Text>
+      </View>
+    </View>
   </View>
 );
 
 export const HomeScreen: React.FC<any> = ({navigation}) => {
   const insets = useSafeAreaInsets();
+  const {width: windowWidth} = useWindowDimensions();
+  const partnerBannerScrollRef = useRef<ScrollView | null>(null);
+  const partnerBannerIndexRef = useRef(PARTNER_BANNER_START_INDEX);
+  const didSetPartnerBannerStartRef = useRef(false);
 
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,6 +160,48 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
   >(null);
   const [attendanceLoading, setAttendanceLoading] = useState(true);
   const {toast, showFavoriteToast} = useFavoriteToast();
+  const partnerBannerViewportWidth = Math.max(windowWidth - 32, 0);
+  const partnerBannerWidth = Math.max(
+    236,
+    partnerBannerViewportWidth - PARTNER_BANNER_SIDE_PEEK * 2,
+  );
+  const partnerBannerStride = partnerBannerWidth + PARTNER_BANNER_GAP;
+
+  useEffect(() => {
+    if (PARTNER_BANNERS.length <= 1) {
+      return;
+    }
+
+    partnerBannerIndexRef.current = PARTNER_BANNER_START_INDEX;
+    didSetPartnerBannerStartRef.current = false;
+
+    const startTimer = setTimeout(() => {
+      if (didSetPartnerBannerStartRef.current) {
+        return;
+      }
+
+      partnerBannerScrollRef.current?.scrollTo({
+        x: PARTNER_BANNER_START_INDEX * partnerBannerStride,
+        animated: false,
+      });
+      didSetPartnerBannerStartRef.current = true;
+    }, 100);
+
+    const timer = setInterval(() => {
+      const nextIndex = partnerBannerIndexRef.current + 1;
+
+      partnerBannerIndexRef.current = nextIndex;
+      partnerBannerScrollRef.current?.scrollTo({
+        x: nextIndex * partnerBannerStride,
+        animated: true,
+      });
+    }, PARTNER_BANNER_INTERVAL_MS);
+
+    return () => {
+      clearTimeout(startTimer);
+      clearInterval(timer);
+    };
+  }, [partnerBannerStride]);
 
   const fetchProducts = async (showLoading = true) => {
     if (showLoading) {
@@ -214,6 +321,41 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
 
       Alert.alert('오류', '찜 상태를 변경하지 못했습니다. 다시 시도해주세요.');
     }
+  };
+
+  const handlePartnerBannerScrollEnd = (
+    event: NativeSyntheticEvent<NativeScrollEvent>,
+  ) => {
+    const nextIndex = Math.round(
+      event.nativeEvent.contentOffset.x / partnerBannerStride,
+    );
+    const realBannerIndex =
+      ((nextIndex % PARTNER_BANNERS.length) + PARTNER_BANNERS.length) %
+      PARTNER_BANNERS.length;
+
+    if (nextIndex < PARTNER_BANNERS.length) {
+      const adjustedIndex = PARTNER_BANNER_START_INDEX + realBannerIndex;
+
+      partnerBannerIndexRef.current = adjustedIndex;
+      partnerBannerScrollRef.current?.scrollTo({
+        x: adjustedIndex * partnerBannerStride,
+        animated: false,
+      });
+      return;
+    }
+
+    if (nextIndex >= PARTNER_BANNERS.length * 2) {
+      const adjustedIndex = PARTNER_BANNER_START_INDEX + realBannerIndex;
+
+      partnerBannerIndexRef.current = adjustedIndex;
+      partnerBannerScrollRef.current?.scrollTo({
+        x: adjustedIndex * partnerBannerStride,
+        animated: false,
+      });
+      return;
+    }
+
+    partnerBannerIndexRef.current = nextIndex;
   };
 
   return (
@@ -339,14 +481,38 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           </TouchableOpacity>
         </View>
 
-        <Text style={styles.sectionTitle}>업체 배너</Text>
+        <Text style={styles.sectionTitle}>에코 파트너 혜택</Text>
 
         <ScrollView
+          ref={partnerBannerScrollRef}
           horizontal
+          pagingEnabled={false}
+          snapToInterval={partnerBannerStride}
+          decelerationRate="fast"
+          bounces={false}
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.partnerBannerList}>
-          {PARTNER_BANNERS.map(banner => (
-            <PartnerBanner key={banner.id} banner={banner} />
+          contentContainerStyle={[
+            styles.partnerBannerList,
+            {paddingHorizontal: PARTNER_BANNER_SIDE_PEEK},
+          ]}
+          onContentSizeChange={() => {
+            if (didSetPartnerBannerStartRef.current) {
+              return;
+            }
+
+            partnerBannerScrollRef.current?.scrollTo({
+              x: PARTNER_BANNER_START_INDEX * partnerBannerStride,
+              animated: false,
+            });
+            didSetPartnerBannerStartRef.current = true;
+          }}
+          onMomentumScrollEnd={handlePartnerBannerScrollEnd}>
+          {LOOP_PARTNER_BANNERS.map((banner, index) => (
+            <PartnerBanner
+              key={`${banner.id}-${index}`}
+              banner={banner}
+              width={partnerBannerWidth}
+            />
           ))}
         </ScrollView>
 

@@ -19,20 +19,8 @@ import * as ImageManipulator from 'expo-image-manipulator';
 import {profileEditStyles as styles} from '../styles/ProfileEditScreenStyle';
 import {useAuth} from '../context/AuthContext';
 import {authApi, resolveProfileImageUrl} from '../api/authApi';
-
-// 학과 정보 추가 예정
-const DEPARTMENTS = [
-  '컴퓨터공학과',
-  '인공지능공학과',
-  '전자공학과',
-  '정보통신공학과',
-  '기계공학과',
-  '산업경영공학과',
-  '경영학과',
-  '디자인테크놀로지학과',
-  '의류디자인학과',
-  '기타',
-];
+import {DepartmentSelectModal} from '../components/DepartmentSelectModal';
+import {DEFAULT_DEPARTMENT} from '../constants/inhaDepartments';
 
 type ModalType =
   | 'logoutConfirm'
@@ -67,7 +55,7 @@ export function ProfileEditScreen() {
       : null,
   );
   const [selectedDepartment, setSelectedDepartment] = useState(
-    userInfo?.department || DEPARTMENTS[0],
+    userInfo?.department || DEFAULT_DEPARTMENT,
   );
   const [departmentModalVisible, setDepartmentModalVisible] = useState(false);
 
@@ -83,7 +71,7 @@ export function ProfileEditScreen() {
 
         setNickname(user.nickname || user.name);
         setEmail(user.email);
-        setSelectedDepartment(user.department || DEPARTMENTS[0]);
+        setSelectedDepartment(user.department || DEFAULT_DEPARTMENT);
         setProfileImage(
           user.profileImage
             ? {
@@ -349,7 +337,6 @@ export function ProfileEditScreen() {
 
       <DepartmentSelectModal
         visible={departmentModalVisible}
-        departments={DEPARTMENTS}
         selectedDepartment={selectedDepartment}
         onSelect={department => {
           setSelectedDepartment(department);
@@ -401,60 +388,6 @@ export function ProfileEditScreen() {
         onConfirm={closeModal}
       />
     </SafeAreaView>
-  );
-}
-
-function DepartmentSelectModal({
-  visible,
-  departments,
-  selectedDepartment,
-  onSelect,
-  onClose,
-}: {
-  visible: boolean;
-  departments: string[];
-  selectedDepartment: string;
-  onSelect: (department: string) => void;
-  onClose: () => void;
-}) {
-  return (
-    <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
-        <View style={styles.departmentSheet}>
-          <Text style={styles.departmentSheetTitle}>학과 선택</Text>
-
-          {departments.map(department => {
-            const isSelected = selectedDepartment === department;
-
-            return (
-              <Pressable
-                key={department}
-                style={[
-                  styles.departmentOption,
-                  isSelected && styles.departmentOptionSelected,
-                ]}
-                onPress={() => onSelect(department)}>
-                <Text
-                  style={[
-                    styles.departmentOptionText,
-                    isSelected && styles.departmentOptionTextSelected,
-                  ]}>
-                  {department}
-                </Text>
-
-                {isSelected && (
-                  <Ionicons name="checkmark" size={18} color="#79AD6F" />
-                )}
-              </Pressable>
-            );
-          })}
-
-          <Pressable style={styles.departmentCancelButton} onPress={onClose}>
-            <Text style={styles.departmentCancelText}>닫기</Text>
-          </Pressable>
-        </View>
-      </View>
-    </Modal>
   );
 }
 

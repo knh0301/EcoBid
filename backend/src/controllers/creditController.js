@@ -1,4 +1,4 @@
-const { Op } = require('sequelize');
+const { Op, QueryTypes } = require('sequelize');
 const { sequelize, CreditTransaction, User } = require('../models');
 const { evaluateAndAwardBadges } = require('../services/badge.service');
 
@@ -11,9 +11,43 @@ const getDateRange = (year, month) => {
   return { startDate, endDate };
 };
 
+const getRankingPeriod = (query) => {
+  const now = new Date();
+  const hasYear = query.year !== undefined;
+  const hasMonth = query.month !== undefined;
+
+  if (hasYear !== hasMonth) {
+    const error = new Error('year와 month는 함께 전달해주세요.');
+    error.status = 400;
+    throw error;
+  }
+
+  const year = hasYear ? Number(query.year) : now.getFullYear();
+  const month = hasMonth ? Number(query.month) : now.getMonth() + 1;
+
+  if (!Number.isInteger(year) || year < 2000 || year > 2100) {
+    const error = new Error('year는 2000~2100 사이의 정수여야 합니다.');
+    error.status = 400;
+    throw error;
+  }
+
+  if (!Number.isInteger(month) || month < 1 || month > 12) {
+    const error = new Error('month는 1~12 사이의 정수여야 합니다.');
+    error.status = 400;
+    throw error;
+  }
+
+  return {
+    year,
+    month,
+    ...getDateRange(year, month),
+  };
+};
+
 /**
- * 학과별 크레딧 총액 순위
+ * 학과별 월간 크레딧 획득 순위
  * GET /api/credits/department-rankings
+ * GET /api/credits/department-rankings?year=2026&month=6
  */
 exports.getDepartmentCreditRankings = async (req, res, next) => {
   try {
@@ -21,26 +55,32 @@ exports.getDepartmentCreditRankings = async (req, res, next) => {
     const limit = Number.isInteger(requestedLimit) && requestedLimit > 0
       ? Math.min(requestedLimit, 20)
       : 3;
-    const departmentExpr = sequelize.fn(
-      'COALESCE',
-      sequelize.fn('NULLIF', sequelize.fn('TRIM', sequelize.col('department')), ''),
-      '학과 미지정',
-    );
+    const { year, month, startDate, endDate } = getRankingPeriod(req.query);
 
-    const rows = await User.findAll({
-      attributes: [
-        [departmentExpr, 'department'],
-        [sequelize.fn('SUM', sequelize.col('credits')), 'totalCredits'],
-        [sequelize.fn('COUNT', sequelize.col('id')), 'userCount'],
-      ],
-      group: [departmentExpr],
-      order: [
-        [sequelize.fn('SUM', sequelize.col('credits')), 'DESC'],
-        [sequelize.fn('COUNT', sequelize.col('id')), 'DESC'],
-      ],
-      limit,
-      raw: true,
-    });
+    const rows = await sequelize.query(
+      `
+        SELECT
+          COALESCE(NULLIF(TRIM(u.department), ''), '학과 미지정') AS department,
+          SUM(ct.amount) AS totalCredits,
+          COUNT(DISTINCT u.id) AS userCount
+        FROM credit_transactions ct
+        INNER JOIN users u ON u.id = ct.user_id
+        WHERE ct.amount > 0
+          AND ct.created_at >= :startDate
+          AND ct.created_at < :endDate
+        GROUP BY COALESCE(NULLIF(TRIM(u.department), ''), '학과 미지정')
+        ORDER BY totalCredits DESC, userCount DESC, department ASC
+        LIMIT :limit
+      `,
+      {
+        replacements: {
+          startDate,
+          endDate,
+          limit,
+        },
+        type: QueryTypes.SELECT,
+      },
+    );
 
     const rankings = rows.map((item, index) => ({
       rank: index + 1,
@@ -52,6 +92,12 @@ exports.getDepartmentCreditRankings = async (req, res, next) => {
     res.json({
       success: true,
       data: rankings,
+      period: {
+        year,
+        month,
+        startDate,
+        endDate,
+      },
     });
   } catch (err) {
     next(err);

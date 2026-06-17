@@ -13,9 +13,9 @@ export const loginStyles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    justifyContent: 'center',
     paddingHorizontal: 24,
-    paddingVertical: 28,
+    paddingTop: 60,
+    paddingBottom: 40,
   },
 
   card: {

@@ -293,7 +293,7 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
         </View>
 
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>크레딧 총액 학과 순위</Text>
+          <Text style={styles.cardTitle}>이번 달 학과 크레딧 순위</Text>
 
           {rankLoading ? (
             <ActivityIndicator

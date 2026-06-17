@@ -2,7 +2,6 @@ import React, {useState} from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   Pressable,
   ScrollView,
@@ -14,20 +13,8 @@ import {Ionicons} from '@expo/vector-icons';
 import {useNavigation} from '@react-navigation/native';
 import {SafeAreaView} from 'react-native-safe-area-context';
 import {authApi} from '../api/authApi';
+import {DepartmentSelectModal} from '../components/DepartmentSelectModal';
 import {signupStyles as styles} from '../styles/SignupScreenStyle';
-
-const DEPARTMENTS = [
-  '컴퓨터공학과',
-  '인공지능공학과',
-  '전자공학과',
-  '정보통신공학과',
-  '기계공학과',
-  '산업경영공학과',
-  '경영학과',
-  '디자인테크놀로지학과',
-  '의류디자인학과',
-  '기타',
-];
 
 export function SignupScreen() {
   const navigation = useNavigation<any>();
@@ -269,48 +256,15 @@ export function SignupScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <Modal visible={departmentModalVisible} transparent animationType="fade">
-        <View style={styles.modalOverlay}>
-          <View style={styles.departmentSheet}>
-            <Text style={styles.departmentSheetTitle}>학과 선택</Text>
-
-            {DEPARTMENTS.map(item => {
-              const isSelected = department === item;
-
-              return (
-                <Pressable
-                  key={item}
-                  style={[
-                    styles.departmentOption,
-                    isSelected && styles.departmentOptionSelected,
-                  ]}
-                  onPress={() => {
-                    setDepartment(item);
-                    setDepartmentModalVisible(false);
-                  }}>
-                  <Text
-                    style={[
-                      styles.departmentOptionText,
-                      isSelected && styles.departmentOptionTextSelected,
-                    ]}>
-                    {item}
-                  </Text>
-
-                  {isSelected && (
-                    <Ionicons name="checkmark" size={18} color="#79AD6F" />
-                  )}
-                </Pressable>
-              );
-            })}
-
-            <Pressable
-              style={styles.departmentCancelButton}
-              onPress={() => setDepartmentModalVisible(false)}>
-              <Text style={styles.departmentCancelText}>닫기</Text>
-            </Pressable>
-          </View>
-        </View>
-      </Modal>
+      <DepartmentSelectModal
+        visible={departmentModalVisible}
+        selectedDepartment={department}
+        onSelect={selectedDepartment => {
+          setDepartment(selectedDepartment);
+          setDepartmentModalVisible(false);
+        }}
+        onClose={() => setDepartmentModalVisible(false)}
+      />
     </SafeAreaView>
   );
 }

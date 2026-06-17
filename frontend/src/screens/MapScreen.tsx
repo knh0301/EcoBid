@@ -113,15 +113,17 @@ export function MapScreen() {
     '위치 권한을 허용하면 현재 위치 주변을 볼 수 있어요.',
   );
   const [searchMarker, setSearchMarker] = useState<MapPoint | null>(null);
+  const [dynamicPoints, setDynamicPoints] = useState<MapPoint[]>([]);
 
   const visiblePoints = useMemo(() => {
+    const allPoints = [...MAP_POINTS, ...dynamicPoints];
     const basePoints =
       activeFilter === '전체'
-        ? MAP_POINTS
-        : MAP_POINTS.filter(point => point.category === activeFilter);
+        ? allPoints
+        : allPoints.filter(point => point.category === activeFilter);
 
     return searchMarker ? [searchMarker, ...basePoints] : basePoints;
-  }, [activeFilter, searchMarker]);
+  }, [activeFilter, searchMarker, dynamicPoints]);
 
   useEffect(() => {
     requestCurrentLocation();
@@ -150,9 +152,56 @@ export function MapScreen() {
         accuracy: Location.Accuracy.Balanced,
       });
 
+      const lat = currentLocation.coords.latitude;
+      const lng = currentLocation.coords.longitude;
+
+      const newPoints: MapPoint[] = [
+        {
+          id: `dynamic-partner-1-${Date.now()}`,
+          title: '제휴 리필 매장',
+          description: '개인 용기를 가져오면 에코 포인트를 받을 수 있어요',
+          category: '제휴매장',
+          coordinate: {
+            latitude: lat + (Math.random() - 0.5) * 0.01,
+            longitude: lng + (Math.random() - 0.5) * 0.01,
+          },
+        },
+        {
+          id: `dynamic-partner-2-${Date.now()}`,
+          title: '지구사랑 카페',
+          description: '텀블러 지참 시 음료 500원 할인 및 친환경 빨대 제공',
+          category: '제휴매장',
+          coordinate: {
+            latitude: lat + (Math.random() - 0.5) * 0.01,
+            longitude: lng + (Math.random() - 0.5) * 0.01,
+          },
+        },
+        {
+          id: `dynamic-partner-3-${Date.now()}`,
+          title: '에코 프레시 마트',
+          description: '포장지 없는 채소 구매 시 에코 포인트 2배 적립',
+          category: '제휴매장',
+          coordinate: {
+            latitude: lat + (Math.random() - 0.5) * 0.01,
+            longitude: lng + (Math.random() - 0.5) * 0.01,
+          },
+        },
+        {
+          id: `dynamic-partner-4-${Date.now()}`,
+          title: '그린 베이커리',
+          description: '개인 다회용기에 빵 포장 시 미니 스콘 무료 증정',
+          category: '제휴매장',
+          coordinate: {
+            latitude: lat + (Math.random() - 0.5) * 0.01,
+            longitude: lng + (Math.random() - 0.5) * 0.01,
+          },
+        },
+      ];
+      setDynamicPoints(newPoints);
+
       const nextRegion = {
-        latitude: currentLocation.coords.latitude,
-        longitude: currentLocation.coords.longitude,
+        latitude: lat,
+        longitude: lng,
         latitudeDelta: 0.018,
         longitudeDelta: 0.018,
       };

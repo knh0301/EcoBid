@@ -70,8 +70,19 @@ const getFallbackDraft = () => ({
 const sendFallbackDraft = (res) =>
   res.json({
     success: true,
-    data: getFallbackDraft(),
+    data: {
+      ...getFallbackDraft(),
+      isFallback: true,
+    },
   });
+
+const readConfiguredEnv = value => {
+  const trimmedValue = String(value || '').trim();
+
+  return trimmedValue && !trimmedValue.toLowerCase().startsWith('your_')
+    ? trimmedValue
+    : '';
+};
 
 const getProductDraftPrompt = () =>
   [
@@ -161,7 +172,7 @@ const requestGeminiDraft = async ({ apiKey, model, base64, mimeType }) => {
 };
 
 const generateDraftWithGemini = async ({ base64, mimeType }) => {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey = readConfiguredEnv(process.env.GEMINI_API_KEY);
 
   if (!apiKey) {
     return null;
@@ -204,7 +215,9 @@ const generateDraftWithGemini = async ({ base64, mimeType }) => {
 };
 
 const generateDraftWithOpenAI = async ({ base64, mimeType }) => {
-  if (!process.env.OPENAI_API_KEY) {
+  const apiKey = readConfiguredEnv(process.env.OPENAI_API_KEY);
+
+  if (!apiKey) {
     return null;
   }
 
@@ -214,7 +227,7 @@ const generateDraftWithOpenAI = async ({ base64, mimeType }) => {
   const openAIResponse = await fetch('https://api.openai.com/v1/responses', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+      Authorization: `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({

@@ -36,6 +36,7 @@ export interface ProductDraft {
   category: string;
   description: string;
   suggestedCreditPrice: number;
+  isFallback?: boolean;
 }
 
 /**

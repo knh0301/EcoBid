@@ -5,6 +5,8 @@ type SubmitMissionPayload = {
   missionTitle: string;
   content: string;
   imageUrl?: string | null;
+  imageBase64?: string | null;
+  imageMimeType?: string | null;
   rewardPoints?: number;
 };
 
@@ -52,6 +54,8 @@ type SubmitMissionResponse = {
   data: {
     submission?: MissionSubmission;
     rewardPoints: number;
+    requestedRewardPoints?: number;
+    verification?: MissionVerificationResult | null;
     newlyAwardedBadges: Badge[];
   };
 };
@@ -66,6 +70,12 @@ export type MissionSubmission = {
   imageUrl?: string | null;
   status: MissionSubmissionStatus;
   rejectionReason?: string | null;
+  verificationProvider?: string | null;
+  aiIsValid?: boolean | null;
+  aiConfidence?: number | null;
+  aiReason?: string | null;
+  aiEvidence?: string | null;
+  aiCheckedAt?: string | null;
   createdAt: string;
   updatedAt: string;
   Mission?: {
@@ -82,6 +92,15 @@ export type MissionSubmission = {
     studentId?: string | null;
     department?: string | null;
   };
+};
+
+export type MissionVerificationResult = {
+  provider: string;
+  isValid: boolean;
+  confidence: number;
+  reason: string;
+  evidence: string[];
+  checkedAt: string;
 };
 
 export const missionsApi = {

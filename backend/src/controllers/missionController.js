@@ -1,3 +1,6 @@
+const fs = require('fs/promises');
+const path = require('path');
+const crypto = require('crypto');
 const {
   sequelize,
   CreditTransaction,
@@ -11,12 +14,22 @@ const {
   findMissionCatalogItemByTitle,
   getMissionCatalog,
 } = require('../services/missionCatalog');
+const {
+  shouldAutoApproveMission,
+  verifyMissionSubmission,
+} = require('../services/missionVerification.service');
 
 const DEFAULT_MISSION_REWARD = 50;
 const DAILY_MISSION_COMPLETION_LIMIT = 5;
 const DAILY_MISSION_REWARD_LIMIT = 50;
 const AD_VIEW_MISSION_TITLE = '광고 보기';
 const AD_VIEW_DAILY_LIMIT = 3;
+const MISSION_UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads', 'missions');
+const MISSION_MIME_EXTENSIONS = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+};
 const ADMIN_EMAILS = String(process.env.ADMIN_EMAILS || '')
   .split(',')
   .map(email => email.trim().toLowerCase())
@@ -68,6 +81,58 @@ const resolveMissionReward = (title, requestedRewardPoints) => {
     requestedRewardPoints <= 500
     ? requestedRewardPoints
     : DEFAULT_MISSION_REWARD;
+};
+
+const saveMissionImage = async ({ base64, mimeType }) => {
+  if (!base64 || !mimeType) {
+    return null;
+  }
+
+  const extension = MISSION_MIME_EXTENSIONS[mimeType];
+
+  if (!extension) {
+    const error = new Error('jpg, png, webp 이미지만 인증할 수 있습니다.');
+    error.status = 400;
+    throw error;
+  }
+
+  await fs.mkdir(MISSION_UPLOAD_DIR, { recursive: true });
+
+  const buffer = Buffer.from(base64, 'base64');
+  const fileName = `${crypto.randomUUID()}.${extension}`;
+  const filePath = path.join(MISSION_UPLOAD_DIR, fileName);
+
+  await fs.writeFile(filePath, buffer);
+
+  return {
+    imageUrl: `/uploads/missions/${fileName}`,
+    imageHash: crypto.createHash('sha256').update(buffer).digest('hex'),
+  };
+};
+
+const createMissionReward = async ({
+  userId,
+  amount,
+  title,
+  submissionId,
+  transaction,
+}) => {
+  await User.increment('credits', {
+    by: amount,
+    where: { id: userId },
+    transaction,
+  });
+
+  await CreditTransaction.create(
+    {
+      userId,
+      amount,
+      referenceType: 'MISSION',
+      referenceId: submissionId,
+      description: `${title} 미션 보상 ${amount} 크레딧`,
+    },
+    { transaction },
+  );
 };
 
 const getTodayCatalogMissionProgress = async (userId, transaction = null) => {
@@ -310,7 +375,9 @@ exports.submitMission = async (req, res, next) => {
     const userId = req.user.id;
     const title = String(req.body.missionTitle || req.body.title || '').trim();
     const content = String(req.body.content || req.body.description || '').trim();
-    const imageUrl = req.body.imageUrl || null;
+    const submittedImageUrl = req.body.imageUrl || null;
+    const imageBase64 = req.body.imageBase64 || req.body.base64 || null;
+    const imageMimeType = req.body.imageMimeType || req.body.mimeType || null;
     const requestedRewardPoints = Number(req.body.rewardPoints);
     const catalogItem = findMissionCatalogItemByTitle(title);
     const isAdViewMission = title === AD_VIEW_MISSION_TITLE;
@@ -404,58 +471,94 @@ exports.submitMission = async (req, res, next) => {
     }
 
     if (dailyCatalogItem) {
+      const savedImage = await saveMissionImage({
+        base64: imageBase64,
+        mimeType: imageMimeType,
+      });
+      const imageUrl = savedImage?.imageUrl || submittedImageUrl;
+      const verification = await verifyMissionSubmission({
+        missionTitle: title,
+        missionDescription: catalogItem?.description || null,
+        verificationCriteria: catalogItem?.verificationCriteria || null,
+        content,
+        base64: imageBase64,
+        mimeType: imageMimeType,
+      });
+      const isAutoApproved = shouldAutoApproveMission(verification);
       const submission = await MissionSubmission.create(
         {
           missionId: mission.id,
           userId,
           content,
           imageUrl,
-          status: 'PENDING',
+          imageHash: savedImage?.imageHash || null,
+          status: isAutoApproved ? 'APPROVED' : 'PENDING',
+          verificationProvider: verification?.provider || null,
+          aiIsValid: verification?.isValid ?? null,
+          aiConfidence: verification?.confidence ?? null,
+          aiReason: verification?.reason || null,
+          aiEvidence: verification?.evidence?.join('\n') || null,
+          aiCheckedAt: verification?.checkedAt || null,
         },
         { transaction },
       );
 
+      if (isAutoApproved) {
+        await createMissionReward({
+          userId,
+          amount: rewardPoints,
+          title,
+          submissionId: submission.id,
+          transaction,
+        });
+      }
+
       await transaction.commit();
+
+      const newlyAwardedBadges = isAutoApproved
+        ? await evaluateAndAwardBadges(userId)
+        : [];
 
       return res.status(201).json({
         success: true,
-        message: '미션 인증 신청이 접수되었습니다.',
+        message: isAutoApproved
+          ? 'AI 인증이 완료되었습니다.'
+          : '미션 인증 신청이 접수되었습니다.',
         data: {
           mission,
           submission,
-          rewardPoints,
-          newlyAwardedBadges: [],
+          rewardPoints: isAutoApproved ? rewardPoints : 0,
+          requestedRewardPoints: rewardPoints,
+          verification,
+          newlyAwardedBadges,
         },
       });
     }
 
+    const savedImage = await saveMissionImage({
+      base64: imageBase64,
+      mimeType: imageMimeType,
+    });
+    const imageUrl = savedImage?.imageUrl || submittedImageUrl;
     const submission = await MissionSubmission.create(
       {
         missionId: mission.id,
         userId,
         content,
         imageUrl,
+        imageHash: savedImage?.imageHash || null,
         status: 'APPROVED',
       },
       { transaction },
     );
 
-    await User.increment('credits', {
-      by: rewardPoints,
-      where: { id: userId },
+    await createMissionReward({
+      userId,
+      amount: rewardPoints,
+      title,
+      submissionId: submission.id,
       transaction,
     });
-
-    await CreditTransaction.create(
-      {
-        userId,
-        amount: rewardPoints,
-        referenceType: 'MISSION',
-        referenceId: submission.id,
-        description: `${title} 미션 보상 ${rewardPoints} 크레딧`,
-      },
-      { transaction },
-    );
 
     await transaction.commit();
 
@@ -609,22 +712,14 @@ exports.reviewMissionSubmission = async (req, res, next) => {
       },
       { transaction },
     );
-    await User.increment('credits', {
-      by: rewardPoints,
-      where: { id: submission.userId },
+
+    await createMissionReward({
+      userId: submission.userId,
+      amount: rewardPoints,
+      title: submission.Mission?.title || '미션',
+      submissionId: submission.id,
       transaction,
     });
-
-    await CreditTransaction.create(
-      {
-        userId: submission.userId,
-        amount: rewardPoints,
-        referenceType: 'MISSION',
-        referenceId: submission.id,
-        description: `${submission.Mission?.title || '미션'} 미션 보상 ${rewardPoints} 크레딧`,
-      },
-      { transaction },
-    );
 
     await transaction.commit();
 

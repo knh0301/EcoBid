@@ -21,76 +21,79 @@ export const missionStyles = StyleSheet.create({
   },
 
   scrollContent: {
-    padding: 20,
-    paddingBottom: 40,
+    padding: 16,
+    paddingBottom: 32,
   },
 
   pageTitle: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
     color: colors.pageTitle,
-    marginBottom: 8,
+    marginBottom: 6,
   },
 
   pageSubtitle: {
-    fontSize: 16,
+    fontSize: 14,
     color: colors.textSecondary,
-    marginBottom: 24,
+    marginBottom: 18,
   },
 
   sectionTitle: {
-    fontSize: 22,
+    fontSize: 20,
     fontWeight: 'bold',
     color: colors.black,
-    marginTop: 32,
-    marginBottom: 16,
+    marginTop: 24,
+    marginBottom: 12,
   },
 
   card: {
     backgroundColor: colors.white,
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 16,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: colors.borderSoft,
     shadowColor: colors.black,
-    shadowOffset: {width: 0, height: 2},
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 2,
+    shadowOffset: {width: 0, height: 1},
+    shadowOpacity: 0.04,
+    shadowRadius: 5,
+    elevation: 1,
   },
 
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    gap: 10,
+    marginBottom: 6,
   },
 
   cardTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: colors.cardTitle,
     flex: 1,
   },
 
   cardCredit: {
-    fontSize: 14,
+    fontSize: 13,
     fontWeight: 'bold',
     color: colors.primary,
   },
 
   cardDesc: {
-    fontSize: 14,
+    fontSize: 13,
     color: colors.textSecondary,
-    marginBottom: 20,
-    lineHeight: 20,
+    marginBottom: 12,
+    lineHeight: 18,
   },
 
   button: {
     backgroundColor: colors.chatGreen,
-    borderRadius: 14,
-    paddingVertical: 16,
+    borderRadius: 10,
+    minHeight: 42,
+    paddingVertical: 11,
+    paddingHorizontal: 14,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -101,7 +104,7 @@ export const missionStyles = StyleSheet.create({
 
   buttonText: {
     color: colors.textLight,
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: 'bold',
   },
 
@@ -111,9 +114,9 @@ export const missionStyles = StyleSheet.create({
 
   progressCard: {
     backgroundColor: colors.white,
-    borderRadius: 24,
-    padding: 24,
-    marginBottom: 16,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 10,
     borderWidth: 1,
     borderColor: colors.borderSoft,
   },
@@ -122,25 +125,26 @@ export const missionStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 12,
   },
 
   progressTitle: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: colors.cardTitle,
   },
 
   progressValue: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: 'bold',
     color: colors.primary,
   },
 
   progressBarTrack: {
-    height: 12,
+    height: 10,
     backgroundColor: colors.lightGrayBackground,
-    borderRadius: 6,
+    borderRadius: 5,
     overflow: 'hidden',
   },
 

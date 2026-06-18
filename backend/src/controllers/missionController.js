@@ -13,6 +13,10 @@ const {
 } = require('../services/missionCatalog');
 
 const DEFAULT_MISSION_REWARD = 50;
+const DAILY_MISSION_COMPLETION_LIMIT = 5;
+const DAILY_MISSION_REWARD_LIMIT = 50;
+const AD_VIEW_MISSION_TITLE = '광고 보기';
+const AD_VIEW_DAILY_LIMIT = 3;
 
 const getTodayDateRange = () => {
   const today = new Intl.DateTimeFormat('en-CA', {
@@ -43,6 +47,141 @@ const resolveMissionReward = (title, requestedRewardPoints) => {
     : DEFAULT_MISSION_REWARD;
 };
 
+const getTodayCatalogMissionProgress = async (userId, transaction = null) => {
+  const catalog = getMissionCatalog();
+  const titles = catalog.map(item => item.title);
+  const { startDate, endDate } = getTodayDateRange();
+  const todaySubmissions = await MissionSubmission.findAll({
+    where: {
+      userId,
+      status: 'APPROVED',
+      createdAt: {
+        [Op.gte]: startDate,
+        [Op.lt]: endDate,
+      },
+    },
+    include: [
+      {
+        model: Mission,
+        attributes: ['title'],
+        where: {
+          title: {
+            [Op.in]: titles,
+          },
+        },
+      },
+    ],
+    transaction,
+  });
+  const completedTitles = new Set(
+    todaySubmissions
+      .map(submission => submission.Mission?.title)
+      .filter(Boolean),
+  );
+  const earnedRewardPoints = catalog.reduce((sum, item) => {
+    return completedTitles.has(item.title) ? sum + item.rewardPoints : sum;
+  }, 0);
+
+  return {
+    completedTitles,
+    completedMissionCount: completedTitles.size,
+    earnedRewardPoints: Math.min(earnedRewardPoints, DAILY_MISSION_REWARD_LIMIT),
+    maxMissionCount: DAILY_MISSION_COMPLETION_LIMIT,
+    maxRewardPoints: DAILY_MISSION_REWARD_LIMIT,
+  };
+};
+
+const getTodayAdViewProgress = async (userId, transaction = null) => {
+  const catalogItem = findMissionCatalogItemByTitle(AD_VIEW_MISSION_TITLE);
+  const { startDate, endDate } = getTodayDateRange();
+  const mission = await Mission.findOne({
+    where: { title: AD_VIEW_MISSION_TITLE },
+    transaction,
+  });
+  const completedCount = mission
+    ? await MissionSubmission.count({
+        where: {
+          missionId: mission.id,
+          userId,
+          status: 'APPROVED',
+          createdAt: {
+            [Op.gte]: startDate,
+            [Op.lt]: endDate,
+          },
+        },
+        transaction,
+      })
+    : 0;
+  const rewardPoints = catalogItem?.rewardPoints || 20;
+
+  return {
+    completedCount,
+    maxCount: AD_VIEW_DAILY_LIMIT,
+    remainingCount: Math.max(AD_VIEW_DAILY_LIMIT - completedCount, 0),
+    rewardPoints,
+    earnedRewardPoints: completedCount * rewardPoints,
+  };
+};
+
+const toMissionListItem = (item, progress) => {
+  const isCompleted = progress.completedTitles.has(item.title);
+  const isLimitReached =
+    progress.completedMissionCount >= DAILY_MISSION_COMPLETION_LIMIT;
+
+  return {
+    ...item,
+    desc: item.description,
+    creditText: `+ ${item.rewardPoints.toLocaleString()} 크레딧`,
+    status: isCompleted ? 'completed' : isLimitReached ? 'locked' : 'active',
+    buttonText: isCompleted
+      ? '크레딧 지급 완료'
+      : isLimitReached
+        ? '오늘 한도 완료'
+        : '인증하기',
+  };
+};
+
+exports.getDailyMissions = async (req, res, next) => {
+  try {
+    const catalog = getMissionCatalog();
+    const progress = await getTodayCatalogMissionProgress(req.user.id);
+    const dailyMissions = catalog.map(item => toMissionListItem(item, progress));
+
+    res.json({
+      success: true,
+      data: {
+        missions: dailyMissions,
+        progress: {
+          earnedRewardPoints: progress.earnedRewardPoints,
+          maxRewardPoints: progress.maxRewardPoints,
+          completedMissionCount: progress.completedMissionCount,
+          maxMissionCount: progress.maxMissionCount,
+        },
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.getAdViewStatus = async (req, res, next) => {
+  try {
+    const progress = await getTodayAdViewProgress(req.user.id);
+    const isLimitReached = progress.completedCount >= progress.maxCount;
+
+    res.json({
+      success: true,
+      data: {
+        ...progress,
+        status: isLimitReached ? 'locked' : 'active',
+        buttonText: isLimitReached ? '오늘 한도 완료' : '광고보기',
+      },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 exports.getRecommendedMissions = async (req, res, next) => {
   try {
     const requestedLimit = Number(req.query.limit);
@@ -50,36 +189,18 @@ exports.getRecommendedMissions = async (req, res, next) => {
       ? Math.min(requestedLimit, 5)
       : 2;
     const catalog = getMissionCatalog();
-    const titles = catalog.map(item => item.title);
-    const { today, startDate, endDate } = getTodayDateRange();
-    const todaySubmissions = await MissionSubmission.findAll({
-      where: {
-        userId: req.user.id,
-        status: 'APPROVED',
-        createdAt: {
-          [Op.gte]: startDate,
-          [Op.lt]: endDate,
-        },
-      },
-      include: [
-        {
-          model: Mission,
-          attributes: ['title'],
-          where: {
-            title: {
-              [Op.in]: titles,
-            },
-          },
-        },
-      ],
-    });
-    const completedTitles = new Set(
-      todaySubmissions
-        .map(submission => submission.Mission?.title)
-        .filter(Boolean),
-    );
+    const { today } = getTodayDateRange();
+    const progress = await getTodayCatalogMissionProgress(req.user.id);
+
+    if (progress.completedMissionCount >= DAILY_MISSION_COMPLETION_LIMIT) {
+      return res.json({
+        success: true,
+        data: [],
+      });
+    }
+
     const availableMissions = catalog.filter(
-      item => !completedTitles.has(item.title),
+      item => !progress.completedTitles.has(item.title),
     );
     const rotationOffset = availableMissions.length > 0
       ? Number(today.replace(/-/g, '')) % availableMissions.length
@@ -91,7 +212,7 @@ exports.getRecommendedMissions = async (req, res, next) => {
     const recommendedMissions = rotatedMissions.slice(0, limit).map(item => ({
       ...item,
       desc: item.description,
-      creditText: `+${item.rewardPoints.toLocaleString()} 크레딧`,
+      creditText: `+ ${item.rewardPoints.toLocaleString()} 크레딧`,
       status: 'active',
       buttonText: '인증하기',
     }));
@@ -115,6 +236,9 @@ exports.submitMission = async (req, res, next) => {
     const imageUrl = req.body.imageUrl || null;
     const requestedRewardPoints = Number(req.body.rewardPoints);
     const catalogItem = findMissionCatalogItemByTitle(title);
+    const isAdViewMission = title === AD_VIEW_MISSION_TITLE;
+    const dailyCatalogItem =
+      getMissionCatalog().find(item => item.title === title) || null;
     const rewardPoints = resolveMissionReward(title, requestedRewardPoints);
 
     if (!title || !content) {
@@ -161,13 +285,39 @@ exports.submitMission = async (req, res, next) => {
       transaction,
     });
 
-    if (existingSubmission) {
+    if (existingSubmission && !isAdViewMission) {
       await transaction.rollback();
 
       return res.status(409).json({
         success: false,
         message: '이미 오늘 인증한 미션입니다.',
       });
+    }
+
+    if (isAdViewMission) {
+      const adViewProgress = await getTodayAdViewProgress(userId, transaction);
+
+      if (adViewProgress.completedCount >= AD_VIEW_DAILY_LIMIT) {
+        await transaction.rollback();
+
+        return res.status(409).json({
+          success: false,
+          message: '광고 보기는 하루 최대 3회까지 완료할 수 있습니다.',
+        });
+      }
+    }
+
+    if (dailyCatalogItem) {
+      const progress = await getTodayCatalogMissionProgress(userId, transaction);
+
+      if (progress.completedMissionCount >= DAILY_MISSION_COMPLETION_LIMIT) {
+        await transaction.rollback();
+
+        return res.status(409).json({
+          success: false,
+          message: '오늘 데일리 미션은 최대 5개까지 완료할 수 있습니다.',
+        });
+      }
     }
 
     const submission = await MissionSubmission.create(

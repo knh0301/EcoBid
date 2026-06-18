@@ -1,4 +1,4 @@
-import React, {useState} from 'react';
+import React, {useCallback, useState} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -7,12 +7,31 @@ import {
   Text,
   View,
   TouchableOpacity,
+  type DimensionValue,
 } from 'react-native';
+import {useFocusEffect} from '@react-navigation/native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {missionStyles} from '../styles/MissionScreenStyle';
-import {missionsApi} from '../api/missions';
+import {
+  AdViewStatus,
+  DailyMission,
+  DailyMissionsProgress,
+  missionsApi,
+} from '../api/missions';
 
-const MISSION_DATA = [
+type MissionStatus = 'active' | 'completed' | 'locked';
+
+type MissionCardItem = {
+  id: string;
+  title: string;
+  desc: string;
+  credit: string;
+  rewardPoints?: number;
+  buttonText: string;
+  status: MissionStatus;
+};
+
+const BASE_MISSION_DATA: MissionCardItem[] = [
   {
     id: '1',
     title: '오늘의 출석 도장',
@@ -24,7 +43,7 @@ const MISSION_DATA = [
   {
     id: '2',
     title: '나눔 물품 등록하기',
-    desc: '물품 거래가 완료되면 100 크레딧을 추가로 지급해드려요.',
+    desc: '나눔 물품을 등록하면 100 크레딧을 지급해드려요.',
     credit: '+ 100 크레딧',
     buttonText: '나눔 물품 등록하기',
     status: 'active',
@@ -41,103 +60,47 @@ const MISSION_DATA = [
   {
     id: '4',
     title: '광고 보기',
-    desc: '광고 봐줘용.',
+    desc: '짧은 광고를 시청하고 EcoBid 운영을 함께 응원해주세요.',
     credit: '+ 20 크레딧',
+    rewardPoints: 20,
     buttonText: '광고보기',
     status: 'active',
   },
 ];
 
-const DAILY_MISSIONS = [
-  {
-    id: 'd1',
-    title: '텀블러 사용하기',
-    desc: '일회용품 대신 텀블러를 사용해보는건 어떨까요?',
-    credit: '+ 5 크레딧',
-    rewardPoints: 5,
-    buttonText: '크레딧 지급 완료',
-    status: 'completed',
-  },
-  {
-    id: 'd2',
-    title: '분리수거 하기',
-    desc: '페트병 라벨 제거, 캔 압축 등 올바른 분리수거를 해봐요.',
-    credit: '+ 5 크레딧',
-    rewardPoints: 5,
-    buttonText: '인증하기',
-    status: 'active',
-  },
-  {
-    id: 'd3',
-    title: '내 용기 이용하여 음식 포장하기',
-    desc: '일회용품 대신 집에 있던 용기를 활용해보세요.',
-    credit: '+ 5 크레딧',
-    rewardPoints: 5,
-    buttonText: '인증하기',
-    status: 'active',
-  },
-  {
-    id: 'd4',
-    title: '음식 남기지 않기',
-    desc: '음식물 쓰레기를 줄여요.',
-    credit: '+ 5 크레딧',
-    rewardPoints: 5,
-    buttonText: '인증하기',
-    status: 'active',
-  },
-  {
-    id: 'd5',
-    title: '대중교통 이용하기',
-    desc: '대중교통도 잘 되어있다.',
-    credit: '+ 5 크레딧',
-    rewardPoints: 5,
-    buttonText: '인증하기',
-    status: 'active',
-  },
-  {
-    id: 'd6',
-    title: '이면지 활용하기',
-    desc: '점점',
-    credit: '+ 5 크레딧',
-    rewardPoints: 5,
-    buttonText: '인증하기',
-    status: 'active',
-  },
-  {
-    id: 'd7',
-    title: '10,000보 걷기',
-    desc: '쓰기',
-    credit: '+ 5 크레딧',
-    rewardPoints: 5,
-    buttonText: '인증하기',
-    status: 'active',
-  },
-  {
-    id: 'd8',
-    title: '리필 제품 구매하기',
-    desc: '구찮다.',
-    credit: '+ 5 크레딧',
-    rewardPoints: 5,
-    buttonText: '인증하기',
-    status: 'active',
-  },
-  {
-    id: 'd9',
-    title: '안쓰는 멀티탭 뽑기',
-    desc: '전기세 줄줄 샌다.',
-    credit: '+ 5 크레딧',
-    rewardPoints: 5,
-    buttonText: '인증하기',
-    status: 'active',
-  },
-];
+const toMissionCardItem = (mission: DailyMission): MissionCardItem => ({
+  id: mission.id,
+  title: mission.title,
+  desc: mission.desc || mission.description,
+  credit: mission.creditText,
+  rewardPoints: mission.rewardPoints,
+  buttonText: mission.buttonText,
+  status: mission.status,
+});
+
+const DEFAULT_DAILY_PROGRESS: DailyMissionsProgress = {
+  earnedRewardPoints: 0,
+  maxRewardPoints: 50,
+  completedMissionCount: 0,
+  maxMissionCount: 5,
+};
+
+const DEFAULT_AD_VIEW_STATUS: AdViewStatus = {
+  completedCount: 0,
+  maxCount: 3,
+  remainingCount: 3,
+  rewardPoints: 20,
+  earnedRewardPoints: 0,
+  status: 'active',
+  buttonText: '광고보기',
+};
 
 const MissionCard = ({
   item,
   isLoading,
   onPress,
 }: {
-  item: any;
+  item: MissionCardItem;
   isLoading: boolean;
   onPress: () => void;
 }) => (
@@ -155,10 +118,10 @@ const MissionCard = ({
     <TouchableOpacity
       style={[
         missionStyles.button,
-        item.status === 'completed' && missionStyles.buttonCompleted,
+        item.status !== 'active' && missionStyles.buttonCompleted,
       ]}
       activeOpacity={0.7}
-      disabled={item.status === 'completed' || isLoading}
+      disabled={item.status !== 'active' || isLoading}
       onPress={onPress}>
       {isLoading ? (
         <ActivityIndicator size="small" color="#FFFFFF" />
@@ -166,7 +129,7 @@ const MissionCard = ({
         <Text
           style={[
             missionStyles.buttonText,
-            item.status === 'completed' && missionStyles.buttonTextCompleted,
+            item.status !== 'active' && missionStyles.buttonTextCompleted,
           ]}>
           {item.buttonText}
         </Text>
@@ -180,8 +143,73 @@ export function MissionScreen({navigation}: any) {
   const [submittingMissionId, setSubmittingMissionId] = useState<string | null>(
     null,
   );
+  const [dailyMissions, setDailyMissions] = useState<MissionCardItem[]>([]);
+  const [dailyProgress, setDailyProgress] = useState<DailyMissionsProgress>(
+    DEFAULT_DAILY_PROGRESS,
+  );
+  const [adViewStatus, setAdViewStatus] = useState<AdViewStatus>(
+    DEFAULT_AD_VIEW_STATUS,
+  );
+  const [dailyMissionsLoading, setDailyMissionsLoading] = useState(true);
+  const [dailyMissionsError, setDailyMissionsError] = useState('');
+  const missionData = BASE_MISSION_DATA.map(item => {
+    if (item.title !== '광고 보기') {
+      return item;
+    }
 
-  const handleFriendInvite = async (item: any) => {
+    return {
+      ...item,
+      credit: `+ ${adViewStatus.rewardPoints.toLocaleString()} 크레딧`,
+      buttonText: adViewStatus.buttonText,
+      status: adViewStatus.status,
+    };
+  });
+  const earnedDailyRewardPoints = Math.min(
+    dailyProgress.earnedRewardPoints,
+    dailyProgress.maxRewardPoints,
+  );
+  const dailyProgressPercent: DimensionValue =
+    dailyProgress.maxRewardPoints > 0
+      ? `${Math.round(
+          (earnedDailyRewardPoints / dailyProgress.maxRewardPoints) * 100,
+        )}%`
+      : '0%';
+
+  const fetchDailyMissions = useCallback(async () => {
+    setDailyMissionsLoading(true);
+    setDailyMissionsError('');
+
+    try {
+      const result = await missionsApi.getDailyMissions();
+
+      setDailyMissions(result.missions.map(toMissionCardItem));
+      setDailyProgress(result.progress);
+    } catch (error) {
+      console.warn('Fetch daily missions error:', error);
+      setDailyMissionsError('데일리 미션 정보를 불러오지 못했어요.');
+    } finally {
+      setDailyMissionsLoading(false);
+    }
+  }, []);
+
+  const fetchAdViewStatus = useCallback(async () => {
+    try {
+      const status = await missionsApi.getAdViewStatus();
+
+      setAdViewStatus(status);
+    } catch (error) {
+      console.warn('Fetch ad view status error:', error);
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchDailyMissions();
+      fetchAdViewStatus();
+    }, [fetchAdViewStatus, fetchDailyMissions]),
+  );
+
+  const handleFriendInvite = async (item: MissionCardItem) => {
     try {
       setSubmittingMissionId(item.id);
 
@@ -216,7 +244,35 @@ export function MissionScreen({navigation}: any) {
     }
   };
 
-  const handleMissionPress = (item: any) => {
+  const handleAdView = async (item: MissionCardItem) => {
+    try {
+      setSubmittingMissionId(item.id);
+
+      const result = await missionsApi.submitMission({
+        missionTitle: item.title,
+        content: '광고를 시청했습니다.',
+        rewardPoints: item.rewardPoints,
+      });
+
+      await fetchAdViewStatus();
+
+      Alert.alert(
+        '광고 시청 완료',
+        `${result.rewardPoints.toLocaleString()} 크레딧이 지급되었습니다.`,
+      );
+    } catch (error: any) {
+      const message =
+        error?.response?.data?.message ||
+        '광고 보상 지급에 실패했습니다. 다시 시도해주세요.';
+
+      Alert.alert('광고 보기 실패', message);
+      fetchAdViewStatus();
+    } finally {
+      setSubmittingMissionId(null);
+    }
+  };
+
+  const handleMissionPress = (item: MissionCardItem) => {
     if (item.buttonText === '인증하기') {
       navigation.navigate('MissionVerify', {
         missionTitle: item.title,
@@ -228,6 +284,8 @@ export function MissionScreen({navigation}: any) {
       navigation.navigate('ProductRegister');
     } else if (item.buttonText === '초대하기') {
       handleFriendInvite(item);
+    } else if (item.buttonText === '광고보기') {
+      handleAdView(item);
     }
   };
 
@@ -248,7 +306,7 @@ export function MissionScreen({navigation}: any) {
           매일 미션을 수행하고 크레딧을 모아보세요!
         </Text>
 
-        {MISSION_DATA.map(item => (
+        {missionData.map(item => (
           <MissionCard
             key={item.id}
             item={item}
@@ -262,22 +320,42 @@ export function MissionScreen({navigation}: any) {
         <View style={missionStyles.progressCard}>
           <View style={missionStyles.progressHeader}>
             <Text style={missionStyles.progressTitle}>오늘의 진행도</Text>
-            <Text style={missionStyles.progressValue}>5/25</Text>
+            <Text style={missionStyles.progressValue}>
+              {dailyMissionsLoading
+                ? '...'
+                : `${earnedDailyRewardPoints}/${dailyProgress.maxRewardPoints} 크레딧`}
+            </Text>
           </View>
 
           <View style={missionStyles.progressBarTrack}>
-            <View style={[missionStyles.progressBarFill, {width: '20%'}]} />
+            <View
+              style={[
+                missionStyles.progressBarFill,
+                {width: dailyProgressPercent},
+              ]}
+            />
           </View>
         </View>
 
-        {DAILY_MISSIONS.map(item => (
-          <MissionCard
-            key={item.id}
-            item={item}
-            isLoading={submittingMissionId === item.id}
-            onPress={() => handleMissionPress(item)}
-          />
-        ))}
+        {dailyMissionsLoading ? (
+          <ActivityIndicator size="small" />
+        ) : dailyMissionsError ? (
+          <TouchableOpacity
+            style={missionStyles.button}
+            activeOpacity={0.7}
+            onPress={fetchDailyMissions}>
+            <Text style={missionStyles.buttonText}>{dailyMissionsError}</Text>
+          </TouchableOpacity>
+        ) : (
+          dailyMissions.map(item => (
+            <MissionCard
+              key={item.id}
+              item={item}
+              isLoading={submittingMissionId === item.id}
+              onPress={() => handleMissionPress(item)}
+            />
+          ))
+        )}
       </ScrollView>
     </View>
   );

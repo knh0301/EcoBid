@@ -36,6 +36,7 @@ const productIncludes = [
 ];
 
 const PRODUCT_CATEGORIES = ['가구', '가전', '도서', '의류/잡화', '생활용품', '기타'];
+const PRODUCT_REGISTRATION_REWARD = 100;
 
 const parseOpenAIOutputText = (responseBody) => {
   if (typeof responseBody.output_text === 'string') {
@@ -472,6 +473,20 @@ exports.createProduct = async (req, res, next) => {
     }, { transaction });
 
     await replaceProductImages(product.id, normalizedImageUrls, transaction);
+    await user.increment('credits', {
+      by: PRODUCT_REGISTRATION_REWARD,
+      transaction,
+    });
+    await CreditTransaction.create(
+      {
+        userId: sellerId,
+        amount: PRODUCT_REGISTRATION_REWARD,
+        referenceType: 'PRODUCT',
+        referenceId: product.id,
+        description: `${title} 나눔 물품 등록 보상 ${PRODUCT_REGISTRATION_REWARD} 크레딧`,
+      },
+      { transaction },
+    );
     await transaction.commit();
 
     const newlyAwardedBadges = await evaluateAndAwardBadges(sellerId);

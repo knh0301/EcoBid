@@ -21,6 +21,7 @@ import {SharedItemsScreen} from './src/screens/SharedItemsScreen';
 import {LikedItemsScreen} from './src/screens/LikedItemsScreen';
 import {CreditHistoryScreen} from './src/screens/CreditHistoryScreen';
 import {MissionVerifyScreen} from './src/screens/MissionVerifyScreen';
+import {MissionAdminReviewScreen} from './src/screens/MissionAdminReviewScreen';
 import {ProfileEditScreen} from './src/screens/ProfileEditScreen';
 import {MySharedItemsScreen} from './src/screens/MySharedItemsScreen';
 import {SafeAreaProvider} from 'react-native-safe-area-context';
@@ -160,6 +161,7 @@ export default function App(): React.JSX.Element {
             <Stack.Screen name="LikedItems" component={LikedItemsScreen} />
             <Stack.Screen name="CreditHistory" component={CreditHistoryScreen} />
             <Stack.Screen name="MissionVerify" component={MissionVerifyScreen} />
+            <Stack.Screen name="MissionAdminReview" component={MissionAdminReviewScreen} />
             <Stack.Screen name="ProfileEdit" component={ProfileEditScreen} />
             <Stack.Screen name="MySharedItems" component={MySharedItemsScreen} />
           </>

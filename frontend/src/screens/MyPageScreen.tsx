@@ -109,6 +109,7 @@ export function MyPageScreen() {
   const [userName, setUserName] = useState('이름 확인 중');
   const [joinedDateText, setJoinedDateText] = useState('활동 시작일 확인 중');
   const [profileImageUri, setProfileImageUri] = useState<string | undefined>();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const [creditBalance, setCreditBalance] = useState(0);
   const [creditLoading, setCreditLoading] = useState(true);
@@ -131,6 +132,7 @@ export function MyPageScreen() {
 
       setUserName(user.nickname || user.name);
       setProfileImageUri(resolveProfileImageUrl(user.profileImage));
+      setIsAdmin(user.role === 'ADMIN');
 
       const joinedDate = user.createdAt || user.created_at;
 
@@ -189,6 +191,7 @@ export function MyPageScreen() {
       setUserName('이름 확인 중');
       setJoinedDateText('활동 시작일 확인 중');
       setProfileImageUri(undefined);
+      setIsAdmin(false);
       setCreditBalance(0);
       setTotalEarnedCredits(0);
       setActivities([]);
@@ -296,6 +299,23 @@ export function MyPageScreen() {
             <Text style={styles.statLabel}>나눔한 물품</Text>
           </Pressable>
         </View>
+
+        {isAdmin ? (
+          <Pressable
+            style={styles.adminMenuItem}
+            onPress={() => navigation.navigate('MissionAdminReview')}>
+            <View style={styles.adminMenuIcon}>
+              <Ionicons name="shield-checkmark-outline" size={22} color={colors.primaryDark} />
+            </View>
+
+            <View style={styles.adminMenuTextArea}>
+              <Text style={styles.adminMenuTitle}>미션 승인 관리</Text>
+              <Text style={styles.adminMenuDesc}>사용자 미션 인증 신청을 확인해요</Text>
+            </View>
+
+            <Ionicons name="chevron-forward" size={20} color={colors.textMuted} />
+          </Pressable>
+        ) : null}
 
         <View style={styles.badgeCard}>
           <View style={styles.badgeHeaderRow}>

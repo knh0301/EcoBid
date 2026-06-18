@@ -5,6 +5,8 @@ const { authenticate } = require('../middlewares/auth.middleware');
 
 router.use(authenticate);
 
+router.get('/admin/submissions', missionController.getMissionSubmissionsForAdmin);
+router.patch('/admin/submissions/:id', missionController.reviewMissionSubmission);
 router.get('/daily', missionController.getDailyMissions);
 router.get('/ad-view/status', missionController.getAdViewStatus);
 router.get('/recommended', missionController.getRecommendedMissions);

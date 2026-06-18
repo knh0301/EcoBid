@@ -19,7 +19,7 @@ import {
   missionsApi,
 } from '../api/missions';
 
-type MissionStatus = 'active' | 'completed' | 'locked';
+type MissionStatus = 'active' | 'completed' | 'locked' | 'pending';
 
 type MissionCardItem = {
   id: string;

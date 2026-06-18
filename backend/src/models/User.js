@@ -82,6 +82,12 @@ const User = sequelize.define('User', {
     allowNull: true,
   },
 
+  role: {
+    type: DataTypes.ENUM('USER', 'ADMIN'),
+    defaultValue: 'USER',
+    allowNull: false,
+  },
+
   // Refresh Token 저장
   refreshToken: {
     type: DataTypes.TEXT,

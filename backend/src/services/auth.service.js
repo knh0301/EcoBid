@@ -88,6 +88,7 @@ const toSafeUser = (user) => ({
   department: user.department,
   profileImage: user.profileImage,
   provider: user.provider,
+  role: user.role,
   credits: user.credits,
   createdAt: user.createdAt,
 });

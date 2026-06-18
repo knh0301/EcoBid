@@ -55,6 +55,14 @@ const ensureUserSchema = async () => {
     });
   }
 
+  if (!userColumns.role) {
+    await queryInterface.addColumn('users', 'role', {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'USER',
+    });
+  }
+
   if (!userColumns.password_reset_token_hash) {
     await queryInterface.addColumn('users', 'password_reset_token_hash', {
       type: DataTypes.STRING,
@@ -159,6 +167,26 @@ const ensureMissionSubmissionSchema = async () => {
 
   if (hasLegacySingleColumnUnique) {
     console.log('🔧 mission_submissions 테이블 unique 제약 보정 중...');
+
+    const columns = await queryInterface.describeTable('mission_submissions');
+    const optionalColumns = [
+      ['image_hash', DataTypes.STRING],
+      ['verification_provider', DataTypes.STRING],
+      ['ai_is_valid', DataTypes.BOOLEAN],
+      ['ai_confidence', DataTypes.FLOAT],
+      ['ai_reason', DataTypes.TEXT],
+      ['ai_evidence', DataTypes.TEXT],
+      ['ai_checked_at', DataTypes.DATE],
+    ];
+
+    for (const [columnName, type] of optionalColumns) {
+      if (!columns[columnName]) {
+        await queryInterface.addColumn('mission_submissions', columnName, {
+          type,
+          allowNull: true,
+        });
+      }
+    }
 
     await sequelize.query('PRAGMA foreign_keys = OFF');
 

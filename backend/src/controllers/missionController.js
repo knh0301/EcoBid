@@ -484,7 +484,7 @@ exports.submitMission = async (req, res, next) => {
         base64: imageBase64,
         mimeType: imageMimeType,
       });
-      const isAutoApproved = shouldAutoApproveMission(verification);
+      const isAutoApproved = shouldAutoApproveMission(verification, title);
       const submission = await MissionSubmission.create(
         {
           missionId: mission.id,

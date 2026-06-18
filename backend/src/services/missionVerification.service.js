@@ -19,7 +19,7 @@ const missionVerificationJsonSchema = {
     evidence: {
       type: 'array',
       items: { type: 'string' },
-      description: '사진에서 확인한 핵심 단서',
+      description: '사진에서 실제로 눈에 보이는 핵심 단서만 작성',
     },
   },
   required: ['isValid', 'confidence', 'reason', 'evidence'],
@@ -70,10 +70,12 @@ const getMissionVerificationPrompt = ({
   [
     '너는 EcoBid 친환경 미션 사진 인증 심사 도우미야.',
     '사용자 사진과 활동 설명이 지정된 미션 조건을 충족하는지 판단해.',
+    '활동 설명은 참고만 하고, 반드시 사진에 보이는 시각적 증거를 기준으로 판단해.',
     '검증 기준에 적힌 긍정 증거가 사진에 하나라도 명확히 보이면 isValid를 true로 판단해.',
     '완벽한 인증 사진을 요구하지 말고, 미션 대상이나 핵심 단서가 식별되면 통과시켜.',
     '검증 기준이 결과 사진만 요구한다면 전후 비교 사진이나 추가 증거를 요구하지 마.',
-    '사진이 전혀 무관하거나, 너무 흐리거나, 핵심 대상을 식별할 수 없을 때만 isValid를 false로 판단해.',
+    '사진이 미션과 무관하거나, 너무 흐리거나, 핵심 대상을 식별할 수 없으면 isValid를 false로 판단해.',
+    'evidence에는 추론이나 활동 설명이 아니라 사진에서 실제로 보이는 물체/문자/숫자만 적어.',
     '',
     `미션명: ${missionTitle}`,
     `미션 설명: ${missionDescription || '없음'}`,
@@ -86,6 +88,23 @@ const includesAny = (value, keywords) => {
 
   return keywords.some(keyword => text.includes(keyword));
 };
+
+const hasDisqualifyingText = value =>
+  includesAny(value, [
+    '보이지 않',
+    '확인되지 않',
+    '식별되지 않',
+    '관련이 없',
+    '무관',
+    '아닙니다',
+    '아닌',
+    '없습니다',
+    'not visible',
+    'not shown',
+    'unrelated',
+    'irrelevant',
+    'no evidence',
+  ]);
 
 const extractNumbers = value =>
   String(value || '')
@@ -113,7 +132,6 @@ const missionPositiveRules = {
     keywords: [
       '분리수거',
       '분리 배출',
-      '재활용',
       '재활용품',
       '페트병',
       'pet병',
@@ -136,7 +154,6 @@ const missionPositiveRules = {
       '반찬통',
       '재사용 가능한 용기',
       '음식 용기',
-      'container',
       'lunch box',
       'food container',
     ],
@@ -166,7 +183,6 @@ const missionPositiveRules = {
       '기차',
       '정류장',
       '버스 정류장',
-      '역',
       '승차권',
       '교통카드',
       '대중교통',
@@ -180,7 +196,6 @@ const missionPositiveRules = {
   '이면지 활용하기': {
     keywords: [
       '이면지',
-      '종이',
       '낙서',
       '필기',
       '메모',
@@ -245,12 +260,38 @@ const hasWalkingStepEvidence = evidenceText => {
   return extractNumbers(evidenceText).some(number => number >= 10000);
 };
 
+const getEvidenceText = verification =>
+  [
+    verification?.reason,
+    ...(verification?.evidence || []),
+  ].join(' ');
+
+const hasMissionPositiveEvidence = ({ missionTitle, verification }) => {
+  const title = String(missionTitle || '').trim();
+  const evidenceText = getEvidenceText(verification);
+
+  if (hasDisqualifyingText(evidenceText)) {
+    return false;
+  }
+
+  if (title === '10,000보 걷기') {
+    return hasWalkingStepEvidence(evidenceText);
+  }
+
+  const positiveRule = missionPositiveRules[title];
+
+  return positiveRule
+    ? includesAny(evidenceText, positiveRule.keywords)
+    : verification?.isValid === true;
+};
+
 const applyMissionSpecificRules = ({ missionTitle, result }) => {
   const title = String(missionTitle || '').trim();
-  const evidenceText = [
-    result.reason,
-    ...(result.evidence || []),
-  ].join(' ');
+  const evidenceText = getEvidenceText(result);
+
+  if (hasDisqualifyingText(evidenceText)) {
+    return result;
+  }
 
   if (title === '10,000보 걷기' && hasWalkingStepEvidence(evidenceText)) {
     return {
@@ -263,7 +304,11 @@ const applyMissionSpecificRules = ({ missionTitle, result }) => {
 
   const positiveRule = missionPositiveRules[title];
 
-  if (positiveRule && includesAny(evidenceText, positiveRule.keywords)) {
+  if (
+    positiveRule &&
+    includesAny(evidenceText, positiveRule.keywords) &&
+    result.confidence >= 0.35
+  ) {
     return {
       ...result,
       isValid: true,
@@ -394,9 +439,10 @@ const verifyMissionSubmission = async ({
   return null;
 };
 
-const shouldAutoApproveMission = verification =>
+const shouldAutoApproveMission = (verification, missionTitle) =>
   verification?.isValid === true &&
-  verification.confidence >= getAutoApproveConfidence();
+  verification.confidence >= getAutoApproveConfidence() &&
+  hasMissionPositiveEvidence({ missionTitle, verification });
 
 module.exports = {
   getAutoApproveConfidence,

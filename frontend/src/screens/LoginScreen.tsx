@@ -16,6 +16,18 @@ import {SafeAreaView} from 'react-native-safe-area-context';
 import {useAuth} from '../context/AuthContext';
 import {loginStyles as styles} from '../styles/LoginScreenStyle';
 
+const getLoginErrorMessage = (error: any) => {
+  if (error.code === 'ECONNABORTED') {
+    return '서버 응답 시간이 초과되었습니다. 백엔드가 실행 중인지, 앱의 API 주소가 현재 PC IP와 같은지 확인해주세요.';
+  }
+
+  if (error.request && !error.response) {
+    return '서버에 연결할 수 없습니다. 백엔드 실행 상태와 같은 Wi-Fi 연결 여부를 확인해주세요.';
+  }
+
+  return error.response?.data?.message || '이메일 또는 비밀번호를 확인해주세요.';
+};
+
 export function LoginScreen() {
   const navigation = useNavigation<any>();
   const {
@@ -45,11 +57,7 @@ export function LoginScreen() {
     } catch (error: any) {
       console.warn('Login error:', error);
 
-      const message =
-        error.response?.data?.message ||
-        '이메일 또는 비밀번호를 확인해주세요.';
-
-      Alert.alert('로그인 실패', message);
+      Alert.alert('로그인 실패', getLoginErrorMessage(error));
     } finally {
       setLoginLoading(false);
     }

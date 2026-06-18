@@ -25,6 +25,22 @@ const DEFAULT_PASSWORD_RESET_MAX_ATTEMPTS = 5;
 
 const normalizeEmail = email => String(email || '').trim().toLowerCase();
 
+const getAdminEmails = () =>
+  String(process.env.ADMIN_EMAILS || '')
+    .split(',')
+    .map(email => normalizeEmail(email))
+    .filter(Boolean);
+
+const isAdminEmail = email => getAdminEmails().includes(normalizeEmail(email));
+
+const syncAdminRole = async (user) => {
+  if (user && user.role !== 'ADMIN' && isAdminEmail(user.email)) {
+    await user.update({ role: 'ADMIN' });
+  }
+
+  return user;
+};
+
 const emailWhere = email => sequelize.where(
   sequelize.fn('LOWER', sequelize.col('email')),
   normalizeEmail(email),
@@ -184,6 +200,7 @@ const register = async ({
     studentId: trimmedStudentId,
     department: trimmedDepartment,
     provider: 'LOCAL',
+    role: isAdminEmail(normalizedEmail) ? 'ADMIN' : 'USER',
   });
 
   // 4. 토큰 발급
@@ -209,6 +226,8 @@ const login = async ({ email, password }) => {
     error.status = 401;
     throw error;
   }
+
+  await syncAdminRole(user);
 
   // 2. 비밀번호 검증
   const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -245,6 +264,7 @@ const socialLogin = async ({ email, name, profileImage, provider, providerId }) 
       providerId,
       profileImage,
       nickname: user.nickname || name || user.name,
+      ...(isAdminEmail(normalizedEmail) ? { role: 'ADMIN' } : {}),
     });
   } else {
     // 신규 유저 생성
@@ -255,6 +275,7 @@ const socialLogin = async ({ email, name, profileImage, provider, providerId }) 
       profileImage,
       provider,
       providerId,
+      role: isAdminEmail(normalizedEmail) ? 'ADMIN' : 'USER',
     });
   }
 
@@ -525,7 +546,8 @@ const getMe = async (userId) => {
     error.status = 404;
     throw error;
   }
-  return user;
+
+  return syncAdminRole(user);
 };
 
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

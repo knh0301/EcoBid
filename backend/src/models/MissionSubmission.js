@@ -38,6 +38,34 @@ const MissionSubmission = sequelize.define('MissionSubmission', {
     type: DataTypes.TEXT,
     allowNull: true,
   },
+  imageHash: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  verificationProvider: {
+    type: DataTypes.STRING,
+    allowNull: true,
+  },
+  aiIsValid: {
+    type: DataTypes.BOOLEAN,
+    allowNull: true,
+  },
+  aiConfidence: {
+    type: DataTypes.FLOAT,
+    allowNull: true,
+  },
+  aiReason: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  aiEvidence: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
+  aiCheckedAt: {
+    type: DataTypes.DATE,
+    allowNull: true,
+  },
 }, {
   tableName: 'mission_submissions',
 });

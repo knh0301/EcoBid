@@ -8,7 +8,7 @@ import {refreshAuthTokens} from './authTokenManager';
 // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 const api = axios.create({
   baseURL: API_CONFIG.BASE_URL,
-  timeout: 10000,
+  timeout: API_CONFIG.TIMEOUT,
   headers: {
     'Content-Type': 'application/json',
   },

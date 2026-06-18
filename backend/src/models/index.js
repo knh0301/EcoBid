@@ -173,19 +173,29 @@ const ensureMissionSubmissionSchema = async () => {
     });
   }
 
+  const optionalColumns = [
+    ['image_hash', DataTypes.STRING],
+    ['verification_provider', DataTypes.STRING],
+    ['ai_is_valid', DataTypes.BOOLEAN],
+    ['ai_confidence', DataTypes.FLOAT],
+    ['ai_reason', DataTypes.TEXT],
+    ['ai_evidence', DataTypes.TEXT],
+    ['ai_checked_at', DataTypes.DATE],
+  ];
+
+  for (const [columnName, type] of optionalColumns) {
+    if (!currentColumns[columnName]) {
+      await queryInterface.addColumn('mission_submissions', columnName, {
+        type,
+        allowNull: true,
+      });
+    }
+  }
+
   if (hasLegacySingleColumnUnique) {
     console.log('🔧 mission_submissions 테이블 unique 제약 보정 중...');
 
     const columns = await queryInterface.describeTable('mission_submissions');
-    const optionalColumns = [
-      ['image_hash', DataTypes.STRING],
-      ['verification_provider', DataTypes.STRING],
-      ['ai_is_valid', DataTypes.BOOLEAN],
-      ['ai_confidence', DataTypes.FLOAT],
-      ['ai_reason', DataTypes.TEXT],
-      ['ai_evidence', DataTypes.TEXT],
-      ['ai_checked_at', DataTypes.DATE],
-    ];
 
     for (const [columnName, type] of optionalColumns) {
       if (!columns[columnName]) {

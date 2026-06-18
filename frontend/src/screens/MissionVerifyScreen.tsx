@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import {Ionicons} from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {missionVerifyStyles as styles} from '../styles/MissionVerifyScreenStyle';
 import {missionsApi} from '../api/missions';
@@ -53,6 +54,24 @@ export function MissionVerifyScreen({navigation, route}: any) {
     setImages(images.filter((_, i) => i !== index));
   };
 
+  const prepareImageForSubmission = async (uri: string) => {
+    const manipulatedImage = await ImageManipulator.manipulateAsync(
+      uri,
+      [{resize: {width: 1080}}],
+      {
+        compress: 0.75,
+        format: ImageManipulator.SaveFormat.JPEG,
+        base64: true,
+      },
+    );
+
+    return {
+      uri: manipulatedImage.uri,
+      base64: manipulatedImage.base64 || null,
+      mimeType: 'image/jpeg',
+    };
+  };
+
   const handleSubmit = async () => {
     if (images.length === 0) {
       setModalType('photo_error');
@@ -68,13 +87,22 @@ export function MissionVerifyScreen({navigation, route}: any) {
 
     try {
       setIsSubmitting(true);
+      const imageForSubmission = await prepareImageForSubmission(images[0]);
       const result = await missionsApi.submitMission({
         missionTitle,
         content: description.trim(),
-        imageUrl: images[0] || null,
+        imageUrl: imageForSubmission.uri || images[0] || null,
+        imageBase64: imageForSubmission.base64,
+        imageMimeType: imageForSubmission.mimeType,
         rewardPoints: rewardAmount,
       });
-      setAwardedRewardPoints(result.rewardPoints);
+
+      setAwardedRewardPoints(result.requestedRewardPoints || result.rewardPoints);
+      setModalMessage(
+        result.submission?.status === 'APPROVED'
+          ? `${result.rewardPoints.toLocaleString()} 크레딧이 지급되었습니다.`
+          : '사진이 명확하지 않아 관리자가 확인할 예정입니다.',
+      );
       setModalType('success');
       setModalVisible(true);
     } catch (err: any) {
@@ -204,10 +232,13 @@ export function MissionVerifyScreen({navigation, route}: any) {
             {modalType === 'success' && (
               <>
                 <Text style={styles.modalTitle}>
-                  미션 인증 신청이 완료되었어요!
+                  {modalMessage.includes('지급')
+                    ? 'AI 인증 완료!'
+                    : '관리자 확인 대기 중이에요'}
                 </Text>
                 <Text style={styles.modalSubtitle}>
-                  관리자가 승인하면 {awardedRewardPoints.toLocaleString()} 크레딧이 지급됩니다.
+                  {modalMessage ||
+                    `관리자가 승인하면 ${awardedRewardPoints.toLocaleString()} 크레딧이 지급됩니다.`}
                 </Text>
               </>
             )}

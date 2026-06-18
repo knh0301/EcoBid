@@ -146,6 +146,96 @@ const ensureAttendanceSchema = async () => {
 
 const ensureMissionSubmissionSchema = async () => {
   const queryInterface = sequelize.getQueryInterface();
+  const [tables] = await sequelize.query(`
+    SELECT sql
+    FROM sqlite_master
+    WHERE type = 'table'
+      AND name = 'mission_submissions'
+  `);
+  const tableSql = tables[0]?.sql || '';
+  const hasLegacySingleColumnUnique =
+    /mission_id[^,]+UNIQUE/i.test(tableSql) ||
+    /user_id[^,]+UNIQUE/i.test(tableSql);
+
+  if (hasLegacySingleColumnUnique) {
+    console.log('🔧 mission_submissions 테이블 unique 제약 보정 중...');
+
+    await sequelize.query('PRAGMA foreign_keys = OFF');
+
+    try {
+      await sequelize.query(`
+        CREATE TABLE IF NOT EXISTS mission_submissions_new (
+          id INTEGER PRIMARY KEY,
+          mission_id INTEGER NOT NULL REFERENCES missions (id),
+          user_id INTEGER NOT NULL REFERENCES users (id),
+          content TEXT,
+          image_url VARCHAR(255),
+          status TEXT DEFAULT 'PENDING',
+          created_at DATETIME NOT NULL,
+          updated_at DATETIME NOT NULL,
+          image_hash VARCHAR(255),
+          verification_provider VARCHAR(255),
+          ai_is_valid TINYINT(1),
+          ai_confidence FLOAT,
+          ai_reason TEXT,
+          ai_evidence TEXT,
+          ai_checked_at DATETIME
+        )
+      `);
+
+      await sequelize.query(`
+        INSERT INTO mission_submissions_new (
+          id,
+          mission_id,
+          user_id,
+          content,
+          image_url,
+          status,
+          created_at,
+          updated_at,
+          image_hash,
+          verification_provider,
+          ai_is_valid,
+          ai_confidence,
+          ai_reason,
+          ai_evidence,
+          ai_checked_at
+        )
+        SELECT
+          id,
+          mission_id,
+          user_id,
+          content,
+          image_url,
+          status,
+          created_at,
+          updated_at,
+          image_hash,
+          verification_provider,
+          ai_is_valid,
+          ai_confidence,
+          ai_reason,
+          ai_evidence,
+          ai_checked_at
+        FROM mission_submissions
+        ORDER BY id ASC
+      `);
+
+      await sequelize.query('DROP TABLE mission_submissions');
+      await sequelize.query(
+        'ALTER TABLE mission_submissions_new RENAME TO mission_submissions',
+      );
+      await sequelize.query(`
+        CREATE INDEX IF NOT EXISTS mission_submissions_user_id_mission_id
+        ON mission_submissions (user_id, mission_id)
+      `);
+    } finally {
+      await sequelize.query('PRAGMA foreign_keys = ON');
+    }
+
+    console.log('✅ mission_submissions 테이블 unique 제약 보정 완료');
+  }
+
   const indexes = await queryInterface.showIndex('mission_submissions');
 
   const legacyUniqueIndexes = indexes.filter(index => {

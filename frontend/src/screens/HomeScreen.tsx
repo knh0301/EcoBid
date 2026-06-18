@@ -471,7 +471,7 @@ export const HomeScreen: React.FC<any> = ({navigation}) => {
           </Text>
 
           <Text style={styles.cardSubText}>
-            물품 거래가 완료되면 100크레딧을 추가로 지급해드려요.
+            물품을 등록하면 100크레딧을 바로 지급해드려요.
           </Text>
 
           <TouchableOpacity

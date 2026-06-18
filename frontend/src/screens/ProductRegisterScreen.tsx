@@ -281,7 +281,7 @@ export const ProductRegisterScreen: React.FC<any> = ({navigation, route}) => {
           imageUrls,
         });
 
-        showAlert('나눔 물품 등록이 완료되었어요!', true);
+        showAlert('나눔 물품이 등록되었어요!\n100크레딧이 지급되었어요.', true);
       }
     } catch (error: any) {
       console.error('Submit product error:', error);

@@ -43,6 +43,7 @@ export type RootStackParamList = {
     missionTitle: string;
     rewardPoints?: number;
   };
+  MissionAdminReview: undefined;
 
   ProductRegister: undefined;
   ProductEdit: undefined;

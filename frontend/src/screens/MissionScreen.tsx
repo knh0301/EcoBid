@@ -19,7 +19,12 @@ import {
   missionsApi,
 } from '../api/missions';
 
-type MissionStatus = 'active' | 'completed' | 'locked';
+type MissionStatus =
+  | 'active'
+  | 'completed'
+  | 'locked'
+  | 'pending'
+  | 'rejected';
 
 type MissionCardItem = {
   id: string;
@@ -29,6 +34,7 @@ type MissionCardItem = {
   rewardPoints?: number;
   buttonText: string;
   status: MissionStatus;
+  rejectionReason?: string | null;
 };
 
 const BASE_MISSION_DATA: MissionCardItem[] = [
@@ -76,6 +82,7 @@ const toMissionCardItem = (mission: DailyMission): MissionCardItem => ({
   rewardPoints: mission.rewardPoints,
   buttonText: mission.buttonText,
   status: mission.status,
+  rejectionReason: mission.rejectionReason,
 });
 
 const DEFAULT_DAILY_PROGRESS: DailyMissionsProgress = {
@@ -103,40 +110,51 @@ const MissionCard = ({
   item: MissionCardItem;
   isLoading: boolean;
   onPress: () => void;
-}) => (
-  <View style={missionStyles.card}>
-    <View style={missionStyles.cardHeader}>
-      <Text style={missionStyles.cardTitle}>{item.title}</Text>
+}) => {
+  const isActionable = item.status === 'active' || item.status === 'rejected';
 
-      {item.credit ? (
-        <Text style={missionStyles.cardCredit}>{item.credit}</Text>
+  return (
+    <View style={missionStyles.card}>
+      <View style={missionStyles.cardHeader}>
+        <Text style={missionStyles.cardTitle}>{item.title}</Text>
+
+        {item.credit ? (
+          <Text style={missionStyles.cardCredit}>{item.credit}</Text>
+        ) : null}
+      </View>
+
+      <Text style={missionStyles.cardDesc}>{item.desc}</Text>
+
+      {item.status === 'rejected' && item.rejectionReason ? (
+        <View style={missionStyles.rejectionBox}>
+          <Text style={missionStyles.rejectionTitle}>반려 사유</Text>
+          <Text style={missionStyles.rejectionText}>{item.rejectionReason}</Text>
+        </View>
       ) : null}
+
+      <TouchableOpacity
+        style={[
+          missionStyles.button,
+          !isActionable && missionStyles.buttonCompleted,
+        ]}
+        activeOpacity={0.7}
+        disabled={!isActionable || isLoading}
+        onPress={onPress}>
+        {isLoading ? (
+          <ActivityIndicator size="small" color="#FFFFFF" />
+        ) : (
+          <Text
+            style={[
+              missionStyles.buttonText,
+              !isActionable && missionStyles.buttonTextCompleted,
+            ]}>
+            {item.buttonText}
+          </Text>
+        )}
+      </TouchableOpacity>
     </View>
-
-    <Text style={missionStyles.cardDesc}>{item.desc}</Text>
-
-    <TouchableOpacity
-      style={[
-        missionStyles.button,
-        item.status !== 'active' && missionStyles.buttonCompleted,
-      ]}
-      activeOpacity={0.7}
-      disabled={item.status !== 'active' || isLoading}
-      onPress={onPress}>
-      {isLoading ? (
-        <ActivityIndicator size="small" color="#FFFFFF" />
-      ) : (
-        <Text
-          style={[
-            missionStyles.buttonText,
-            item.status !== 'active' && missionStyles.buttonTextCompleted,
-          ]}>
-          {item.buttonText}
-        </Text>
-      )}
-    </TouchableOpacity>
-  </View>
-);
+  );
+};
 
 export function MissionScreen({navigation}: any) {
   const insets = useSafeAreaInsets();
@@ -273,7 +291,7 @@ export function MissionScreen({navigation}: any) {
   };
 
   const handleMissionPress = (item: MissionCardItem) => {
-    if (item.buttonText === '인증하기') {
+    if (item.buttonText === '인증하기' || item.buttonText === '다시 인증하기') {
       navigation.navigate('MissionVerify', {
         missionTitle: item.title,
         rewardPoints: item.rewardPoints || 50,

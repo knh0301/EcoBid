@@ -55,6 +55,14 @@ const ensureUserSchema = async () => {
     });
   }
 
+  if (!userColumns.role) {
+    await queryInterface.addColumn('users', 'role', {
+      type: DataTypes.STRING,
+      allowNull: false,
+      defaultValue: 'USER',
+    });
+  }
+
   if (!userColumns.password_reset_token_hash) {
     await queryInterface.addColumn('users', 'password_reset_token_hash', {
       type: DataTypes.STRING,
@@ -156,9 +164,37 @@ const ensureMissionSubmissionSchema = async () => {
   const hasLegacySingleColumnUnique =
     /mission_id[^,]+UNIQUE/i.test(tableSql) ||
     /user_id[^,]+UNIQUE/i.test(tableSql);
+  const currentColumns = await queryInterface.describeTable('mission_submissions');
+
+  if (!currentColumns.rejection_reason) {
+    await queryInterface.addColumn('mission_submissions', 'rejection_reason', {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    });
+  }
 
   if (hasLegacySingleColumnUnique) {
     console.log('🔧 mission_submissions 테이블 unique 제약 보정 중...');
+
+    const columns = await queryInterface.describeTable('mission_submissions');
+    const optionalColumns = [
+      ['image_hash', DataTypes.STRING],
+      ['verification_provider', DataTypes.STRING],
+      ['ai_is_valid', DataTypes.BOOLEAN],
+      ['ai_confidence', DataTypes.FLOAT],
+      ['ai_reason', DataTypes.TEXT],
+      ['ai_evidence', DataTypes.TEXT],
+      ['ai_checked_at', DataTypes.DATE],
+    ];
+
+    for (const [columnName, type] of optionalColumns) {
+      if (!columns[columnName]) {
+        await queryInterface.addColumn('mission_submissions', columnName, {
+          type,
+          allowNull: true,
+        });
+      }
+    }
 
     await sequelize.query('PRAGMA foreign_keys = OFF');
 
@@ -171,6 +207,7 @@ const ensureMissionSubmissionSchema = async () => {
           content TEXT,
           image_url VARCHAR(255),
           status TEXT DEFAULT 'PENDING',
+          rejection_reason TEXT,
           created_at DATETIME NOT NULL,
           updated_at DATETIME NOT NULL,
           image_hash VARCHAR(255),
@@ -191,6 +228,7 @@ const ensureMissionSubmissionSchema = async () => {
           content,
           image_url,
           status,
+          rejection_reason,
           created_at,
           updated_at,
           image_hash,
@@ -208,6 +246,7 @@ const ensureMissionSubmissionSchema = async () => {
           content,
           image_url,
           status,
+          rejection_reason,
           created_at,
           updated_at,
           image_hash,

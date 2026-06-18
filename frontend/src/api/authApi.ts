@@ -73,6 +73,7 @@ export type UserProfile = {
   department?: string | null;
   profileImage?: string | null;
   provider?: 'LOCAL' | 'GOOGLE' | 'KAKAO';
+  role?: 'USER' | 'ADMIN';
   credits?: number;
   createdAt?: string;
   created_at?: string;

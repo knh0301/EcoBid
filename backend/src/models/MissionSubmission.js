@@ -34,6 +34,10 @@ const MissionSubmission = sequelize.define('MissionSubmission', {
     type: DataTypes.ENUM('PENDING', 'APPROVED', 'REJECTED'),
     defaultValue: 'PENDING',
   },
+  rejectionReason: {
+    type: DataTypes.TEXT,
+    allowNull: true,
+  },
 }, {
   tableName: 'mission_submissions',
 });

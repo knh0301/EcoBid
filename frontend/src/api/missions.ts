@@ -15,8 +15,9 @@ export type RecommendedMission = {
   desc?: string;
   rewardPoints: number;
   creditText: string;
-  status: 'active' | 'completed' | 'locked';
+  status: 'active' | 'completed' | 'locked' | 'pending' | 'rejected';
   buttonText: string;
+  rejectionReason?: string | null;
 };
 
 export type DailyMission = RecommendedMission;
@@ -25,6 +26,8 @@ export type DailyMissionsProgress = {
   earnedRewardPoints: number;
   maxRewardPoints: number;
   completedMissionCount: number;
+  pendingMissionCount?: number;
+  rejectedMissionCount?: number;
   maxMissionCount: number;
 };
 
@@ -47,8 +50,37 @@ type SubmitMissionResponse = {
   success: boolean;
   message: string;
   data: {
+    submission?: MissionSubmission;
     rewardPoints: number;
     newlyAwardedBadges: Badge[];
+  };
+};
+
+export type MissionSubmissionStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
+export type MissionSubmission = {
+  id: number;
+  missionId: number;
+  userId: number;
+  content?: string | null;
+  imageUrl?: string | null;
+  status: MissionSubmissionStatus;
+  rejectionReason?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  Mission?: {
+    id: number;
+    title: string;
+    description?: string | null;
+    rewardPoints: number;
+  };
+  User?: {
+    id: number;
+    email: string;
+    name: string;
+    nickname?: string | null;
+    studentId?: string | null;
+    department?: string | null;
   };
 };
 
@@ -104,6 +136,28 @@ export const missionsApi = {
     const response = await apiClient.post<SubmitMissionResponse>(
       '/missions/submissions',
       payload,
+    );
+
+    return response.data.data;
+  },
+
+  async getAdminMissionSubmissions(status: MissionSubmissionStatus = 'PENDING') {
+    const response = await apiClient.get<{
+      success: boolean;
+      data: MissionSubmission[];
+    }>(`/missions/admin/submissions?status=${status}`);
+
+    return response.data.data ?? [];
+  },
+
+  async reviewMissionSubmission(
+    submissionId: number,
+    action: 'APPROVE' | 'REJECT',
+    rejectionReason?: string,
+  ) {
+    const response = await apiClient.patch<SubmitMissionResponse>(
+      `/missions/admin/submissions/${submissionId}`,
+      {action, rejectionReason},
     );
 
     return response.data.data;

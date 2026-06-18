@@ -192,7 +192,7 @@ export function MissionVerifyScreen({navigation, route}: any) {
           disabled={isSubmitting}
           onPress={handleSubmit}>
           <Text style={styles.submitText}>
-            {isSubmitting ? '제출 중...' : '크레딧 신청 하기'}
+            {isSubmitting ? '제출 중...' : '인증 신청 하기'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -204,10 +204,10 @@ export function MissionVerifyScreen({navigation, route}: any) {
             {modalType === 'success' && (
               <>
                 <Text style={styles.modalTitle}>
-                  크레딧 지급이 완료되었어요!
+                  미션 인증 신청이 완료되었어요!
                 </Text>
                 <Text style={styles.modalSubtitle}>
-                  {awardedRewardPoints.toLocaleString()} 크레딧이 지급되었습니다.
+                  관리자가 승인하면 {awardedRewardPoints.toLocaleString()} 크레딧이 지급됩니다.
                 </Text>
               </>
             )}

@@ -157,6 +157,47 @@ export const myPageStyles = StyleSheet.create({
     marginTop: 2,
   },
 
+  adminMenuItem: {
+    minHeight: 62,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.profileBorder,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    marginBottom: 14,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+
+  adminMenuIcon: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: colors.lightGreenBackground,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: 12,
+  },
+
+  adminMenuTextArea: {
+    flex: 1,
+    marginRight: 8,
+  },
+
+  adminMenuTitle: {
+    fontSize: 15,
+    fontWeight: '900',
+    color: colors.textDark,
+  },
+
+  adminMenuDesc: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    marginTop: 3,
+  },
+
   badgeCard: {
     backgroundColor: colors.white,
     borderRadius: 18,

@@ -15,7 +15,7 @@ export type RecommendedMission = {
   desc?: string;
   rewardPoints: number;
   creditText: string;
-  status: 'active' | 'completed' | 'locked' | 'pending';
+  status: 'active' | 'completed' | 'locked' | 'pending' | 'rejected';
   buttonText: string;
 };
 
@@ -26,6 +26,7 @@ export type DailyMissionsProgress = {
   maxRewardPoints: number;
   completedMissionCount: number;
   pendingMissionCount?: number;
+  rejectedMissionCount?: number;
   maxMissionCount: number;
 };
 

@@ -78,7 +78,7 @@ const getTodayCatalogMissionProgress = async (userId, transaction = null) => {
     where: {
       userId,
       status: {
-        [Op.in]: ['PENDING', 'APPROVED'],
+        [Op.in]: ['PENDING', 'APPROVED', 'REJECTED'],
       },
       createdAt: {
         [Op.gte]: startDate,
@@ -99,11 +99,16 @@ const getTodayCatalogMissionProgress = async (userId, transaction = null) => {
     order: [['createdAt', 'DESC']],
     transaction,
   });
-  const submissionsByTitle = new Map(
-    todaySubmissions
-      .map(submission => [submission.Mission?.title, submission])
-      .filter(([title]) => Boolean(title)),
-  );
+  const submissionsByTitle = new Map();
+
+  todaySubmissions.forEach(submission => {
+    const title = submission.Mission?.title;
+
+    if (title && !submissionsByTitle.has(title)) {
+      submissionsByTitle.set(title, submission);
+    }
+  });
+
   const completedTitles = new Set(
     [...submissionsByTitle.entries()]
       .filter(([, submission]) => submission.status === 'APPROVED')
@@ -114,18 +119,29 @@ const getTodayCatalogMissionProgress = async (userId, transaction = null) => {
       .filter(([, submission]) => submission.status === 'PENDING')
       .map(([title]) => title),
   );
+  const rejectedTitles = new Set(
+    [...submissionsByTitle.entries()]
+      .filter(([, submission]) => submission.status === 'REJECTED')
+      .map(([title]) => title),
+  );
   const earnedRewardPoints = catalog.reduce((sum, item) => {
     return completedTitles.has(item.title) ? sum + item.rewardPoints : sum;
   }, 0);
+  const activeSubmittedTitles = new Set([
+    ...completedTitles,
+    ...pendingTitles,
+  ]);
 
   return {
     submissionsByTitle,
     completedTitles,
     pendingTitles,
+    rejectedTitles,
     submittedTitles: new Set(submissionsByTitle.keys()),
     completedMissionCount: completedTitles.size,
     pendingMissionCount: pendingTitles.size,
-    submittedMissionCount: submissionsByTitle.size,
+    rejectedMissionCount: rejectedTitles.size,
+    submittedMissionCount: activeSubmittedTitles.size,
     earnedRewardPoints: Math.min(earnedRewardPoints, DAILY_MISSION_REWARD_LIMIT),
     maxMissionCount: DAILY_MISSION_COMPLETION_LIMIT,
     maxRewardPoints: DAILY_MISSION_REWARD_LIMIT,
@@ -167,6 +183,7 @@ const getTodayAdViewProgress = async (userId, transaction = null) => {
 const toMissionListItem = (item, progress) => {
   const isCompleted = progress.completedTitles.has(item.title);
   const isPending = progress.pendingTitles.has(item.title);
+  const isRejected = progress.rejectedTitles.has(item.title);
   const isLimitReached =
     progress.submittedMissionCount >= DAILY_MISSION_COMPLETION_LIMIT;
 
@@ -180,14 +197,18 @@ const toMissionListItem = (item, progress) => {
         ? 'pending'
         : isLimitReached
           ? 'locked'
-          : 'active',
+          : isRejected
+            ? 'rejected'
+            : 'active',
     buttonText: isCompleted
       ? '크레딧 지급 완료'
       : isPending
         ? '승인 대기'
         : isLimitReached
           ? '오늘 한도 완료'
-          : '인증하기',
+          : isRejected
+            ? '다시 인증하기'
+            : '인증하기',
   };
 };
 
@@ -206,6 +227,7 @@ exports.getDailyMissions = async (req, res, next) => {
           maxRewardPoints: progress.maxRewardPoints,
           completedMissionCount: progress.completedMissionCount,
           pendingMissionCount: progress.pendingMissionCount,
+          rejectedMissionCount: progress.rejectedMissionCount,
           maxMissionCount: progress.maxMissionCount,
         },
       },
@@ -251,7 +273,9 @@ exports.getRecommendedMissions = async (req, res, next) => {
     }
 
     const availableMissions = catalog.filter(
-      item => !progress.submittedTitles.has(item.title),
+      item =>
+        !progress.completedTitles.has(item.title) &&
+        !progress.pendingTitles.has(item.title),
     );
     const rotationOffset = availableMissions.length > 0
       ? Number(today.replace(/-/g, '')) % availableMissions.length

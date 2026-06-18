@@ -208,6 +208,28 @@ export const missionAdminReviewStyles = StyleSheet.create({
     backgroundColor: colors.lightGrayBackground,
   },
 
+  reasonBox: {
+    marginTop: 12,
+    borderRadius: 10,
+    backgroundColor: '#FFF4F2',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+
+  reasonTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: colors.heart,
+    marginBottom: 5,
+  },
+
+  reasonText: {
+    fontSize: 13,
+    lineHeight: 19,
+    fontWeight: '700',
+    color: colors.textDark,
+  },
+
   actionRow: {
     flexDirection: 'row',
     gap: 8,
@@ -240,5 +262,81 @@ export const missionAdminReviewStyles = StyleSheet.create({
 
   rejectButtonText: {
     color: colors.textSecondary,
+  },
+
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: colors.modalOverlay,
+    justifyContent: 'center',
+    paddingHorizontal: 22,
+  },
+
+  rejectModal: {
+    borderRadius: 16,
+    backgroundColor: colors.white,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+  },
+
+  rejectModalTitle: {
+    fontSize: 18,
+    fontWeight: '900',
+    color: colors.textDark,
+  },
+
+  rejectModalDesc: {
+    marginTop: 6,
+    fontSize: 13,
+    fontWeight: '700',
+    color: colors.textSecondary,
+  },
+
+  rejectInput: {
+    minHeight: 116,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: colors.borderSoft,
+    backgroundColor: colors.inputBackground,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginTop: 14,
+    fontSize: 14,
+    lineHeight: 20,
+    fontWeight: '700',
+    color: colors.textDark,
+  },
+
+  rejectModalActions: {
+    flexDirection: 'row',
+    gap: 8,
+    marginTop: 14,
+  },
+
+  modalButton: {
+    flex: 1,
+    height: 42,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  modalCancelButton: {
+    backgroundColor: colors.lightGrayBackground,
+  },
+
+  modalRejectButton: {
+    backgroundColor: colors.heart,
+  },
+
+  modalCancelText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: colors.textSecondary,
+  },
+
+  modalRejectText: {
+    fontSize: 14,
+    fontWeight: '900',
+    color: colors.white,
   },
 });

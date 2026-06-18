@@ -181,6 +181,7 @@ const getTodayAdViewProgress = async (userId, transaction = null) => {
 };
 
 const toMissionListItem = (item, progress) => {
+  const submission = progress.submissionsByTitle.get(item.title);
   const isCompleted = progress.completedTitles.has(item.title);
   const isPending = progress.pendingTitles.has(item.title);
   const isRejected = progress.rejectedTitles.has(item.title);
@@ -191,6 +192,7 @@ const toMissionListItem = (item, progress) => {
     ...item,
     desc: item.description,
     creditText: `+ ${item.rewardPoints.toLocaleString()} 크레딧`,
+    rejectionReason: isRejected ? submission?.rejectionReason || null : null,
     status: isCompleted
       ? 'completed'
       : isPending
@@ -522,6 +524,7 @@ exports.reviewMissionSubmission = async (req, res, next) => {
     }
 
     const action = String(req.body.action || '').trim().toUpperCase();
+    const rejectionReason = String(req.body.rejectionReason || '').trim();
 
     if (!['APPROVE', 'REJECT'].includes(action)) {
       await transaction.rollback();
@@ -565,7 +568,22 @@ exports.reviewMissionSubmission = async (req, res, next) => {
     }
 
     if (action === 'REJECT') {
-      await submission.update({ status: 'REJECTED' }, { transaction });
+      if (!rejectionReason) {
+        await transaction.rollback();
+
+        return res.status(400).json({
+          success: false,
+          message: '반려 사유를 입력해주세요.',
+        });
+      }
+
+      await submission.update(
+        {
+          status: 'REJECTED',
+          rejectionReason,
+        },
+        { transaction },
+      );
       await transaction.commit();
 
       return res.json({
@@ -584,7 +602,13 @@ exports.reviewMissionSubmission = async (req, res, next) => {
       submission.Mission?.rewardPoints,
     );
 
-    await submission.update({ status: 'APPROVED' }, { transaction });
+    await submission.update(
+      {
+        status: 'APPROVED',
+        rejectionReason: null,
+      },
+      { transaction },
+    );
     await User.increment('credits', {
       by: rewardPoints,
       where: { id: submission.userId },

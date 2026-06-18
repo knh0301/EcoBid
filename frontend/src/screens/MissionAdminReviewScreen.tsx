@@ -3,10 +3,12 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Pressable,
   RefreshControl,
   ScrollView,
   Text,
+  TextInput,
   View,
 } from 'react-native';
 import {SafeAreaView} from 'react-native-safe-area-context';
@@ -40,6 +42,10 @@ export function MissionAdminReviewScreen({navigation}: any) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [reviewingId, setReviewingId] = useState<number | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
+  const [rejectTarget, setRejectTarget] = useState<MissionSubmission | null>(
+    null,
+  );
+  const [rejectionReason, setRejectionReason] = useState('');
 
   const fetchSubmissions = useCallback(
     async (showLoading = true) => {
@@ -79,35 +85,61 @@ export function MissionAdminReviewScreen({navigation}: any) {
     setIsRefreshing(false);
   };
 
-  const handleReview = (
-    submission: MissionSubmission,
-    action: 'APPROVE' | 'REJECT',
-  ) => {
-    const actionText = action === 'APPROVE' ? '승인' : '반려';
-
+  const handleApprove = (submission: MissionSubmission) => {
     Alert.alert(
-      `미션 신청 ${actionText}`,
-      `${submission.Mission?.title || '미션'} 신청을 ${actionText}할까요?`,
+      '미션 신청 승인',
+      `${submission.Mission?.title || '미션'} 신청을 승인할까요?`,
       [
         {text: '취소', style: 'cancel'},
         {
-          text: actionText,
-          style: action === 'REJECT' ? 'destructive' : 'default',
-          onPress: () => submitReview(submission.id, action),
+          text: '승인',
+          onPress: () => submitReview(submission.id, 'APPROVE'),
         },
       ],
     );
   };
 
+  const handleRejectPress = (submission: MissionSubmission) => {
+    setRejectTarget(submission);
+    setRejectionReason('');
+  };
+
+  const closeRejectModal = () => {
+    if (reviewingId) {
+      return;
+    }
+
+    setRejectTarget(null);
+    setRejectionReason('');
+  };
+
+  const handleRejectSubmit = () => {
+    const trimmedReason = rejectionReason.trim();
+
+    if (!rejectTarget) {
+      return;
+    }
+
+    if (!trimmedReason) {
+      Alert.alert('반려 사유 입력', '사용자에게 전달할 반려 사유를 입력해주세요.');
+      return;
+    }
+
+    submitReview(rejectTarget.id, 'REJECT', trimmedReason);
+  };
+
   const submitReview = async (
     submissionId: number,
     action: 'APPROVE' | 'REJECT',
+    reason?: string,
   ) => {
     try {
       setReviewingId(submissionId);
 
-      await missionsApi.reviewMissionSubmission(submissionId, action);
+      await missionsApi.reviewMissionSubmission(submissionId, action, reason);
       setSubmissions(prev => prev.filter(item => item.id !== submissionId));
+      setRejectTarget(null);
+      setRejectionReason('');
 
       Alert.alert(
         '처리 완료',
@@ -162,8 +194,8 @@ export function MissionAdminReviewScreen({navigation}: any) {
         key={submission.id}
         submission={submission}
         isReviewing={reviewingId === submission.id}
-        onApprove={() => handleReview(submission, 'APPROVE')}
-        onReject={() => handleReview(submission, 'REJECT')}
+        onApprove={() => handleApprove(submission)}
+        onReject={() => handleRejectPress(submission)}
       />
     ));
   };
@@ -212,6 +244,52 @@ export function MissionAdminReviewScreen({navigation}: any) {
         showsVerticalScrollIndicator={false}>
         {renderContent()}
       </ScrollView>
+
+      <Modal
+        transparent
+        visible={!!rejectTarget}
+        animationType="fade"
+        onRequestClose={closeRejectModal}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.rejectModal}>
+            <Text style={styles.rejectModalTitle}>반려 사유 입력</Text>
+            <Text style={styles.rejectModalDesc}>
+              사용자에게 전달할 내용을 적어주세요.
+            </Text>
+
+            <TextInput
+              style={styles.rejectInput}
+              value={rejectionReason}
+              onChangeText={setRejectionReason}
+              placeholder="예: 사진에서 텀블러 사용 여부가 확인되지 않아요."
+              placeholderTextColor={colors.textMuted}
+              multiline
+              textAlignVertical="top"
+              maxLength={300}
+            />
+
+            <View style={styles.rejectModalActions}>
+              <Pressable
+                style={[styles.modalButton, styles.modalCancelButton]}
+                onPress={closeRejectModal}
+                disabled={!!reviewingId}>
+                <Text style={styles.modalCancelText}>취소</Text>
+              </Pressable>
+
+              <Pressable
+                style={[styles.modalButton, styles.modalRejectButton]}
+                onPress={handleRejectSubmit}
+                disabled={!!reviewingId}>
+                {reviewingId ? (
+                  <ActivityIndicator size="small" color={colors.white} />
+                ) : (
+                  <Text style={styles.modalRejectText}>반려하기</Text>
+                )}
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -285,6 +363,13 @@ function SubmissionCard({
           style={styles.proofImage}
           resizeMode="cover"
         />
+      ) : null}
+
+      {submission.status === 'REJECTED' && submission.rejectionReason ? (
+        <View style={styles.reasonBox}>
+          <Text style={styles.reasonTitle}>반려 사유</Text>
+          <Text style={styles.reasonText}>{submission.rejectionReason}</Text>
+        </View>
       ) : null}
 
       {isPending ? (

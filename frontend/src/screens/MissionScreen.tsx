@@ -34,6 +34,7 @@ type MissionCardItem = {
   rewardPoints?: number;
   buttonText: string;
   status: MissionStatus;
+  rejectionReason?: string | null;
 };
 
 const BASE_MISSION_DATA: MissionCardItem[] = [
@@ -81,6 +82,7 @@ const toMissionCardItem = (mission: DailyMission): MissionCardItem => ({
   rewardPoints: mission.rewardPoints,
   buttonText: mission.buttonText,
   status: mission.status,
+  rejectionReason: mission.rejectionReason,
 });
 
 const DEFAULT_DAILY_PROGRESS: DailyMissionsProgress = {
@@ -122,6 +124,13 @@ const MissionCard = ({
       </View>
 
       <Text style={missionStyles.cardDesc}>{item.desc}</Text>
+
+      {item.status === 'rejected' && item.rejectionReason ? (
+        <View style={missionStyles.rejectionBox}>
+          <Text style={missionStyles.rejectionTitle}>반려 사유</Text>
+          <Text style={missionStyles.rejectionText}>{item.rejectionReason}</Text>
+        </View>
+      ) : null}
 
       <TouchableOpacity
         style={[

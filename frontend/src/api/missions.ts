@@ -17,6 +17,7 @@ export type RecommendedMission = {
   creditText: string;
   status: 'active' | 'completed' | 'locked' | 'pending' | 'rejected';
   buttonText: string;
+  rejectionReason?: string | null;
 };
 
 export type DailyMission = RecommendedMission;
@@ -64,6 +65,7 @@ export type MissionSubmission = {
   content?: string | null;
   imageUrl?: string | null;
   status: MissionSubmissionStatus;
+  rejectionReason?: string | null;
   createdAt: string;
   updatedAt: string;
   Mission?: {
@@ -151,10 +153,11 @@ export const missionsApi = {
   async reviewMissionSubmission(
     submissionId: number,
     action: 'APPROVE' | 'REJECT',
+    rejectionReason?: string,
   ) {
     const response = await apiClient.patch<SubmitMissionResponse>(
       `/missions/admin/submissions/${submissionId}`,
-      {action},
+      {action, rejectionReason},
     );
 
     return response.data.data;

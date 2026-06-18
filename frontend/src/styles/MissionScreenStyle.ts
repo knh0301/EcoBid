@@ -88,6 +88,28 @@ export const missionStyles = StyleSheet.create({
     lineHeight: 18,
   },
 
+  rejectionBox: {
+    borderRadius: 10,
+    backgroundColor: '#FFF4F2',
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    marginBottom: 12,
+  },
+
+  rejectionTitle: {
+    fontSize: 12,
+    fontWeight: '900',
+    color: colors.heart,
+    marginBottom: 5,
+  },
+
+  rejectionText: {
+    fontSize: 13,
+    lineHeight: 18,
+    fontWeight: '700',
+    color: colors.textDark,
+  },
+
   button: {
     backgroundColor: colors.chatGreen,
     borderRadius: 10,

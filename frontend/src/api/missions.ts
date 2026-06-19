@@ -1,5 +1,6 @@
 import apiClient from './client';
 import {Badge} from './badges';
+import {API_CONFIG} from '../config/apiConfig';
 
 type SubmitMissionPayload = {
   missionTitle: string;
@@ -103,6 +104,28 @@ export type MissionVerificationResult = {
   checkedAt: string;
 };
 
+const getApiOrigin = () => API_CONFIG.BASE_URL.replace(/\/api\/?$/, '');
+
+export const resolveMissionImageUrl = (imageUrl?: string | null) => {
+  if (!imageUrl) {
+    return undefined;
+  }
+
+  if (
+    imageUrl.startsWith('http://') ||
+    imageUrl.startsWith('https://') ||
+    imageUrl.startsWith('file://')
+  ) {
+    return imageUrl;
+  }
+
+  if (imageUrl.startsWith('/')) {
+    return `${getApiOrigin()}${imageUrl}`;
+  }
+
+  return imageUrl;
+};
+
 export const missionsApi = {
   async getAdViewStatus(): Promise<AdViewStatus> {
     const response = await apiClient.get<{
@@ -166,7 +189,10 @@ export const missionsApi = {
       data: MissionSubmission[];
     }>(`/missions/admin/submissions?status=${status}`);
 
-    return response.data.data ?? [];
+    return (response.data.data ?? []).map(submission => ({
+      ...submission,
+      imageUrl: resolveMissionImageUrl(submission.imageUrl),
+    }));
   },
 
   async reviewMissionSubmission(

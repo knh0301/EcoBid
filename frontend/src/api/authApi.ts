@@ -146,33 +146,6 @@ export const authApi = {
     return result;
   },
 
-  // 소셜 로그인
-  socialLogin: async (payload: {
-    email: string;
-    name?: string;
-    profileImage?: string;
-    provider: 'GOOGLE' | 'KAKAO';
-    providerId: string;
-  }) => {
-    const {data} = await api.post('/auth/social', payload);
-    const result: AuthResponse = data.data;
-
-    await tokenStorage.setAccessToken(result.accessToken);
-    await tokenStorage.setRefreshToken(result.refreshToken);
-
-    return result;
-  },
-
-  googleLogin: async (payload: {accessToken?: string; idToken?: string}) => {
-    const {data} = await api.post('/auth/google', payload);
-    const result: AuthResponse = data.data;
-
-    await tokenStorage.setAccessToken(result.accessToken);
-    await tokenStorage.setRefreshToken(result.refreshToken);
-
-    return result;
-  },
-
   requestPasswordReset: async (payload: {
     email: string;
   }): Promise<PasswordResetRequestResponse> => {

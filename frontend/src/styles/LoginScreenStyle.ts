@@ -4,7 +4,7 @@ import {colors} from './colors';
 export const loginStyles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.pageBackground,
+    backgroundColor: colors.white,
   },
 
   keyboardView: {
@@ -13,29 +13,30 @@ export const loginStyles = StyleSheet.create({
 
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: 24,
-    paddingTop: 60,
-    paddingBottom: 40,
+    paddingHorizontal: 28,
+    paddingTop: 72,
+    paddingBottom: 34,
   },
 
   card: {
     backgroundColor: colors.white,
-    borderRadius: 18,
-    borderWidth: 1,
-    borderColor: colors.borderLight,
-    paddingHorizontal: 24,
-    paddingVertical: 34,
+    flex: 1,
+    width: '100%',
+    maxWidth: 520,
+    alignSelf: 'center',
+    paddingHorizontal: 0,
+    paddingVertical: 22,
     alignItems: 'center',
   },
 
   logoBox: {
-    width: 66,
-    height: 66,
-    borderRadius: 16,
+    width: 82,
+    height: 82,
+    borderRadius: 20,
     backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 18,
+    marginBottom: 24,
     shadowColor: colors.black,
     shadowOpacity: 0.12,
     shadowRadius: 6,
@@ -44,33 +45,33 @@ export const loginStyles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 27,
+    fontSize: 34,
     fontWeight: '900',
     color: colors.textDark,
-    marginBottom: 24,
+    marginBottom: 34,
   },
 
   inputGroup: {
     width: '100%',
-    marginBottom: 14,
+    marginBottom: 18,
   },
 
   label: {
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: '800',
     color: colors.textDark,
-    marginBottom: 6,
+    marginBottom: 8,
   },
 
   input: {
     width: '100%',
-    height: 44,
-    borderRadius: 9,
+    height: 56,
+    borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.borderLight,
     backgroundColor: colors.white,
-    paddingHorizontal: 14,
-    fontSize: 13,
+    paddingHorizontal: 16,
+    fontSize: 16,
     color: colors.textDark,
   },
 
@@ -78,17 +79,17 @@ export const loginStyles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 2,
-    marginBottom: 16,
+    marginTop: 4,
+    marginBottom: 22,
   },
 
   findPasswordText: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.textMuted,
   },
 
   findPasswordLink: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.primaryDark,
     fontWeight: '800',
     textDecorationLine: 'underline',
@@ -96,8 +97,8 @@ export const loginStyles = StyleSheet.create({
 
   loginButton: {
     width: '100%',
-    height: 46,
-    borderRadius: 9,
+    height: 58,
+    borderRadius: 12,
     backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
@@ -105,7 +106,7 @@ export const loginStyles = StyleSheet.create({
 
   loginButtonText: {
     color: colors.textLight,
-    fontSize: 14,
+    fontSize: 17,
     fontWeight: '900',
   },
 
@@ -147,17 +148,17 @@ export const loginStyles = StyleSheet.create({
 
   signupRow: {
     flexDirection: 'row',
-    marginTop: 22,
+    marginTop: 28,
     alignItems: 'center',
   },
 
   signupText: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.textTertiary,
   },
 
   signupLink: {
-    fontSize: 11,
+    fontSize: 13,
     color: colors.primaryDark,
     fontWeight: '900',
     textDecorationLine: 'underline',

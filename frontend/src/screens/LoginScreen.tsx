@@ -32,7 +32,6 @@ export function LoginScreen() {
   const navigation = useNavigation<any>();
   const {
     loginWithEmail,
-    signInWithGoogle,
     isLoading: authLoading,
   } = useAuth();
 
@@ -63,15 +62,6 @@ export function LoginScreen() {
     }
   };
 
-  const handleGoogleLogin = async () => {
-    try {
-      await signInWithGoogle();
-    } catch (error: any) {
-      Alert.alert('로그인 실패', error.message || '다시 시도해주세요.');
-    }
-  };
-
-
   const isButtonLoading = loginLoading || authLoading;
 
   return (
@@ -85,7 +75,7 @@ export function LoginScreen() {
           showsVerticalScrollIndicator={false}>
           <View style={styles.card}>
             <View style={styles.logoBox}>
-              <Ionicons name="leaf-outline" size={44} color="#7FA56F" />
+              <Ionicons name="leaf-outline" size={52} color="#7FA56F" />
             </View>
 
             <Text style={styles.title}>로그인</Text>
@@ -132,23 +122,6 @@ export function LoginScreen() {
                 <Text style={styles.loginButtonText}>로그인</Text>
               )}
             </Pressable>
-
-            <Text style={styles.dividerText}>또는</Text>
-
-            <Pressable
-              style={[styles.googleButton, authLoading && {opacity: 0.7}]}
-              onPress={handleGoogleLogin}
-              disabled={isButtonLoading}>
-              {authLoading ? (
-                <ActivityIndicator size="small" color="#4285F4" />
-              ) : (
-                <>
-                  <Text style={styles.googleIcon}>G</Text>
-                  <Text style={styles.googleButtonText}>Google로 로그인</Text>
-                </>
-              )}
-            </Pressable>
-
 
             <View style={styles.signupRow}>
               <Text style={styles.signupText}>계정이 없으신가요?</Text>
